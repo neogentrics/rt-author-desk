@@ -1,0 +1,10 @@
+node_modules/
+release/
+dist/
+.DS_Store
+*.log
+.env
+.env.*
+
+# Real sales reports are private test files and never go in the repo.
+test/private/
