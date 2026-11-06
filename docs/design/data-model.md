@@ -16,6 +16,8 @@ flowchart LR
   Series --> Book
   Book --> Edition
   Edition --> Listing
+  Edition --> Recording
+  Recording --> Listing
   ISBN --> Edition
   Store --> Listing
   Listing --> Sale[Sale line]
@@ -39,6 +41,7 @@ flowchart LR
 | **Person** | An editor, an artist or a narrator. |
 | **Edition** | One format of a book: ebook, paperback, hardcover, large print or audiobook. Page count, trim size, paper, length, cover status, credits. A book can have several of one format, such as a new paperback after a rework. |
 | **ISBN** | The number, who issued it (bought, or a store's free one), where it may be used, and which edition has it. |
+| **Recording** | One audio version of a book. See [recordings](#recordings). |
 | **Store** | A place that sells or distributes books. Stores are data, so a new one needs no new code. |
 | **Listing** | One edition on one store. Store ID, link, status, publisher name shown, credits shown, program (such as an exclusive term with start and end dates), and the **route**. |
 | **Price** | A listing's price in one marketplace, from a date. Old prices are kept, so a sale can be compared with the price at the time. |
@@ -46,6 +49,23 @@ flowchart LR
 **The route.** Some listings are yours directly, and some reach a store through a distributor. A book at one store can come
 from both. The route says which, because reports arrive from the account that pays you, not from the shop the reader used.
 Sales are only ever imported from the paying account, so a distributed sale can't be counted twice.
+
+## Recordings
+
+An audiobook edition can exist in more than one version at once: a narrator's recording on one store and a store's auto-made
+one on another. So a recording is its own record, and an audiobook listing says which recording is live there.
+
+| Field | What it holds |
+|---|---|
+| Voice | Human, synthesized, or a cloned voice, which counts as synthesized |
+| Read by | The narrator, or the voice and tool that made it, including a store's own auto-narration |
+| Permission | For a cloned voice: whose voice it is, and the permission on file |
+| Rights | Who holds them, any exclusive deal, which store it's tied to, when it ends, whether it's a royalty share, and the contract attached |
+| Replacing | Keep, or waiting to be replaced. If it's waiting, what's replacing it and when it was swapped |
+| Made | Length, finished date, and the RT Audio Studio project it came from, if any |
+
+The audiobook tracker reads straight from this: titles down the side, stores across the top, and each square shows the recording,
+its voice and any problem. Old recordings stay on record after a swap, so sales can be tied to the recording that made them.
 
 ## The money
 

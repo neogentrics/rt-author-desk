@@ -64,6 +64,8 @@ tested alone, so a problem in one doesn't hold up the other.
 | 🙋 Books and series | M | Works for one novel or a long series, under any number of pen names and publisher names. A book can be planned, in progress, live, pulled or being reworked. |
 | 🙋 Editions | M | Ebook, paperback, hardcover, large print and audiobook, each with its own details: page count, trim size, narrator, contributors. |
 | 🙋 Store listings | L | An edition on a store: its store ID, price in each marketplace, link, status, the publisher name the store shows, and how it got there, directly or through a distributor. |
+| 🙋 Recordings | M | Each audiobook recording of a book: human or synthesized voice, who read it, and what rights it has, such as an exclusive deal and when it ends. [How it works](docs/design/data-model.md#recordings). |
+| 🙋 Audiobook tracker | M | Every title on every store: which recording is live, its voice, its rights, and which are waiting to be replaced and by what. |
 | 🙋 ISBNs | M | Every ISBN you own or were given, who issued it, where it can be used and which edition has it. Check digits are verified. |
 | 🙋 The store grid | M | One page per book: editions down the side, stores across the top, so a gap or a wrong price shows at a glance. |
 | 🙋 Clash checks | M | Finds real problems: see [the list](docs/product-plan.md#clash-checks). You can dismiss one with a reason. |
@@ -74,7 +76,7 @@ tested alone, so a problem in one doesn't hold up the other.
 
 | Feature | Size | Details |
 |---|:-:|---|
-| 🙋 Read sales reports | L | KDP, Barnes & Noble Press, ACX and IngramSpark. Drop a file in, see what it holds, and accept it. [How it works](docs/design/report-imports.md). |
+| 🙋 Read sales reports | L | KDP, Barnes & Noble Press, ACX, Google Play Books and IngramSpark. Drop a file in, see what it holds, and accept it. [How it works](docs/design/report-imports.md). |
 | 🙋 Every row accounted for | M | Each row is imported, a duplicate, or set aside with a reason. Totals are checked against the report's own. Importing twice does no harm, and any import can be undone. |
 | Matching | M | Report rows are matched to editions by ISBN or store ID. What it can't match, it asks about once and remembers. |
 | 🙋 Royalties | L | By month, book, edition, store, marketplace and currency. Estimates are kept apart from what was actually paid. |
@@ -93,7 +95,8 @@ tested alone, so a problem in one doesn't hold up the other.
 | Themes & fonts | S | The suite's themes and fonts. |
 | Installed list | S | Leaves the small file that tells the other apps it's installed. |
 
-**Test:** enter a real catalog, then find every known clash. Import two years of real KDP reports: every row is accounted for,
+**Test:** enter a real catalog, then find every known clash. Mark a recording as exclusive to one store, list it on another,
+and see the clash. Import two years of real KDP reports: every row is accounted for,
 and each month's total matches the report to the cent. Import the same file again and nothing changes. Export everything and
 find it all in the files.
 
@@ -103,7 +106,7 @@ find it all in the files.
 
 | Feature | Size | Details |
 |---|:-:|---|
-| 🙋 More readers | L | Draft2Digital, Kobo, Apple Books, Google Play Books and Lulu. Each needs a real report to build from. |
+| 🙋 More readers | L | Draft2Digital, Kobo, Apple Books and Lulu. Each needs a real report to build from. |
 | 🙋 Match your columns | M | For any other store: show the app which column is the date, the title and the money, and it remembers that store's layout. |
 | Layout changed | S | When a store changes its report, the app says what's different instead of guessing, and offers Match your columns. |
 | Reports due | S | Each store's last report and when the next is due, shown on the Desk. |
@@ -175,7 +178,7 @@ over its limit. Compare a campaign's spend against its sales.
 | 🙋 Link a book | S | Tie a book here to the same book in RT Story Tracker. Each app keeps working without the other. |
 | 🙋 Writing progress | M | Word counts and draft status from RT Story Tracker, shown on the book and the Desk. |
 | 🙋 Published facts | M | Editions, ISBNs, dates, prices and links, for RT Story Tracker's catalog to show. |
-| 🙋 What was made | M | RT Press and RT Audio Studio tell this app when a print file or an audiobook is finished, and it's recorded on the edition. |
+| 🙋 What was made | M | RT Press and RT Audio Studio tell this app when a print file or an audiobook is finished, and you accept it onto the edition. A new recording from RT Audio Studio arrives with its voice type, ready to replace one that's waiting. |
 | Publish through RT Markdown Reader | S | Hand a launch post or a press kit to RT Markdown Reader, which sends it on. This app builds no publishing of its own. |
 | Automations | M | Webhooks and n8n can be told about a release, a report or a due date. Off until you turn it on, and the vault and personal money stay out. |
 

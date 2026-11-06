@@ -44,8 +44,9 @@ count once. **Any import can be undone** as a batch.
 | KDP | Real files read: see below | 1.0 |
 | Barnes & Noble Press | Sales reports export to a spreadsheet, with sale date, title, format and BN ID or ISBN (its help center). Not seen yet | 1.0 |
 | ACX | A monthly earnings statement as a multi-sheet Excel file, and a CSV from Sales Overview (its help pages). Not seen yet. Final figures arrive at the end of the following month | 1.0 |
+| Google Play Books | Not seen yet. It's a report from Partner Center, including audiobooks | 1.0 |
 | IngramSpark | Not seen yet | 1.0 |
-| Draft2Digital, Kobo, Apple Books, Google Play Books, Lulu | Not seen yet | 1.1 |
+| Draft2Digital, Kobo, Apple Books, Lulu | Not seen yet | 1.1 |
 
 ### What a KDP report holds
 

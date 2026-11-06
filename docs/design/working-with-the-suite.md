@@ -26,7 +26,7 @@ ask for it. App Link id: `rt-author-desk`. This app works completely on its own,
 | Word counts, draft status, what's left | RT Story Tracker | Shown on the book and the Desk, and for launch plans |
 | The list of books | RT Story Tracker | Linking a book here to the same book there |
 | Print files and covers made | RT Press | Recorded on the edition: page count, trim size, finished date |
-| Audio masters made | RT Audio Studio | Recorded on the edition: length, narrator, finished date |
+| Audio masters made | RT Audio Studio | A new recording on the edition: length, narrator, voice type, finished date |
 | Sending a document out | RT Markdown Reader | Launch posts and press kits, over `open_document` |
 
 ## The line with RT Story Tracker
@@ -63,7 +63,13 @@ Named for what they return. Each needs a key, and a locked project or vault answ
 | `list_books` | RT Story Tracker | Permanent ID, title, series, number |
 | `book_progress` | RT Story Tracker | Word count, chapters done, draft status |
 | `published_facts` | This app | For a book: editions, formats, ISBNs, release dates, list prices and store links. **Never** royalties, costs or account details |
-| `record_made` | This app, called by RT Press and RT Audio Studio | Says a file was finished, with its book, format, page count or length, and date. It lands on a list for you to accept, because the rule is that a request never changes anything by itself |
+| `record_made` | This app, called by RT Press and RT Audio Studio | Says a file was finished, with its book, format, page count or length, and date. For audio, it also gives the voice type and who read it. It lands on a list for you to accept, because the rule is that a request never changes anything by itself |
+
+## Replacing an audiobook
+
+The two apps split this job. RT Audio Studio makes and checks the audio. This app tracks which recording is live on each store, what
+rights it has and which are waiting to be replaced. When a new recording arrives through `record_made`, you choose what it
+replaces. Uploading it to the store stays with you, and you mark it live here.
 
 ## Files that stay here
 

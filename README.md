@@ -13,6 +13,8 @@ own books.
 ## What it will do
 
 - **Keep the catalog.** Every book, every edition, every ISBN, and every store each edition is on, with its price and link.
+- **Track every audiobook.** Which recording is live on which store, whether the voice is human or synthesized, what
+  rights it has, and which recordings are waiting to be replaced.
 - **Catch clashes.** An ebook in an exclusive program that's also on sale elsewhere, a free store ISBN used at another
   store, a publisher name that differs between stores, a price just under a royalty line.
 - **Read your sales reports.** Download a report from a store and drop it in. The app accounts for every row, and importing

@@ -36,6 +36,7 @@ The plan comes from reading what's there today, and what it can't do well.
 | A book reaches some stores directly and others through a distributor | A listing has to record the route, and the same sale can't be counted twice |
 | Sales & Royalties has two rows, both blank | Hand-typed monthly totals don't happen. Import is the only way this gets done |
 | The real KDP files carry every sale by title, marketplace, format and currency | There's far more in the reports than the monthly total Notion asked for |
+| Audiobooks differ by store: some are a narrator's recording, some a store's generic AI voice, and a recording can be tied to an exclusive deal | A recording has to be its own record, with its voice and rights, separate from where it's on sale |
 | Release dates slip because of covers, not writing | A launch plan has to watch the cover first |
 | A release rule exists: how far ahead to schedule, and how far apart books in a series should be | Spacing rules belong in the app, as your own settings |
 
@@ -61,6 +62,9 @@ Real problems the app looks for. Each says what's wrong and what to do, and can 
 |---|---|
 | An ebook in an exclusive program is also on sale elsewhere | It breaks the program's terms |
 | A free store ISBN is used on another store | Those ISBNs can only be used with the store that gave them |
+| A recording tied to an exclusive deal is listed on another store | It can break the deal. Royalty Share contracts need a close look |
+| A store has a recording marked as a human voice when it's synthesized | Stores ask you to declare this, and AI-made audio has to say so |
+| A cloned voice has no permission on record | A cloned voice needs that person's permission, and it counts as synthesized |
 | An ISBN is on two editions, or fails its check digit | Stores reject it, or the wrong book gets the sale |
 | The publisher name differs between stores, or from your records | Readers and stores see an inconsistent publisher, and it matters when a publisher name changes |
 | A contributor is credited on one store and not another | Editors, narrators and artists should be credited the same everywhere |
@@ -77,7 +81,7 @@ checked. See [royalties and prices](design/royalties-and-prices.md).
 
 ## What's in and what's out
 
-**In:** the catalog, ISBNs, listings, release dates, launch plans, marketing plans and results, sales reports, royalties,
+**In:** the catalog, ISBNs, listings, audiobook recordings and their rights, release dates, launch plans, marketing plans and results, sales reports, royalties,
 costs, profit, direct sales, author copies, events, accounts, a vault for logins, the business checklist, the calculator, and
 a private personal money section.
 
