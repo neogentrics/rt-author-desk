@@ -48,6 +48,7 @@ later, macOS 13 or later, and 64-bit Linux. It works with no internet.
 | Page | What's in it |
 |---|---|
 | [Roadmap](ROADMAP.md) | Every release, what's in it and how it's tested |
+| [Roadmap page](https://claude.ai/artifact/NUBwv6uERamH5akR2xLAZN) | The same roadmap as a page, private to the owner. Its source is `docs/roadmap.html` |
 | [Product plan](docs/product-plan.md) | What the app is for, who it's for, and how it does the job its own way |
 | [Decisions](docs/decisions.md) | What the owner has chosen, and what's waiting for his approval |
 | [Data model](docs/design/data-model.md) | Books, editions, listings and money, and how they fit together |
