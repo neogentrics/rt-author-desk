@@ -29,6 +29,7 @@ test('the store grid has editions down the side, every active store across the t
   const grid = storeGrid(library, book.id, { today: TODAY, locale: 'en-US' });
   assert.equal(grid.book.title, 'Book One');
   assert.equal(grid.stores.length, 9);
+  assert.deepEqual(grid.stores.slice(0, 3).map((s) => s.name), ['Amazon KDP', 'Barnes & Noble Press', 'ACX'], 'the natural order, not alphabetical by ID');
   assert.deepEqual(grid.rows.map((r) => r.edition.format), ['ebook', 'paperback']);
 
   const cell = grid.rows[0].cells['store-kdp'];

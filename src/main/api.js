@@ -3,6 +3,7 @@
 // back plain data or a plain-words problem. Kept apart from Electron so it's tested like any other module.
 const { Catalog, CatalogError } = require('./catalog');
 const { ClashError, dismissClash, findClashes, restoreClash } = require('./clashes');
+const { BUILT_IN_STORES } = require('./storage/schema');
 const { desk, releaseCalendar, storeGrid } = require('./views');
 const { today: todayOf } = require('../shared/dates');
 const { displayIsbn } = require('../shared/isbn');
@@ -81,6 +82,8 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
     removeEdition: ({ id }) => catalog.removeEdition(id) ?? true,
     addIsbn: (fields) => catalog.addIsbn(fields),
     assignIsbn: ({ isbnId, editionId }) => catalog.assignIsbn(isbnId, editionId),
+    editionChoices: () => library.list('editions').map((edition) => ({ id: edition.id, label: catalog.describeEdition(edition.id) }))
+      .sort((a, b) => a.label.localeCompare(b.label)),
     isbnRegister: () => library.list('isbns').map((isbn) => ({
       ...isbn, shown: displayIsbn(isbn.isbn), store_name: storeName(isbn.store_id),
       edition: isbn.edition_id ? catalog.describeEdition(isbn.edition_id) : null,
@@ -98,7 +101,7 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
       series: library.list('series'),
       penNames: library.list('pen_names'),
       publishers: library.list('publisher_names'),
-      stores: library.list('stores'),
+      stores: catalog.stores().map((store) => ({ ...store, built_in: BUILT_IN_STORES.some(([id]) => id === store.id) })),
     }),
     saveSeries: (fields) => catalog.saveSeries(fields),
     savePenName: (fields) => catalog.savePenName(fields),

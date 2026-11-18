@@ -1,9 +1,9 @@
 'use strict';
-// Step zero: an app that installs, opens its encrypted library and shows the empty Desk. The catalog and the money
-// come in v1.0 (ROADMAP.md).
+// Opens the encrypted library and the window. The catalog is in v1.0's first test build; the money follows (ROADMAP.md).
 const fs = require('node:fs');
 const path = require('node:path');
 const { app, BrowserWindow, ipcMain, Menu, session, shell } = require('electron');
+const { createApi } = require('./api');
 const { Library } = require('./storage/library');
 const { selfTest } = require('./self-test');
 
@@ -46,6 +46,13 @@ if (selfTestArg) {
       opened = { ok: false, message: error.message };
     }
     ipcMain.handle('desk:info', () => ({ version: app.getVersion(), library: opened }));
+    // The window's only way to the library: one allowlisted call, and only from this app's own page.
+    const api = library && opened.ok ? createApi(library, { locale: app.getLocale() }) : null;
+    ipcMain.handle('desk:call', (event, name, args) => {
+      if (!event.senderFrame?.url.startsWith('file://')) return { ok: false, message: 'That request did not come from the app.' };
+      if (!api) return { ok: false, message: 'Your library is not open.' };
+      return api.call(name, args);
+    });
 
     Menu.setApplicationMenu(Menu.buildFromTemplate([
       ...(process.platform === 'darwin' ? [{ role: 'appMenu' }] : []),

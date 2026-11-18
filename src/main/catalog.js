@@ -4,7 +4,8 @@
 // Rules in this file are the ones in docs/design/data-model.md.
 const { isRealDate } = require('../shared/dates');
 const { parseIsbn } = require('../shared/isbn');
-const { money, parseMoney } = require('../shared/money');
+const { MoneyError, money, parseMoney } = require('../shared/money');
+const { BUILT_IN_STORES } = require('./storage/schema');
 
 const FORMATS = ['ebook', 'paperback', 'hardcover', 'large print', 'audiobook'];
 const ISSUERS = ['bought', 'store', 'given'];
@@ -64,6 +65,13 @@ class Catalog {
   }
 
   // Stores are data: add your own beside the built-in ones. A store that has listings can be switched off but not removed.
+  // The built-in stores in their natural order (KDP first), then your own in the order you added them.
+  stores() {
+    const order = new Map(BUILT_IN_STORES.map(([id], index) => [id, index]));
+    return this.library.list('stores').sort((a, b) => (order.get(a.id) ?? 999) - (order.get(b.id) ?? 999)
+      || a.created_at.localeCompare(b.created_at) || a.name.localeCompare(b.name));
+  }
+
   saveStore(fields) {
     this.#mustHaveName('stores', fields, 'A store needs a name.');
     if ('kind' in fields && !['store', 'distributor', 'audio'].includes(fields.kind)) {
@@ -73,6 +81,7 @@ class Catalog {
   }
 
   removeStore(id) {
+    if (BUILT_IN_STORES.some(([builtIn]) => builtIn === id)) throw new CatalogError("A built-in store can't be removed. Switch it off instead.");
     const used = this.library.db.prepare('SELECT count(*) AS n FROM listings WHERE store_id = ? OR via_store_id = ?').get(id, id).n;
     if (used) throw new CatalogError(`This store has ${used} listing${used === 1 ? '' : 's'}. Switch it off instead of removing it.`);
     this.library.remove('stores', id);
@@ -280,7 +289,11 @@ class Catalog {
     try {
       price = parseMoney(amount, currency);
     } catch (error) {
-      throw new CatalogError(`${String(amount)} ${currency ?? ''} isn't a price. ${error.message}`.trim());
+      if (!(error instanceof MoneyError)) throw error;
+      if (/currency/i.test(error.message)) {
+        throw new CatalogError(`${String(currency ?? '').trim() || 'No currency'} isn't a currency this app knows. Use its three-letter code, such as USD, GBP or EUR.`);
+      }
+      throw new CatalogError(`"${String(amount).trim()}" isn't a price. Write it as you would on the store, such as 12.99.`);
     }
     if (price.minor < 0n) throw new CatalogError("A price can't be below zero. Use 0 for free.");
     const same = this.library.db.prepare('SELECT id FROM prices WHERE listing_id = ? AND marketplace = ? AND from_date = ?').get(listingId, place, fromDate);

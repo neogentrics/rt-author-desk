@@ -109,6 +109,9 @@ test('names and stores: your own store beside the built-in ones, and a used stor
   ok('saveListing', { edition_id: edition.id, store_id: mine.id });
   assert.match(call('removeStore', { id: mine.id }).message, /Switch it off instead/);
   assert.equal(ok('saveStore', { id: mine.id, active: false }).active, 0);
+  assert.match(call('removeStore', { id: 'store-kobo' }).message, /built-in store can't be removed/);
+  assert.equal(ok('names').stores.find((s) => s.id === 'store-kobo').built_in, true);
+  assert.equal(ok('names').stores.find((s) => s.id === mine.id).built_in, false);
   const lone = ok('saveStore', { name: 'Unused' });
   assert.equal(ok('removeStore', { id: lone.id }), true);
 

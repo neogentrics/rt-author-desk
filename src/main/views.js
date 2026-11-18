@@ -22,7 +22,7 @@ function storeGrid(library, bookId, { today, locale } = {}) {
   const editions = catalog.editionsOf(bookId);
   const listings = editions.flatMap((edition) => catalog.listingsOf(edition.id));
   const used = new Set(listings.map((listing) => listing.store_id));
-  const stores = library.list('stores').filter((store) => store.active || used.has(store.id));
+  const stores = catalog.stores().filter((store) => store.active || used.has(store.id));
   const clashes = findClashes(library, { today }).filter((clash) => clash.book_id === bookId);
 
   const rows = editions.map((edition) => {
