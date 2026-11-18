@@ -7,8 +7,8 @@ nothing else to install.
 RT Author Desk is part of the **Recon Towers** suite, built by its Dev Department. It was inspired by the owner writing his
 own books.
 
-> **Status: being planned. No code has been written, and there's nothing to download yet.**
-> Building starts when the owner approves the plan. Start with the [roadmap](ROADMAP.md).
+> **Status: early build. There's nothing to download yet.**
+> The catalog is working in test builds, and the money (sales reports, royalties) is next. Start with the [roadmap](ROADMAP.md).
 
 ## What it will do
 
