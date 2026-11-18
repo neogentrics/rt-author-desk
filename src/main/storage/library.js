@@ -125,8 +125,12 @@ class Library {
   }
 }
 
+// SQLite has no true and false, so a checkbox's value is stored as 1 or 0.
 function pick(record, fields) {
-  return Object.fromEntries(fields.map((key) => [key, record[key] ?? null]));
+  return Object.fromEntries(fields.map((key) => {
+    const value = record[key] ?? null;
+    return [key, typeof value === 'boolean' ? Number(value) : value];
+  }));
 }
 
 module.exports = { DATABASE_FILE, Library, REMOVAL_DAYS };
