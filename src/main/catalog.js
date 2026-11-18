@@ -40,6 +40,44 @@ class Catalog {
     this.library.remove('books', id);
   }
 
+  // ---- Names: series, pen names, publisher names and stores ----------------------------------------------------
+
+  saveSeries(fields) {
+    this.#mustHaveName('series', fields, 'A series needs a name.');
+    this.#mustExist('pen_names', fields.pen_name_id, 'That pen name');
+    return this.library.put('series', fields);
+  }
+
+  savePenName(fields) {
+    this.#mustHaveName('pen_names', fields, 'A pen name needs a name.');
+    return this.library.put('pen_names', fields);
+  }
+
+  // A publisher name with the dates it applied, because a name can change and old listings still show the old one.
+  savePublisherName(fields) {
+    this.#mustHaveName('publisher_names', fields, 'A publisher name needs a name.');
+    this.#mustBeDate(fields.from_date, 'start date');
+    this.#mustBeDate(fields.to_date, 'end date');
+    const merged = { ...(fields.id ? this.library.get('publisher_names', fields.id) : null), ...fields };
+    if (merged.from_date && merged.to_date && merged.to_date < merged.from_date) throw new CatalogError('The name stops before it starts.');
+    return this.library.put('publisher_names', fields);
+  }
+
+  // Stores are data: add your own beside the built-in ones. A store that has listings can be switched off but not removed.
+  saveStore(fields) {
+    this.#mustHaveName('stores', fields, 'A store needs a name.');
+    if ('kind' in fields && !['store', 'distributor', 'audio'].includes(fields.kind)) {
+      throw new CatalogError('A store is a store, a distributor or an audio store.');
+    }
+    return this.library.put('stores', fields);
+  }
+
+  removeStore(id) {
+    const used = this.library.db.prepare('SELECT count(*) AS n FROM listings WHERE store_id = ? OR via_store_id = ?').get(id, id).n;
+    if (used) throw new CatalogError(`This store has ${used} listing${used === 1 ? '' : 's'}. Switch it off instead of removing it.`);
+    this.library.remove('stores', id);
+  }
+
   // ---- Editions -------------------------------------------------------------------------------------------------
 
   saveEdition(fields) {
@@ -272,6 +310,12 @@ class Catalog {
   }
 
   // ---- internals ------------------------------------------------------------------------------------------------
+
+  // A name has to be there when a record is made, and can't be blanked later.
+  #mustHaveName(table, fields, message) {
+    const making = fields.id === undefined || !this.library.get(table, fields.id);
+    if ((making || 'name' in fields) && !String(fields.name ?? '').trim()) throw new CatalogError(message);
+  }
 
   #mustBeDate(value, what) {
     if (value != null && !isRealDate(value)) {
