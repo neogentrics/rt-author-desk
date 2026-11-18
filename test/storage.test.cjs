@@ -7,6 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { DATABASE_FILE, Library } = require('../src/main/storage/library');
 const { WrongKeyError, openDatabase } = require('../src/main/storage/database');
+const { STEPS } = require('../src/main/storage/schema');
 const { runChecks } = require('../src/main/self-test');
 
 const temp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-test-'));
@@ -41,7 +42,7 @@ test('every record has a permanent random ID, and every change is logged', () =>
 
   library = new Library(dir).open();
   assert.equal(library.get('books', book.id).business_status, 'live');
-  assert.equal(library.info().step, 1);
+  assert.equal(library.info().step, STEPS.at(-1).version);
   library.close();
 });
 
