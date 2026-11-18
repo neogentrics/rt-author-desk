@@ -65,6 +65,10 @@ These are facts, not choices.
   non-exclusive, with the old 40% and 25% ending at the end of 2026. Check this against ACX and the contract for each title.
 - **KDP's ebook band.** The owner's own guide says the 70% rate reaches $12.99 since 7 July 2026, citing KDP's pricing page, and
   some outside sources still say $9.99. KDP's page decides.
+- **The sample KDP report doesn't add up.** In the December 2024 orders file, the Summary says 50.38 USD, 0.52 GBP, 0.03 EUR and 0.06 CAD,
+  but the detail sheets hold 49.53 USD and nothing in the other currencies. The cause isn't known: a filtered export, royalties that
+  only the Summary counts (such as pages read), or a layout we haven't understood. The reader reports the difference and doesn't hide it.
+  A recent report from the owner will settle it, and until then totals are labeled estimates.
 - **How KENP royalties appear.** The sample report has pages read but no rows that show a KENP royalty. A report from a month
   with Kindle Unlimited reads will settle it.
 - **Google Play Books.** Notion says he publishes audiobooks and physical books there. Print sales on Google weren't confirmed for

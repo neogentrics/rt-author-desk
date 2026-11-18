@@ -1,0 +1,17 @@
+:root {
+  --bg: #eef1f6; --surface: #fff; --ink: #18212f; --ink-soft: #465266; --line: #dae0ea; --accent: #1d55b8;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0e1219; --surface: #171d28; --ink: #e8ecf4; --ink-soft: #b7c0cf; --line: #2a3345; --accent: #8fb4ff; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-size: 15px; line-height: 1.55; }
+.desk { max-width: 860px; margin: 0 auto; padding: 40px 24px; display: grid; gap: 18px; }
+h1 { margin: 0; font-size: 28px; }
+h2 { margin: 0 0 6px; font-size: 16px; }
+.lead { margin: 0; color: var(--ink-soft); font-size: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; padding: 16px 18px; }
+.card p { margin: 0 0 6px; }
+.note { color: var(--ink-soft); font-size: 14px; }
