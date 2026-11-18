@@ -26,6 +26,7 @@ const TABLES = {
     'program_exclusive', 'program_from', 'program_until', 'isbn_id', 'recording_id', 'release_date', 'notes',
   ],
   prices: ['listing_id', 'marketplace', 'currency', 'amount', 'from_date', 'notes'],
+  dismissed_clashes: ['clash_key', 'reason'],
 };
 
 // The stores every library starts with. Their IDs are fixed, so two computers that each made a new library agree on
@@ -182,6 +183,19 @@ const STEPS = [
           created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
         );
         CREATE UNIQUE INDEX prices_one_per_day ON prices (listing_id, marketplace, from_date);
+      `);
+    },
+  },
+  {
+    version: 4,
+    up(db) {
+      db.exec(`
+        CREATE TABLE dismissed_clashes (
+          id TEXT PRIMARY KEY, clash_key TEXT NOT NULL CHECK (length(clash_key) > 0),
+          reason TEXT NOT NULL CHECK (length(trim(reason)) > 0),
+          created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX dismissed_clashes_one_each ON dismissed_clashes (clash_key);
       `);
     },
   },
