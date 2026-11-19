@@ -4,10 +4,10 @@
 
 <br>
 
-[![Status](https://img.shields.io/badge/status-early%20build-f0a52b?style=for-the-badge&labelColor=06202f)](CHANGELOG.md)
-[![Tests](https://img.shields.io/github/actions/workflow/status/neogentrics/rt-author-desk/ci.yml?style=for-the-badge&label=tests&labelColor=06202f)](https://github.com/neogentrics/rt-author-desk/actions/workflows/ci.yml)
-[![Platforms](https://img.shields.io/badge/windows%20%7C%20macOS%20%7C%20linux-14a3a8?style=for-the-badge&labelColor=06202f)](#download)
-[![Offline](https://img.shields.io/badge/works-offline-2e8fe0?style=for-the-badge&labelColor=06202f)](#how-your-library-is-kept)
+[![Status](https://img.shields.io/badge/status-early%20build-f0a52b?style=for-the-badge&labelColor=0a1a33)](CHANGELOG.md)
+[![Tests](https://img.shields.io/github/actions/workflow/status/neogentrics/rt-author-desk/ci.yml?style=for-the-badge&label=tests&labelColor=0a1a33)](https://github.com/neogentrics/rt-author-desk/actions/workflows/ci.yml)
+[![Platforms](https://img.shields.io/badge/windows%20%7C%20macOS%20%7C%20linux-2a4a80?style=for-the-badge&labelColor=0a1a33)](#download)
+[![Offline](https://img.shields.io/badge/works-offline-2e8fe0?style=for-the-badge&labelColor=0a1a33)](#how-your-library-is-kept)
 
 **[Download](#download)** &nbsp;·&nbsp; **[What it does](#what-it-does)** &nbsp;·&nbsp; **[Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[What's new](CHANGELOG.md)** &nbsp;·&nbsp; **[Project page](https://recontowers.com/projects/)**
 
@@ -41,6 +41,10 @@ own books.
 </tr>
 <tr>
 <td><img src="docs/screenshots/stores.png" alt="Stores and names: the built-in stores, series, pen names and publisher names"><br><b>Stores and names.</b> The places you sell, and the names you publish and write under.</td>
+<td><img src="docs/screenshots/preferences.png" alt="Preferences: theme, Glass, colour-safe colours, font and text size"><br><b>Make it yours.</b> The suite's themes, Glass, colour-safe colours, fonts and text size.</td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/help.png" alt="The Help Center, open on the guide to clashes"><br><b>Help.</b> Short, searchable guides, and a tour of a made-up catalog.</td>
 <td></td>
 </tr>
 </table>

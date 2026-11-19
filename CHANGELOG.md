@@ -40,6 +40,9 @@ leaves alpha when the catalog is solid and doesn't wait for the money. The first
 - **The app updates itself, test builds included.** On Windows and the Linux AppImage, a newer test build downloads in the background and asks to
   restart. On a Mac and with the `.deb`, it tells you and opens the download page. Pre-releases are looked at while the app is before 1.0.0.
 
+- **An icon of its own**: a round amber badge with a ledger on it, in a different shape and colour family from the other Recon Towers
+  apps. The PNG and the Windows icon file are made from one SVG by `npm run icons`.
+
 ### Started early, for 1.1 (the money)
 These are in the test builds, and v1.0 doesn't depend on them.
 - **A reader for Amazon KDP orders and payments reports**, used in tests with made-up files.

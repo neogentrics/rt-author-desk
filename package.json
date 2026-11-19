@@ -26,7 +26,8 @@
     "dist:win": "electron-builder --win nsis portable --x64 --publish never",
     "dist:mac": "electron-builder --mac dmg --arm64 --x64 --publish never",
     "dist:linux": "electron-builder --linux AppImage deb --x64 --publish never",
-    "check:install": "node scripts/check-install.cjs"
+    "check:install": "node scripts/check-install.cjs",
+    "icons": "electron scripts/make-icons.cjs"
   },
   "build": {
     "appId": "com.recontowers.authordesk",
