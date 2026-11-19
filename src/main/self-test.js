@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { createApi } = require('./api');
+const { readWorkbook } = require('./reports/xlsx');
 const { DATABASE_FILE, Library } = require('./storage/library');
 const { WrongKeyError, openDatabase } = require('./storage/database');
 const { parseMoney, toDecimalString, totals } = require('../shared/money');
@@ -59,6 +60,15 @@ function runChecks(dir) {
     check('the catalog holds a priced listing', page.editions[0].listings[0].prices[0].amount === '12.99' && page.grid.rows[0].cells['store-kdp'][0].prices.length === 1);
     check('the clash checks run', made('clashes').some((item) => item.kind === 'release-without-final'));
     check('the nine built-in stores are there', made('names').stores.length === 9);
+    check('the money screens have their data', made('earnings').currencies.length === 0 && made('readers').filter((r) => r.ready).length === 1 && made('imports').length === 0);
+    // The spreadsheet reader's two libraries are in the build: a file that isn't a workbook is refused in words, not by a crash.
+    let reader = 'loaded';
+    try {
+      readWorkbook(Buffer.from('not a workbook'));
+    } catch (error) {
+      reader = error.name;
+    }
+    check('the report reader is in the build', reader === 'WorkbookError', reader);
   } finally {
     catalog.close();
   }

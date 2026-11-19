@@ -27,6 +27,18 @@ const TABLES = {
   ],
   prices: ['listing_id', 'marketplace', 'currency', 'amount', 'from_date', 'notes'],
   dismissed_clashes: ['clash_key', 'reason'],
+  report_files: ['store_id', 'kind', 'file_name', 'fingerprint', 'period_start', 'period_end', 'status', 'rows_in_file', 'counts',
+    'accounting', 'problems', 'mismatch_accepted', 'original'],
+  sale_lines: ['report_id', 'fingerprint', 'store_id', 'store_item', 'title', 'author', 'marketplace', 'period', 'royalty_date',
+    'royalty_type', 'transaction_type', 'units_sold', 'units_refunded', 'net_units', 'currency', 'list_price', 'offer_price',
+    'delivery_cost', 'royalty', 'estimate', 'edition_id', 'listing_id'],
+  pages_read: ['report_id', 'fingerprint', 'store_id', 'store_item', 'title', 'marketplace', 'read_date', 'period', 'pages', 'edition_id'],
+  order_counts: ['report_id', 'fingerprint', 'store_id', 'store_item', 'title', 'marketplace', 'kind', 'order_date', 'period',
+    'paid_units', 'free_units', 'edition_id'],
+  payments: ['report_id', 'fingerprint', 'store_id', 'marketplace', 'period_start', 'period_end', 'payment_number', 'detail',
+    'paid_date', 'method', 'earned_currency', 'accrued', 'tax_withheld', 'adjustments', 'net', 'source', 'fx_rate',
+    'payout_currency', 'payout', 'status'],
+  item_matches: ['store_id', 'store_item', 'edition_id'],
 };
 
 // The stores every library starts with. Their IDs are fixed, so two computers that each made a new library agree on
@@ -196,6 +208,78 @@ const STEPS = [
           created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
         );
         CREATE UNIQUE INDEX dismissed_clashes_one_each ON dismissed_clashes (clash_key);
+      `);
+    },
+  },
+  {
+    version: 5,
+    up(db) {
+      const date = (column) => `${column} TEXT CHECK (${column} IS NULL OR ${column} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]')`;
+      const month = (column) => `${column} TEXT NOT NULL CHECK (${column} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]')`;
+      // An amount that can be negative (a refund): whole units of the smallest denomination, as text.
+      const signed = (column, extra = 'NOT NULL') => `${column} TEXT ${extra} CHECK (${column} IS NULL OR (length(${column}) > 0 AND ${column} NOT GLOB '*[^0-9-]*' AND ${column} NOT GLOB '*?-*'))`;
+      const stamps = 'created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL';
+      db.exec(`
+        CREATE TABLE report_files (
+          id TEXT PRIMARY KEY, store_id TEXT NOT NULL, kind TEXT NOT NULL, file_name TEXT NOT NULL DEFAULT '',
+          fingerprint TEXT NOT NULL, ${date('period_start')}, ${date('period_end')},
+          status TEXT NOT NULL DEFAULT 'accepted' CHECK (status IN ('accepted', 'undone')),
+          rows_in_file INTEGER NOT NULL, counts TEXT NOT NULL DEFAULT '{}', accounting TEXT NOT NULL DEFAULT '[]',
+          problems TEXT NOT NULL DEFAULT '[]', mismatch_accepted INTEGER NOT NULL DEFAULT 0 CHECK (mismatch_accepted IN (0, 1)),
+          original BLOB, ${stamps}
+        );
+        CREATE UNIQUE INDEX report_files_one_live ON report_files (fingerprint) WHERE status = 'accepted';
+
+        CREATE TABLE sale_lines (
+          id TEXT PRIMARY KEY, report_id TEXT NOT NULL, fingerprint TEXT NOT NULL, store_id TEXT NOT NULL,
+          store_item TEXT NOT NULL DEFAULT '', title TEXT NOT NULL DEFAULT '', author TEXT NOT NULL DEFAULT '',
+          marketplace TEXT NOT NULL DEFAULT '', ${month('period')}, royalty_date TEXT NOT NULL DEFAULT '',
+          royalty_type TEXT NOT NULL DEFAULT '', transaction_type TEXT NOT NULL DEFAULT '',
+          units_sold INTEGER NOT NULL DEFAULT 0, units_refunded INTEGER NOT NULL DEFAULT 0, net_units INTEGER NOT NULL DEFAULT 0,
+          currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'),
+          ${signed('list_price', '')}, ${signed('offer_price', '')}, ${signed('delivery_cost', '')}, ${signed('royalty')},
+          estimate INTEGER NOT NULL DEFAULT 1 CHECK (estimate IN (0, 1)), edition_id TEXT, listing_id TEXT, ${stamps}
+        );
+        CREATE UNIQUE INDEX sale_lines_one_each ON sale_lines (fingerprint);
+        CREATE INDEX sale_lines_by_report ON sale_lines (report_id);
+        CREATE INDEX sale_lines_by_edition ON sale_lines (edition_id);
+        CREATE INDEX sale_lines_by_item ON sale_lines (store_id, store_item);
+
+        CREATE TABLE pages_read (
+          id TEXT PRIMARY KEY, report_id TEXT NOT NULL, fingerprint TEXT NOT NULL, store_id TEXT NOT NULL,
+          store_item TEXT NOT NULL DEFAULT '', title TEXT NOT NULL DEFAULT '', marketplace TEXT NOT NULL DEFAULT '',
+          read_date TEXT NOT NULL DEFAULT '', ${month('period')}, pages INTEGER NOT NULL DEFAULT 0, edition_id TEXT, ${stamps}
+        );
+        CREATE UNIQUE INDEX pages_read_one_each ON pages_read (fingerprint);
+        CREATE INDEX pages_read_by_report ON pages_read (report_id);
+
+        CREATE TABLE order_counts (
+          id TEXT PRIMARY KEY, report_id TEXT NOT NULL, fingerprint TEXT NOT NULL, store_id TEXT NOT NULL,
+          store_item TEXT NOT NULL DEFAULT '', title TEXT NOT NULL DEFAULT '', marketplace TEXT NOT NULL DEFAULT '',
+          kind TEXT NOT NULL CHECK (kind IN ('processed', 'placed')), order_date TEXT NOT NULL DEFAULT '', ${month('period')},
+          paid_units INTEGER NOT NULL DEFAULT 0, free_units INTEGER NOT NULL DEFAULT 0, edition_id TEXT, ${stamps}
+        );
+        CREATE UNIQUE INDEX order_counts_one_each ON order_counts (fingerprint);
+        CREATE INDEX order_counts_by_report ON order_counts (report_id);
+
+        CREATE TABLE payments (
+          id TEXT PRIMARY KEY, report_id TEXT NOT NULL, fingerprint TEXT NOT NULL, store_id TEXT NOT NULL,
+          marketplace TEXT NOT NULL DEFAULT '', ${date('period_start')}, ${date('period_end')},
+          payment_number TEXT NOT NULL DEFAULT '', detail TEXT NOT NULL DEFAULT '', paid_date TEXT NOT NULL DEFAULT '',
+          method TEXT NOT NULL DEFAULT '', earned_currency TEXT CHECK (earned_currency IS NULL OR earned_currency GLOB '[A-Z][A-Z][A-Z]'),
+          ${signed('accrued', '')}, ${signed('tax_withheld', '')}, ${signed('adjustments', '')}, ${signed('net', '')},
+          source TEXT NOT NULL DEFAULT '', fx_rate TEXT NOT NULL DEFAULT '',
+          payout_currency TEXT CHECK (payout_currency IS NULL OR payout_currency GLOB '[A-Z][A-Z][A-Z]'), ${signed('payout', '')},
+          status TEXT NOT NULL DEFAULT '', ${stamps}
+        );
+        CREATE UNIQUE INDEX payments_one_each ON payments (fingerprint);
+        CREATE INDEX payments_by_report ON payments (report_id);
+
+        CREATE TABLE item_matches (
+          id TEXT PRIMARY KEY, store_id TEXT NOT NULL, store_item TEXT NOT NULL CHECK (length(store_item) > 0),
+          edition_id TEXT NOT NULL, ${stamps}
+        );
+        CREATE UNIQUE INDEX item_matches_one_each ON item_matches (store_id, store_item);
       `);
     },
   },

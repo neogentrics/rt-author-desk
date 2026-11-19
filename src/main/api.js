@@ -3,16 +3,18 @@
 // back plain data or a plain-words problem. Kept apart from Electron so it's tested like any other module.
 const { Catalog, CatalogError } = require('./catalog');
 const { ClashError, dismissClash, findClashes, restoreClash } = require('./clashes');
+const { ImportError, Importer } = require('./importer');
 const { BUILT_IN_STORES } = require('./storage/schema');
 const { audiobookTracker, desk, releaseCalendar, storeGrid } = require('./views');
 const { today: todayOf } = require('../shared/dates');
 const { displayIsbn } = require('../shared/isbn');
 const { MoneyError, format, toDecimalString } = require('../shared/money');
 
-const FRIENDLY = [CatalogError, ClashError, MoneyError];
+const FRIENDLY = [CatalogError, ClashError, ImportError, MoneyError];
 
 function createApi(library, { now = () => new Date(), locale } = {}) {
   const catalog = new Catalog(library);
+  const importer = new Importer(library, { locale, now });
   const today = () => todayOf(now());
   const options = () => ({ today: today(), locale });
   const named = (table) => (id) => (id ? library.get(table, id)?.name ?? null : null);
@@ -97,6 +99,15 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
       return { id: row.id };
     },
 
+    // ---- Sales reports. Reading a file happens in the main process (importer.preview), so the window never holds one. ----
+    acceptReport: ({ previewId, knowingMismatch }) => importer.accept({ previewId, knowingMismatch }),
+    undoReport: ({ id }) => importer.undo({ id }),
+    imports: () => importer.reports(),
+    readers: () => importer.readers(),
+    needsMatching: () => importer.needsMatching(),
+    matchItem: ({ storeId, storeItem, editionId }) => importer.matchItem({ storeId, storeItem, editionId }),
+    earnings: () => importer.earnedVsPaid(),
+
     // ---- Names and stores ----
     names: () => ({
       series: library.list('series'),
@@ -126,7 +137,7 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
     }
   }
 
-  return { call, names: [...allowed] };
+  return { call, names: [...allowed], importer };
 }
 
 module.exports = { createApi };

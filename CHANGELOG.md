@@ -28,5 +28,11 @@ The first test build: the catalog. There is nothing to download yet.
 - Installers for Windows (installer and portable), macOS (Apple silicon and Intel) and Linux (AppImage and `.deb`), built
   by CI, each checked by installing it and running a self-test.
 
+- **Sales reports go into the library.** Choose a KDP orders or payments report, see what it holds, and accept it as one batch.
+  Rows are matched to editions by ASIN or ISBN, and anything left over is asked about once and remembered. Rows already imported
+  are skipped, a whole batch can be undone, and the original file is kept encrypted inside the library.
+- **Earned and paid**, side by side by currency and month. A report whose own total doesn't match its rows is shown, and stays flagged.
+- Empty slots for the Barnes & Noble Press, ACX, Google Play Books and IngramSpark readers, which wait for a real report.
+
 ### Fixed
 - Lists keep the order things were added, even when two are added in the same millisecond.

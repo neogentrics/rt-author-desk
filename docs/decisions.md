@@ -69,6 +69,18 @@ These follow the plan and fill gaps in it. Any can be changed.
 27. **Dismissing a clash needs a reason,** and it stays dismissed until the records it names change.
 28. **Nine of the fifteen clash checks are built.** The rest wait for the data they need: contributors, rate cards, spacing
     rules and pre-order deadlines.
+29. **Rows nobody owns yet are kept and counted.** A report row that matches no edition is saved with no edition, so the library's
+    totals still agree with the report. The Money screen asks about each ASIN or ISBN once and remembers the answer.
+30. **A report that doesn't match its own total can still be imported, but only on purpose.** The mismatch is shown first, the
+    person ticks that they know, and the batch carries a red flag on the Money screen until it is undone. It is never dropped silently.
+31. **The original file is kept inside the encrypted library**, not beside it, so it is as encrypted as everything else and goes
+    with a backup. Undoing a batch removes it. The batch stays in the list as "undone".
+32. **A payment counts as paid only when its status says Paid.** Anything else is shown as waiting, with the status as written. No
+    real payments report has been seen, so this needs checking against one.
+33. **A month is the unit for sales.** KDP's royalty date is a month, so earned-by-month is exact, and a payment is placed in the month
+    its sales period starts.
+34. **Corrected rows aren't replaced yet.** A row the store has changed counts as a new row, not a correction. "Replaced, with your
+    agreement" in the design isn't built.
 
 ## To check before or during the build
 

@@ -104,6 +104,9 @@ input[type="checkbox"] { width: auto; }
 dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; margin: 0 0 10px; }
 dl.facts dt { color: var(--ink-soft); }
 dl.facts dd { margin: 0; }
+.num { text-align: right; }
+ul.plain { margin: 0 0 8px; padding-left: 20px; }
+tr.total th, tr.total td { border-top: 2px solid var(--line); font-weight: 700; }
 .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, Consolas, monospace; font-size: 14px; }
 .empty { text-align: center; padding: 28px 18px; }
 .empty h2 { margin-bottom: 6px; }

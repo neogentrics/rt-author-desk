@@ -102,6 +102,7 @@ function readOrders(workbook) {
     }
     const currency = col(row.cells, 'Currency');
     sales.push({
+      sheet: 'Combined Sales',
       row: row.number,
       fingerprint: print(row.cells),
       royaltyDate: col(row.cells, 'Royalty Date'),
@@ -159,7 +160,7 @@ function readOrders(workbook) {
         account(name, row.number, 'not a sale', 'empty');
         continue;
       }
-      const base = { row: row.number, fingerprint: p(row.cells), date: get(row.cells, 'Date'), title: get(row.cells, 'Title'),
+      const base = { sheet: name, row: row.number, fingerprint: p(row.cells), date: get(row.cells, 'Date'), title: get(row.cells, 'Title'),
         storeId: get(row.cells, 'ASIN'), marketplace: get(row.cells, 'Marketplace') };
       if (kind === 'kenp') list.push({ ...base, pages: whole(get(row.cells, 'Kindle Edition Normalized Page (KENP) Read'), 'KENP') });
       else list.push({ ...base, kind, paid: whole(get(row.cells, 'Paid Units'), 'Paid Units'), free: whole(get(row.cells, 'Free Units'), 'Free Units') });
@@ -228,6 +229,7 @@ function readPayments(workbook) {
     const paid = String(row.cells[paidAt] ?? '').trim();
     const amount = (name, currency) => (!notApplicable(get(row.cells, name)) && currency ? parseMoney(get(row.cells, name), currency) : null);
     payments.push({
+      sheet: 'Payments',
       row: row.number,
       fingerprint: print(row.cells),
       periodStart: get(row.cells, 'Sales Period - Start Date'),

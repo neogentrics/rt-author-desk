@@ -11,6 +11,7 @@
     ['', 'Desk'],
     ['books', 'Books'],
     ['audiobooks', 'Audiobooks'],
+    ['money', 'Money'],
     ['calendar', 'Calendar'],
     ['clashes', 'Clashes'],
     ['isbns', 'ISBNs'],

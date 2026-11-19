@@ -61,9 +61,12 @@ tested alone, so a problem in one doesn't hold up the other.
 ISBNs with check digits, audiobook recordings, store listings with their route and prices, the store grid, nine clash checks,
 a release calendar, the all-titles audiobook tracker and the Desk. It has been used by hand on a made-up library, and its tests pass. What's left in the
 catalog: contributors and credits (and the clash that depends on them), and the clash checks that need
-rate cards, spacing rules or pre-order deadlines. In the money, the KDP orders and payments reader exists, and
-the rest of the readers, matching, royalties and the calculator are not started. Nothing under "For every app" is built yet
-except the encrypted library and the Linux installer. The open finding about the sample KDP report is in
+rate cards, spacing rules or pre-order deadlines. In the money, KDP's orders and payments reports now go into the library:
+one batch at a time, rows matched to editions by ASIN or ISBN (with one question for the rest), rows already imported
+skipped, a whole batch undoable, the original file kept encrypted, and earned shown beside paid. A report whose own Summary
+doesn't match its rows is shown, refused unless you say you know, and flagged for good. The Barnes & Noble Press, ACX, Google Play Books and IngramSpark
+readers are empty slots that say they are waiting for a real report. Royalties by month, book and store, and the calculator, are not started.
+Nothing under "For every app" is built yet except the encrypted library, the installers for all three systems, and the icon. The open finding about the sample KDP report is in
 [decisions](docs/decisions.md#to-check-before-or-during-the-build).
 
 **The catalog**
@@ -85,9 +88,9 @@ except the encrypted library and the Linux installer. The open finding about the
 
 | Feature | Size | Details |
 |---|:-:|---|
-| 🙋 Read sales reports | L | KDP, Barnes & Noble Press, ACX, Google Play Books and IngramSpark. Drop a file in, see what it holds, and accept it. [How it works](docs/design/report-imports.md). |
-| 🙋 Every row accounted for | M | Each row is imported, a duplicate, or set aside with a reason. Totals are checked against the report's own. Importing twice does no harm, and any import can be undone. |
-| Matching | M | Report rows are matched to editions by ISBN or store ID. What it can't match, it asks about once and remembers. |
+| 🙋 Read sales reports | L | KDP (built, on made-up files), and empty slots for Barnes & Noble Press, ACX, Google Play Books and IngramSpark that wait for a real report. Choose a file, see what it holds, and accept it. [How it works](docs/design/report-imports.md). |
+| 🙋 Every row accounted for | M | Built for KDP. Each row is imported, a duplicate, or set aside with a reason. Totals are checked against the report's own. Importing twice does no harm, and any import can be undone. |
+| Matching | M | Built for KDP. Report rows are matched to editions by ISBN or store ID. What it can't match, it asks about once and remembers. |
 | 🙋 Royalties | L | By month, book, edition, store, marketplace and currency. Estimates are kept apart from what was actually paid. |
 | Currencies | M | Amounts stay in the currency they were earned in. Paid amounts use the rate on the store's payment report. |
 | 🙋 Royalty and pricing calculator | L | What a price earns per copy at each store, side by side, and what to charge to earn a given amount. Rates are dated, and you can check and change them. [How it works](docs/design/royalties-and-prices.md). |

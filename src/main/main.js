@@ -2,8 +2,9 @@
 // Opens the encrypted library and the window. The catalog is in v1.0's first test build; the money follows (ROADMAP.md).
 const fs = require('node:fs');
 const path = require('node:path');
-const { app, BrowserWindow, ipcMain, Menu, session, shell } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, Menu, session, shell } = require('electron');
 const { createApi } = require('./api');
+const { ImportError } = require('./importer');
 const { Library } = require('./storage/library');
 const { selfTest } = require('./self-test');
 
@@ -52,6 +53,28 @@ if (selfTestArg) {
       if (!event.senderFrame?.url.startsWith('file://')) return { ok: false, message: 'That request did not come from the app.' };
       if (!api) return { ok: false, message: 'Your library is not open.' };
       return api.call(name, args);
+    });
+
+    // A report is chosen here, in the main process, and read here. The window only ever sees what the app says is in it,
+    // and then asks to accept it by the number it was given.
+    ipcMain.handle('desk:pick-report', async (event) => {
+      if (!event.senderFrame?.url.startsWith('file://')) return { ok: false, message: 'That request did not come from the app.' };
+      if (!api) return { ok: false, message: 'Your library is not open.' };
+      const choice = await dialog.showOpenDialog(window, {
+        title: 'Choose a sales report',
+        properties: ['openFile'],
+        filters: [{ name: 'Sales reports (.xlsx)', extensions: ['xlsx'] }],
+      });
+      if (choice.canceled || !choice.filePaths[0]) return { ok: true, value: null };
+      try {
+        const file = choice.filePaths[0];
+        if (fs.statSync(file).size > 50 * 1024 * 1024) return { ok: false, message: 'That file is too big to be a sales report.' };
+        return { ok: true, value: api.importer.preview(fs.readFileSync(file), path.basename(file)) };
+      } catch (error) {
+        if (error instanceof ImportError) return { ok: false, message: error.message };
+        console.error('[pick-report]', error);
+        return { ok: false, message: "That file couldn't be read, and nothing was imported." };
+      }
     });
 
     Menu.setApplicationMenu(Menu.buildFromTemplate([

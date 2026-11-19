@@ -50,18 +50,22 @@ const SALE = ['Royalty Date', 'Title', 'Author Name', 'ASIN/ISBN', 'Marketplace'
   'Avg. Delivery/Manufacturing cost', 'Royalty', 'Currency'];
 
 // A made-up KDP orders workbook with the real layout: two books, two currencies.
-function madeUpKdpOrders({ combinedHeader = SALE, summaryUsd = '7.06', extraEbookRow = false } = {}) {
+function madeUpKdpOrders({ combinedHeader = SALE, summaryUsd = '7.06', extraEbookRow = false, printIsbn = '9780000000002', extraSale = false, refund = false } = {}) {
   const ebook = ['2026-09', 'The Lantern Road', 'A. Writer', 'B0TESTEBK1', 'Amazon.com', '70%', 'Standard', 3, 0, 3, 4.99, 4.99, 0.06, 2.0699999999999998, 'USD'];
   const free = ['2026-09', 'The Lantern Road', 'A. Writer', 'B0TESTEBK1', 'Amazon.com', 'N/A', 'Free - Promotion', 5, 0, 5, 4.99, 0, 0, 0, 'USD'];
-  const print = ['2026-09', 'The Lantern Road', 'A. Writer', '9780000000002', 'Amazon.com', '60%', 'Standard - Paperback', 1, 0, 1, 12.99, 12.99, 2.8, 4.99, 'USD'];
+  const print = ['2026-09', 'The Lantern Road', 'A. Writer', printIsbn, 'Amazon.com', '60%', 'Standard - Paperback', 1, 0, 1, 12.99, 12.99, 2.8, 4.99, 'USD'];
   const uk = ['2026-09', 'The Lantern Road', 'A. Writer', 'B0TESTEBK1', 'Amazon.co.uk', '70%', 'Standard', 1, 0, 1, 3.99, 3.99, 0.05, 2.74, 'GBP'];
+  // An extra sale in the next month, so a second file can overlap the first. A refund is a negative royalty.
+  const later = ['2026-10', 'The Lantern Road', 'A. Writer', 'B0TESTEBK1', 'Amazon.com', '70%', 'Standard', 2, 0, 2, 4.99, 4.99, 0.04, 1.38, 'USD'];
+  const returned = ['2026-10', 'The Lantern Road', 'A. Writer', 'B0TESTEBK1', 'Amazon.com', '70%', 'Refund', 0, 1, -1, 4.99, 4.99, 0.02, -0.69, 'USD'];
+  const extra = [...(extraSale ? [later] : []), ...(refund ? [returned] : [])];
   const fmt = (row) => [row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13], row[14]];
   return makeXlsx([
     { name: 'Report Definitions', rows: [['Report', 'Definition'], ['Summary', 'Totals.']] },
     { name: 'Summary', rows: [['Date', 'Paid Units Sold (eBook)', 'Royalty (USD)', 'Royalty (GBP)'], ['2026-09-01', 4, summaryUsd, 2.74]] },
-    { name: 'Combined Sales', rows: [combinedHeader, ebook, free, print, uk] },
+    { name: 'Combined Sales', rows: [combinedHeader, ebook, free, print, uk, ...extra] },
     { name: 'eBook Royalty', rows: [['Royalty Date', 'Title', 'Author Name', 'ASIN', 'Marketplace', 'Royalty Type', 'Transaction Type', 'Units Sold', 'Units Refunded', 'Net Units Sold', 'Avg. List Price without tax', 'Avg. Offer Price without tax', 'Avg. File Size (MB)', 'Avg. Delivery Cost', 'Royalty', 'Currency'],
-      fmt(ebook), fmt(free), fmt(uk), ...(extraEbookRow ? [fmt(ebook)] : [])] },
+      fmt(ebook), fmt(free), fmt(uk), ...extra.map(fmt), ...(extraEbookRow ? [fmt(ebook)] : [])] },
     { name: 'Paperback Royalty', rows: [['Royalty Date', 'Order Date', 'Title', 'Author Name', 'ISBN', 'Marketplace', 'Royalty Type', 'Transaction Type', 'Units Sold', 'Units Refunded', 'Net Units Sold', 'Avg. List Price without tax', 'Avg. Offer Price without tax', 'Avg. Manufacturing Cost', 'Royalty', 'Currency', 'ASIN'],
       ['2026-09', '2026-09-03', 'The Lantern Road', 'A. Writer', '9780000000002', 'Amazon.com', '60%', 'Standard - Paperback', 1, 0, 1, 12.99, 12.99, 2.8, 4.99, 'USD', 'B0TESTPBK1']] },
     { name: 'Hardcover Royalty', rows: [['Royalty Date', 'Order Date', 'Title', 'Author Name', 'ISBN', 'Marketplace', 'Royalty Type', 'Transaction Type', 'Units Sold', 'Units Refunded', 'Net Units Sold', 'Avg. List Price without tax', 'Avg. Offer Price without tax', 'Avg. Manufacturing Cost', 'Royalty', 'Currency', 'ASIN']] },
