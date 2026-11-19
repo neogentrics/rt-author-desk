@@ -225,3 +225,92 @@ const quiet = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-link-'));
 e2e('run from its source, the app does not say it is installed', async () => {
   assert.deepEqual(fs.readdirSync(quiet), [], 'nothing was written');
 }, { env: { NMR_LINK_DIR: quiet } });
+
+// Backups, from Preferences: choose a folder (the app's own folder dialog is bypassed in these tests), back up, and see the file.
+const backupFolder = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-backups-'));
+e2e('Preferences: choose a folder, back up now, and find a backup there that checks out', async (app) => {
+  await app.call('saveBook', { title: 'Tidewater' });
+  await app.run('void AD.openPreferences()');
+  await app.until("document.querySelector('#backup-choose')", 'the Backups section');
+  assert.match(await app.run("document.querySelector('.backup-folder').textContent"), /No folder chosen yet/);
+  await app.click('#backup-choose');
+  await app.until(`document.querySelector('.backup-folder').textContent === ${JSON.stringify(backupFolder)}`, 'the chosen folder');
+  await app.fill('#pref-backup-every', 'day');
+  await app.until("document.querySelector('#pref-backup-every').value === 'day'");
+  await app.click('#backup-now');
+  await app.until("/Last backup:/.test(document.querySelector('dialog[id=preferences] p[role=status]').textContent)", 'the backup to finish');
+  const made = fs.readdirSync(backupFolder);
+  assert.equal(made.length, 1);
+  assert.match(made[0], /^RT Author Desk backup \d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z\.rtadbackup$/);
+  const info = require('../src/main/backups').verifyBackup(path.join(backupFolder, made[0]));
+  assert.equal(info.holds.books, 1);
+  assert.equal(info.version, require('../package.json').version);
+}, { env: { RTAD_TEST_FILES: JSON.stringify({ backupFolder }) } });
+
+// A backup made elsewhere, to restore. The test stops at the question: the restart that follows can't be watched from the page.
+const backupToRestore = (() => {
+  const { Library } = require('../src/main/storage/library');
+  const { Catalog } = require('../src/main/catalog');
+  const { createBackup } = require('../src/main/backups');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-made-'));
+  const library = new Library(path.join(dir, 'library')).open();
+  const catalog = new Catalog(library);
+  catalog.saveBook({ title: 'One' });
+  catalog.saveBook({ title: 'Two' });
+  const made = createBackup(library, path.join(dir, 'out'), { version: '1.0.0-alpha.0' });
+  library.close();
+  return made.file;
+})();
+e2e('Preferences: a backup chosen to restore says what is in it and what restoring does, and Cancel changes nothing', async (app) => {
+  const mine = await app.call('saveBook', { title: 'Mine' });
+  await app.run('void AD.openPreferences()');
+  await app.until("document.querySelector('#backup-restore')");
+  await app.click('#backup-restore');
+  await app.until("document.querySelector('dialog:last-of-type .danger')", 'the question');
+  const text = await app.run("document.querySelector('dialog:last-of-type').textContent");
+  assert.match(text, /holds 2 books, 0 editions and 0 listings/);
+  assert.match(text, /by version 1\.0\.0-alpha\.0/);
+  assert.match(text, /not deleted: it is kept in a folder beside it/);
+  await app.clickText('Cancel', 'dialog:last-of-type');
+  assert.deepEqual((await app.call('books')).map((b) => b.id), [mine.id], 'nothing was changed');
+}, { env: { RTAD_TEST_FILES: JSON.stringify({ backupFile: backupToRestore }) } });
+
+e2e('removing an edition from a book page moves it to the Trash, and bringing it back returns it with its listing and price', async (app) => {
+  const book = await app.call('saveBook', { title: 'Tidewater' });
+  const edition = await app.call('saveEdition', { book_id: book.id, format: 'ebook' });
+  const listing = await app.call('saveListing', { edition_id: edition.id, store_id: 'store-kdp', status: 'live' });
+  await app.call('setPrice', { listingId: listing.id, marketplace: 'US', currency: 'USD', amount: '4.99', fromDate: '2026-01-01' });
+  await app.goTo(`#/book/${book.id}`);
+  await app.until("[...document.querySelectorAll('main .editions button')].some((b) => b.textContent.trim() === 'Remove')", 'the edition card');
+  await app.clickText('Remove', 'main .editions');
+  await app.until("document.querySelector('dialog .danger')", 'the question');
+  const asked = await app.run("document.querySelector('dialog').textContent");
+  assert.match(asked, /1 listing and prices go with it/);
+  assert.match(asked, /waits in the Trash for 30 days/);
+  await app.clickText('Move to the Trash', 'dialog');
+  await app.until("!document.querySelector('dialog')");
+  await app.until("document.querySelector('#nav a[href=\"#/trash\"] .tally')", 'the count beside Trash');
+  assert.equal((await app.call('book', { id: book.id })).editions.length, 0);
+
+  await app.goTo('#/trash');
+  await app.until("document.querySelector('main .list li')", 'the item in the Trash');
+  assert.match(await app.run("document.querySelector('main .list li').textContent"), /Tidewater: ebook.*30 days left/);
+  await app.clickText('Bring it back', 'main');
+  await app.until("document.querySelector('main .empty')", 'the Trash to be empty again');
+  const back = (await app.call('book', { id: book.id })).editions[0];
+  assert.equal(back.id, edition.id, 'the same edition');
+  assert.equal(back.listings[0].prices[0].amount, '4.99');
+});
+
+// Export, from the menu's command: the folder is chosen by the test instead of a dialog.
+const exportParent = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-export-'));
+e2e('Export Everything puts the library, spreadsheets and reports in a new folder, and says so', async (app) => {
+  await app.call('saveBook', { title: 'Tidewater' });
+  await app.run('void AD.exportAll()');
+  await app.until("/Exported 1 book/.test(document.getElementById('toast').textContent)", 'the message');
+  const [made] = fs.readdirSync(exportParent);
+  assert.match(made, /^RT Author Desk export \d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}$/);
+  const json = JSON.parse(fs.readFileSync(path.join(exportParent, made, 'library.json'), 'utf8'));
+  assert.deepEqual(json.tables.books.map((b) => b.title), ['Tidewater']);
+  assert.ok(fs.existsSync(path.join(exportParent, made, 'csv', 'books.csv')));
+}, { env: { RTAD_TEST_FILES: JSON.stringify({ exportFolder: exportParent }) } });

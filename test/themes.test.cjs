@@ -174,3 +174,16 @@ test('every file the page loads is in the build, fonts included', () => {
   assert.match(html, /font-src 'self'/, 'the policy lets the app load its own fonts');
   assert.ok(!/style="/.test(html), 'no inline styles, which the policy would block');
 });
+
+test('the window can change how things look, but not where backups go', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-test-'));
+  const settings = new Settings(root);
+  settings.save({ backupFolder: '/chosen/in/the/dialog', backupEvery: 'day' });
+  settings.saveFromWindow({ theme: 'plum', backupFolder: '/somewhere/else', backupEvery: 'hour', backupKeep: 7, welcomed: true });
+  assert.deepEqual([settings.values.theme, settings.values.backupFolder, settings.values.backupEvery, settings.values.backupKeep, settings.values.welcomed],
+    ['plum', '/chosen/in/the/dialog', 'hour', 7, true]);
+  assert.doesNotThrow(() => settings.saveFromWindow(null));
+  assert.equal(cleanSettings({ backupEvery: 'fortnightly', backupKeep: 0, backupFolder: 5 }).backupEvery, 'off');
+  assert.equal(cleanSettings({ backupKeep: 0 }).backupKeep, DEFAULT_SETTINGS.backupKeep);
+  assert.equal(cleanSettings({ backupFolder: 'x'.repeat(2000) }).backupFolder, '');
+});

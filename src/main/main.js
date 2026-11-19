@@ -7,6 +7,8 @@ const { createApi } = require('./api');
 const { buildMenu } = require('./menu');
 const { Settings } = require('./settings');
 const { BookImportError } = require('./books-import');
+const { BackupError, BackupSchedule, restoreBackup, verifyBackup } = require('./backups');
+const { ExportError, exportAll } = require('./export');
 const { launchPathFor, sharedFolder, writeInstalled } = require('./installed');
 const { ImportError } = require('./importer');
 const { Library } = require('./storage/library');
@@ -192,7 +194,87 @@ if (selfTestArg) {
     // How it looks lives beside the library, so it's right before anything is opened.
     const settings = new Settings(app.getPath('userData'));
     ipcMain.handle('desk:settings', (event) => (fromApp(event) ? settings.values : null));
-    ipcMain.handle('desk:save-settings', (event, changes) => (fromApp(event) ? settings.save(changes) : null));
+    ipcMain.handle('desk:save-settings', (event, changes) => (fromApp(event) ? settings.saveFromWindow(changes) : null));
+
+    // Backups: to a folder chosen here, on a schedule once one is, and restored from a file chosen here. A restore swaps the library
+    // for the backup (the old one is kept to one side) and starts the app again, so nothing is half one and half the other.
+    const backups = new BackupSchedule({ getLibrary: () => real?.library, settings, stateFile: path.join(app.getPath('userData'), 'backups.json'), version: app.getVersion() });
+    const friendly = (error) => {
+      if (error instanceof BackupError) return { ok: false, message: error.message };
+      console.error('[backups]', error);
+      return { ok: false, message: 'Something went wrong with the backup, and nothing was changed.' };
+    };
+    ipcMain.handle('desk:backup-status', (event) => (fromApp(event) ? { ok: true, value: { ...backups.status(), folder: settings.values.backupFolder } } : NOT_FROM_APP));
+    ipcMain.handle('desk:choose-backup-folder', async (event) => {
+      if (!fromApp(event)) return NOT_FROM_APP;
+      const choice = await chooseFile('backupFolder', { title: 'Choose a folder for your backups', properties: ['openDirectory', 'createDirectory'] });
+      if (choice.canceled || !choice.filePaths[0]) return { ok: true, value: settings.values };
+      return { ok: true, value: settings.save({ backupFolder: choice.filePaths[0] }) };
+    });
+    ipcMain.handle('desk:backup-now', (event) => {
+      if (!fromApp(event)) return NOT_FROM_APP;
+      if (sample) return { ok: false, message: 'This is a made-up catalog. Leave it before backing up your own library.' };
+      try {
+        const done = backups.run();
+        return { ok: true, value: { file: path.basename(done.file), bytes: done.bytes } };
+      } catch (error) {
+        return friendly(error);
+      }
+    });
+    // Everything out, as JSON and CSV and the original reports, into a new folder inside one the person chooses.
+    ipcMain.handle('desk:export-all', async (event) => {
+      if (!fromApp(event)) return NOT_FROM_APP;
+      if (sample) return { ok: false, message: 'This is a made-up catalog. Leave it before exporting your own library.' };
+      if (!real) return { ok: false, message: 'Your library is not open.' };
+      const choice = await chooseFile('exportFolder', { title: 'Choose where to put the export', properties: ['openDirectory', 'createDirectory'] });
+      if (choice.canceled || !choice.filePaths[0]) return { ok: true, value: null };
+      try {
+        const done = exportAll(real.library, choice.filePaths[0], { version: app.getVersion() });
+        if (!process.env.RTAD_TEST_FILES) shell.showItemInFolder(done.folder);
+        return { ok: true, value: { folder: done.folder, counts: done.counts, reports: done.reports, files: done.files } };
+      } catch (error) {
+        if (error instanceof ExportError) return { ok: false, message: error.message };
+        console.error('[export]', error);
+        return { ok: false, message: 'The export could not be made, and nothing was changed.' };
+      }
+    });
+
+    // Choose a backup and see what is in it. Nothing is changed until the person confirms.
+    let chosenBackup = null;
+    ipcMain.handle('desk:pick-backup', async (event) => {
+      if (!fromApp(event)) return NOT_FROM_APP;
+      if (sample) return { ok: false, message: 'Leave the made-up catalog first.' };
+      const choice = await chooseFile('backupFile', { title: 'Choose a backup to restore', properties: ['openFile'], filters: [{ name: 'RT Author Desk backups', extensions: ['rtadbackup'] }], defaultPath: settings.values.backupFolder || undefined });
+      if (choice.canceled || !choice.filePaths[0]) return { ok: true, value: null };
+      try {
+        const info = verifyBackup(choice.filePaths[0]);
+        chosenBackup = choice.filePaths[0];
+        return { ok: true, value: { name: path.basename(choice.filePaths[0]), createdAt: info.createdAt, version: info.version, holds: info.holds } };
+      } catch (error) {
+        return friendly(error);
+      }
+    });
+    ipcMain.handle('desk:restore-backup', (event) => {
+      if (!fromApp(event)) return NOT_FROM_APP;
+      if (!chosenBackup) return { ok: false, message: 'Choose a backup first.' };
+      try {
+        real?.library.close();
+        real = null;
+        backups.stop();
+        restoreBackup({ userData: app.getPath('userData'), file: chosenBackup });
+        chosenBackup = null;
+        app.relaunch();
+        app.exit(0);
+        return { ok: true };
+      } catch (error) {
+        return friendly(error);
+      }
+    });
+    setTimeout(() => backups.start(), 0);
+    // Whatever has waited in the Trash for 30 days goes for good, when the app starts and once a day after that.
+    const purgeTrash = () => { try { real?.api.trash.purge(); } catch (error) { console.error('[trash]', error.message); } };
+    setTimeout(purgeTrash, 5000);
+    setInterval(purgeTrash, 24 * 60 * 60 * 1000).unref();
 
     // Updates: restarting into a downloaded one, and opening the page for a build that can't replace itself.
     ipcMain.handle('desk:install-update', (event) => (fromApp(event) ? updater.installNow() : false));

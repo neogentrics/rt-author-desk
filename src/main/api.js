@@ -6,6 +6,7 @@ const { ClashError, dismissClash, findClashes, restoreClash } = require('./clash
 const { BookImportError, BookImporter } = require('./books-import');
 const { ImportError, Importer } = require('./importer');
 const { RoyaltyError, royalties } = require('./royalties');
+const { Trash } = require('./trash');
 const { BUILT_IN_STORES } = require('./storage/schema');
 const { audiobookTracker, desk, releaseCalendar, storeGrid } = require('./views');
 const { today: todayOf } = require('../shared/dates');
@@ -18,6 +19,7 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
   const catalog = new Catalog(library);
   const importer = new Importer(library, { locale, now });
   const booksImporter = new BookImporter(library);
+  const trash = new Trash(library, { now });
   const today = () => todayOf(now());
   const options = () => ({ today: today(), locale });
   const named = (table) => (id) => (id ? library.get(table, id)?.name ?? null : null);
@@ -59,7 +61,7 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
         || Number(a.series_number ?? Infinity) - Number(b.series_number ?? Infinity) || a.title.localeCompare(b.title));
     },
     saveBook: (fields) => catalog.saveBook(fields),
-    removeBook: ({ id }) => catalog.removeBook(id) ?? true,
+    removeBook: ({ id }) => (trash.removeBook(id), true),
     book: ({ id }) => {
       const book = library.get('books', id);
       if (!book) throw new CatalogError("That book isn't in your library.");
@@ -85,7 +87,7 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
 
     // ---- Editions, ISBNs, recordings, listings and prices ----
     saveEdition: (fields) => catalog.saveEdition(fields),
-    removeEdition: ({ id }) => catalog.removeEdition(id) ?? true,
+    removeEdition: ({ id }) => (trash.removeEdition(id), true),
     addIsbn: (fields) => catalog.addIsbn(fields),
     assignIsbn: ({ isbnId, editionId }) => catalog.assignIsbn(isbnId, editionId),
     editionChoices: () => library.list('editions').map((edition) => ({ id: edition.id, label: catalog.describeEdition(edition.id) }))
@@ -96,11 +98,17 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
     })),
     saveRecording: (fields) => catalog.saveRecording(fields),
     saveListing: (fields) => catalog.saveListing(fields),
-    removeListing: ({ id }) => catalog.removeListing(id) ?? true,
+    removeListing: ({ id }) => (trash.removeListing(id), true),
     setPrice: (fields) => {
       const row = catalog.setPrice(fields);
       return { id: row.id };
     },
+
+    // ---- The Trash: what was removed waits 30 days ----
+    trash: () => trash.list(),
+    restoreTrash: ({ id }) => trash.restore(id),
+    deleteTrash: ({ id }) => (trash.deleteForever(id), true),
+    emptyTrash: () => trash.empty(),
 
     // ---- Sales reports. Reading a file happens in the main process (importer.preview), so the window never holds one. ----
     acceptReport: ({ previewId, knowingMismatch }) => importer.accept({ previewId, knowingMismatch }),
@@ -147,7 +155,7 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
     }
   }
 
-  return { call, names: [...allowed], importer, booksImporter };
+  return { call, names: [...allowed], importer, booksImporter, trash };
 }
 
 module.exports = { createApi };

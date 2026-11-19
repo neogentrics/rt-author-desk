@@ -81,6 +81,7 @@ to open the app from *System Settings → Privacy & Security*.
 | **Sales reports** (early, part of 1.1) | Choose an Amazon KDP orders or payments report and see what it holds before accepting it. Every row is accounted for, rows you already have are skipped, rows that match no book are asked about once, and a whole import can be undone. The original file is kept encrypted |
 | **Earned and paid** (early, part of 1.1) | What the reports say you earned, beside what the payment reports say you were paid, by currency and month. A report whose own total doesn't match its rows is flagged and never hidden |
 | **Royalties** (early, part of 1.1) | Added up by month, book, edition, store and marketplace, in any mix, always by currency. Estimates from the sales reports are kept apart from what the payment reports say was paid, and last month's earnings show on the Desk |
+| **Backups, Trash and export** | Backups to a folder you choose, as one closed encrypted file. Anything you remove waits 30 days in the Trash and comes back exactly. Everything can be exported as JSON and CSV, with your original reports |
 | **Bring in your books** | From a CSV file, such as a Notion export: match the columns, check what it found, and bring them in. Every row is accounted for, a title you already have is skipped, and the whole import can be undone |
 | **Help and a tour** | A Help Center (`F1`) with short, searchable guides, and a tour of a made-up catalog that never touches your own books |
 | **Updates itself** | Looks for a newer version, test builds included, on Windows and the Linux AppImage. A Mac and the `.deb` are told and sent to the download page |
@@ -88,8 +89,7 @@ to open the app from *System Settings → Privacy & Security*.
 | **Private by default** | Your library is an encrypted database on your own computer |
 | **Works offline** | No account, no server, and nothing leaves your computer |
 
-Coming next, for 1.0: backups, Trash and getting everything out as
-CSV and JSON. Then 1.1, the money: a royalty and pricing calculator, and readers for Barnes & Noble Press, ACX, Google Play
+Coming next, for 1.0: a simple first run and contributors and credits. Then 1.1, the money: a royalty and pricing calculator, and readers for Barnes & Noble Press, ACX, Google Play
 Books and IngramSpark, which are waiting for a real report to build from. After that: the other stores, costs and profit per book,
 launches, accounts and a locked vault for logins, links to the other Recon Towers apps, and moving off Notion. See the
 [roadmap](ROADMAP.md).

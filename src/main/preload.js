@@ -12,6 +12,12 @@ contextBridge.exposeInMainWorld('desk', {
   leaveSample: () => ipcRenderer.invoke('desk:leave-sample'),
   installUpdate: () => ipcRenderer.invoke('desk:install-update'),
   openReleases: () => ipcRenderer.invoke('desk:open-releases'),
+  backupStatus: () => ipcRenderer.invoke('desk:backup-status'),
+  chooseBackupFolder: () => ipcRenderer.invoke('desk:choose-backup-folder'),
+  backupNow: () => ipcRenderer.invoke('desk:backup-now'),
+  pickBackup: () => ipcRenderer.invoke('desk:pick-backup'),
+  restoreBackup: () => ipcRenderer.invoke('desk:restore-backup'),
+  exportAll: () => ipcRenderer.invoke('desk:export-all'),
   pickBooksFile: () => ipcRenderer.invoke('desk:pick-books-file'),
   pickReport: () => ipcRenderer.invoke('desk:pick-report'),
 });

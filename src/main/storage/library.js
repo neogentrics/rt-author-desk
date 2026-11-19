@@ -85,6 +85,21 @@ class Library {
     return this.get(table, id);
   }
 
+  // Puts back a record exactly as it was, with its own id and its own dates, as the Trash does. The record's marker of removal goes.
+  restoreRow(table, row) {
+    const allowed = [...Library.columns(table), 'id', 'created_at', 'updated_at', 'device_id'];
+    const names = Object.keys(row).filter((key) => allowed.includes(key));
+    if (!names.includes('id')) throw new Error('A record to put back needs its id.');
+    const at = this.now().toISOString();
+    this.db.transaction(() => {
+      this.db.prepare(`INSERT INTO ${table} (${names.join(', ')}) VALUES (${names.map((n) => `@${n}`).join(', ')})`).run(pick(row, names));
+      this.db.prepare('DELETE FROM removals WHERE record_table = ? AND record_id = ?').run(table, row.id);
+      this.db.prepare('INSERT INTO changes (record_table, record_id, op, fields, device_id, at) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(table, row.id, 'put', names.filter((n) => Library.columns(table).includes(n)).join(','), this.deviceId, at);
+    })();
+    return this.get(table, row.id);
+  }
+
   get(table, id) {
     Library.columns(table);
     return this.db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(id) ?? null;

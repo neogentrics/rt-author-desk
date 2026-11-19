@@ -189,3 +189,7 @@ dialog.import-dialog[open] { width: min(64rem, 96vw); max-height: 92vh; }
 .import-list { max-height: 18rem; overflow: auto; }
 tr.attention td { background: var(--check-bg); }
 tr.skipped td { color: var(--ink-soft); }
+
+.backup-folder { word-break: break-all; color: var(--ink-soft); }
+.tally { background: color-mix(in srgb, var(--t-on-panel) 22%, transparent); color: inherit; border-radius: 999px; padding: 0 8px; font-size: 0.867rem; font-weight: 700; }
+a[aria-current="page"] .tally { background: var(--t-panel); color: var(--t-on-panel); }

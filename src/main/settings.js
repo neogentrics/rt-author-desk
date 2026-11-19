@@ -35,4 +35,10 @@ class Settings {
   }
 }
 
+// What the window may change by itself. The backup folder is chosen in the app's own folder dialog, never by a request from the page.
+Settings.prototype.saveFromWindow = function saveFromWindow(changes) {
+  const { backupFolder, ...allowed } = changes && typeof changes === 'object' ? changes : {};
+  return this.save(allowed);
+};
+
 module.exports = { Settings };

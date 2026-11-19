@@ -55,9 +55,10 @@
   }
 
   async function removeBook(page) {
-    if (!(await AD.confirm(`Remove "${page.book.title}"? It has no editions, so nothing else is lost.`))) return;
+    if (!(await AD.confirm(`Remove "${page.book.title}"? It has no editions, so nothing else goes with it. It waits in the Trash for 30 days, and you can bring it back.`, 'Move to the Trash'))) return;
     try {
       await AD.call('removeBook', { id: page.book.id });
+      AD.toast('Moved to the Trash. You can bring it back for 30 days.');
       location.hash = '#/books';
     } catch (problem) {
       AD.toast(problem.message);
@@ -89,12 +90,11 @@
 
   async function removeEdition(page, edition) {
     const listings = edition.listings.length;
-    const message = `Remove this ${edition.format}?${listings ? ` Its ${AD.plural(listings, 'listing')} and prices will go too.` : ''}${edition.isbns.length ? ' Its ISBNs stay in your register.' : ''}`;
-    if (!(await AD.confirm(message))) return;
-    await AD.act(async () => {
-      for (const listing of edition.listings) await AD.call('removeListing', { id: listing.id });
-      await AD.call('removeEdition', { id: edition.id });
-    }, 'Removed.');
+    const recordings = edition.recordings.length;
+    const goes = [listings && `its ${AD.plural(listings, 'listing')} and prices`, recordings && `its ${AD.plural(recordings, 'recording')}`].filter(Boolean);
+    const message = `Remove this ${edition.format}?${goes.length ? ` ${goes.join(' and ')[0].toUpperCase()}${goes.join(' and ').slice(1)} go with it.` : ''}${edition.isbns.length ? ' Its ISBNs go back in your register.' : ''} It waits in the Trash for 30 days, and you can bring it all back.`;
+    if (!(await AD.confirm(message, 'Move to the Trash'))) return;
+    await AD.act(() => AD.call('removeEdition', { id: edition.id }), 'Moved to the Trash. You can bring it back for 30 days.');
   }
 
   async function isbnForm(edition) {
@@ -202,7 +202,7 @@
           h('button', { onclick: async () => { if (await priceDialog(listing, null)) reopen(); } }, 'Set a price'),
           h('button', { onclick: async () => { if (await listingForm(edition, store, listing, page.stores)) reopen(); } }, 'Edit the listing'),
           h('button', { class: 'danger', onclick: async () => {
-            if (!(await AD.confirm('Remove this listing and its prices?'))) return;
+            if (!(await AD.confirm('Remove this listing and its prices? It waits in the Trash for 30 days, and you can bring it back.', 'Move to the Trash'))) return;
             try { await AD.call('removeListing', { id: listing.id }); reopen(); } catch (problem) { AD.toast(problem.message); }
           } }, 'Remove'))));
     }

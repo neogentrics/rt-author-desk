@@ -112,15 +112,21 @@ const UI_FONTS = {
   trebuchet: { label: 'Trebuchet MS', stack: "'Trebuchet MS', 'Fira Sans', sans-serif" },
 };
 
+const BACKUP_EVERY = { off: { label: 'Off' }, hour: { label: 'Every hour' }, day: { label: 'Every day' }, week: { label: 'Every week' } };
+
 const DEFAULT_SETTINGS = {
   theme: 'system',
   glass: false,
   colorSafe: false,
   uiFont: 'inter',
   textSize: 15,
+  backupFolder: '',
+  backupEvery: 'off',
+  backupKeep: 10,
+  welcomed: false,
 };
 
-const LIMITS = { textSize: [13, 22] };
+const LIMITS = { textSize: [13, 22], backupKeep: [1, 100] };
 
 // Anything unknown falls back to the default, so a damaged settings file can't stop the app opening.
 function cleanSettings(input) {
@@ -137,10 +143,14 @@ function cleanSettings(input) {
     colorSafe: source.colorSafe === true,
     uiFont: known(source.uiFont, UI_FONTS, 'uiFont'),
     textSize: within('textSize'),
+    backupFolder: typeof source.backupFolder === 'string' && source.backupFolder.length <= 1024 ? source.backupFolder : '',
+    backupEvery: known(source.backupEvery, BACKUP_EVERY, 'backupEvery'),
+    backupKeep: within('backupKeep'),
+    welcomed: source.welcomed === true,
   };
 }
 
-const themesApi = { DEFAULT_SETTINGS, LIMITS, THEMES, UI_FONTS, cleanSettings };
+const themesApi = { BACKUP_EVERY, DEFAULT_SETTINGS, LIMITS, THEMES, UI_FONTS, cleanSettings };
 // The main process loads this as a module, and the window loads it as a plain script.
 if (typeof module !== 'undefined' && module.exports) module.exports = themesApi;
 else window.ADThemes = themesApi;

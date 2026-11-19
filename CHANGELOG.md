@@ -58,6 +58,14 @@ leaves alpha when the catalog is solid and doesn't wait for the money. The first
   id, name, **version** and the path to start it. It is written each time the app starts, so an update changes the version, and the Windows installer writes
   it too and takes it away on uninstall.
 
+- **Backups.** In Preferences, choose a folder and how often. A backup is one closed file with your whole library in it, still encrypted, so it is
+  safe in OneDrive or Dropbox. One is only made when something has changed, the oldest go past the number you keep, and **Back up now** makes one
+  whenever you like. **Restore from a backup…** checks the file first, says what is in it, and keeps your current library to one side instead of deleting it.
+- **The Trash.** Removing a book, an edition or a listing moves it to the Trash for 30 days, and bringing it back returns it exactly as it was (the same
+  records, ids and dates), with its prices, recordings and ISBNs. This also fixes recordings being left behind when an edition was removed.
+- **Export everything** (`Ctrl+E`): your whole library as one JSON file, a spreadsheet (CSV) for each kind of thing with names filled in beside the ids and amounts
+  as decimals, and each original report as it was imported, in a new folder. The library's key is never written.
+
 ### Started early, for 1.1 (the money)
 These are in the test builds, and v1.0 doesn't depend on them.
 - **A reader for Amazon KDP orders and payments reports**, used in tests with made-up files.

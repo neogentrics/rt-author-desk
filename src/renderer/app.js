@@ -17,6 +17,7 @@
     ['clashes', 'Clashes'],
     ['isbns', 'ISBNs'],
     ['names', 'Stores and names'],
+    ['trash', 'Trash'],
   ];
 
   function where() {
@@ -24,11 +25,12 @@
     return { name: name === 'book' || LINKS.some(([key]) => key === name) ? name : '', id: id ? decodeURIComponent(id) : null };
   }
 
-  function drawNav(current, problems) {
+  function drawNav(current, problems, binned = 0) {
     const section = current === 'book' ? 'books' : current;
     nav.replaceChildren(...LINKS.map(([key, text]) => h('li', null,
       h('a', { href: `#/${key}`, 'aria-current': key === section ? 'page' : null },
-        text, key === 'clashes' && problems ? h('span', { class: 'count', 'aria-label': `${problems} to fix` }, problems) : null))));
+        text, key === 'clashes' && problems ? h('span', { class: 'count', 'aria-label': `${problems} to fix` }, problems) : null,
+        key === 'trash' && binned ? h('span', { class: 'tally', 'aria-label': `${binned} in the Trash` }, binned) : null))));
   }
 
   AD.refresh = async function refresh() {
@@ -37,9 +39,9 @@
     const moved = location.hash !== lastHash;
     lastHash = location.hash;
     try {
-      const [content, clashes] = await Promise.all([AD.routes[name](id), AD.call('clashes')]);
+      const [content, clashes, binned] = await Promise.all([AD.routes[name](id), AD.call('clashes'), AD.call('trash')]);
       if (mine !== drawing) return; // a newer draw has started, so this one is out of date
-      drawNav(name, clashes.filter((c) => c.severity === 'problem').length);
+      drawNav(name, clashes.filter((c) => c.severity === 'problem').length, binned.length);
       view.replaceChildren(...[].concat(content).filter(Boolean)); // a screen may leave a section out as null
       if (moved) {
         view.scrollTo(0, 0);
@@ -64,6 +66,7 @@
     else if (name === 'update-status') { AD.state.update = where; AD.drawBars(); }
     else if (name === 'new-book') AD.addBook();
     else if (name === 'import-books') AD.importBooks();
+    else if (name === 'export-all') AD.exportAll();
     else if (name === 'go') location.hash = where === 'desk' ? '#/' : `#/${where}`;
   });
 

@@ -40,6 +40,7 @@ const TABLES = {
     'payout_currency', 'payout', 'status'],
   item_matches: ['store_id', 'store_item', 'edition_id'],
   catalog_imports: ['kind', 'file_name', 'status', 'counts', 'created'],
+  trash_items: ['kind', 'label', 'payload'],
 };
 
 // The stores every library starts with. Their IDs are fixed, so two computers that each made a new library agree on
@@ -294,6 +295,19 @@ const STEPS = [
           status TEXT NOT NULL DEFAULT 'accepted' CHECK (status IN ('accepted', 'undone')),
           counts TEXT NOT NULL DEFAULT '{}', created TEXT NOT NULL DEFAULT '{}',
           created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
+        );
+      `);
+    },
+  },
+  {
+    version: 7,
+    up(db) {
+      // What was removed from the catalog waits here for 30 days: a whole copy of the records, so putting them back is exact.
+      // The time it was removed is the row's own created_at.
+      db.exec(`
+        CREATE TABLE trash_items (
+          id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('book', 'edition', 'listing')), label TEXT NOT NULL DEFAULT '',
+          payload TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
         );
       `);
     },

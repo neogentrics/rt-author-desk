@@ -65,8 +65,8 @@ prices, the store grid, nine clash checks, a release calendar, the all-titles au
 was missing, and that comes first. Built since: Preferences with the suite's themes, Glass, colour-safe colours, fonts and text size, and a Help menu and Help Center
 with a tour of a made-up catalog, About, and updates that include test builds, and an icon of its own.
 Series, pen names and publisher names can be made right where a book asks for one, and empty screens say what to do.
-Books can be brought in from a CSV file. Still to come, in this order:
-backups, Trash, getting everything out as CSV and JSON, a simple first run, and contributors and credits with the check that
+Books can be brought in from a CSV file, and the catalog now has backups, a Trash and a way to get everything out as CSV and JSON. Still to come, in this order:
+a simple first run, and contributors and credits with the check that
 depends on them. Nine of the fifteen clash checks are built. The contributor check
 comes with contributors, the two price checks and the locked-period check with the calculator in v1.1, and the pre-order and
 spacing checks with launch plans in v1.5.
