@@ -33,9 +33,11 @@ const GUIDES = [
       { type: 'p', text: 'A **book** is the work itself: its title, whether it\'s in a series, the pen name it\'s under, and where it stands (planned, in progress, live, pulled or being reworked). Formats are **editions** of a book.' },
       { type: 'h', text: 'Series, pen names and publisher names' },
       { type: 'ul', items: [
-        'Make them on [Stores and names](go:names): **Add a series**, **Add a pen name**, **Add a publisher name**. Then choose them when you add or change a book.',
+        'The **Series**, **Pen name** and (on an edition) **Publisher name** boxes each end with a **New…** choice. Pick it, type the name, and it is made when you save, so nothing has to be set up first.',
+        'A new series made beside a new pen name is filed under that pen name.',
+        'They are all kept on [Stores and names](go:names), where you can see and rename them.',
         'A publisher name can have dates, because a name can change and old editions still show the old one.',
-        'A book that is not in a series can be given one at any time: open the book, choose **Edit**, and pick the series and its number.',
+        'A book that is not in a series can be given one at any time: open the book, choose **Edit**, and pick or make the series and its number.',
       ] },
       { type: 'note', text: 'Two spellings of one series name, such as "The Tide Books" and "Tide Books", stop a store grouping them. Clashes points that out.' },
     ],

@@ -131,6 +131,7 @@ tr.total th, tr.total td { border-top: 2px solid var(--line); font-weight: 700; 
 .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, Consolas, monospace; font-size: 0.933rem; }
 .empty { text-align: center; padding: 28px 18px; }
 .empty h2 { margin-bottom: 6px; }
+.empty .row { justify-content: center; margin-top: 12px; }
 
 /* Glass: the panel, the page and the cards let the colours behind them show through, with a blur so text stays easy to read. */
 :root[data-surface="glass"] .side { background: linear-gradient(color-mix(in srgb, var(--t-panel) 72%, transparent), color-mix(in srgb, var(--t-panel-end) 72%, transparent)); backdrop-filter: blur(16px) saturate(1.3); }

@@ -26,10 +26,19 @@
   };
 
   AD.routes.calendar = async () => {
-    const events = await AD.call('calendar');
+    const [events, books, editions] = await Promise.all([AD.call('calendar'), AD.call('books'), AD.call('editionChoices')]);
     const out = [h('h1', null, 'Release calendar'), h('p', { class: 'lead' }, 'Every dated release, soonest first. Set dates on an edition, or on a store listing.')];
     if (!events.length) {
-      out.push(h('section', { class: 'card empty' }, h('h2', null, 'Nothing is dated'), h('p', null, 'Open a book and give an edition a release date.')));
+      if (!books.length) {
+        out.push(AD.emptyCard('Nothing is dated yet', 'The calendar shows every release date. There are no books yet, so start by adding one, then date one of its editions.',
+          h('button', { class: 'primary', onclick: AD.addBook }, 'Add a book')));
+      } else if (!editions.length) {
+        out.push(AD.emptyCard('Nothing is dated yet', 'A release date belongs to an edition: an ebook, a paperback or an audiobook. Open a book and add one, then date it.',
+          h('a', { class: 'button primary', href: '#/books' }, 'Go to your books')));
+      } else {
+        out.push(AD.emptyCard('Nothing is dated yet', 'The calendar shows every release date, soonest first. Pick an edition and the day it comes out.',
+          h('button', { class: 'primary', onclick: AD.dateAnEdition }, 'Date a release')));
+      }
       return out;
     }
     const months = new Map();
@@ -85,7 +94,8 @@
       h('p', { class: 'lead' }, 'Every ISBN you own or were given, and where it is used. Each number can be in the register only once.'),
     ];
     if (!isbns.length) {
-      out.push(h('section', { class: 'card empty' }, h('h2', null, 'No ISBNs yet'), h('p', null, 'Add the numbers you own, or add one from an edition on its book page.')));
+      out.push(AD.emptyCard('No ISBNs yet', 'This is the register of every number you own or were given. Add the ones you have, even before a book uses them.',
+        h('button', { class: 'primary', onclick: addIsbn }, 'Add an ISBN')));
       return out;
     }
     const spare = isbns.filter((i) => !i.edition).length;

@@ -24,6 +24,7 @@ By submitting an issue, suggestion or other feedback you agree to the terms in S
 npm ci
 npm start       # launch the app
 npm test        # must pass before you open a PR
+npm run test:e2e  # drives the real app through its window; needs a screen (on a server: xvfb-run -a npm run test:e2e)
 ```
 
 - Money is always a whole number of the currency's smallest unit, with its currency code beside it. Never a floating-point number.

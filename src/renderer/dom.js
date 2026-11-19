@@ -49,17 +49,31 @@
   // A form in a dialog. `fields` are { name, label, type, options, help, required }. The form sends only what was
   // filled in when making something new, and only what changed when editing, so the change log stays meaningful and the
   // database's own defaults apply to anything left blank.
+  // A select can offer to make something new right where it is chosen: `create: { label, noun, placeholder, make(name, all) }`.
+  // Choosing it opens a box for the name. The new record is made when the form is saved, and if saving then fails, the same name
+  // is reused on the next try, so nothing is made twice.
+  const NEW = '__new__';
   AD.form = ({ title, fields, values = {}, submit = 'Save', onSubmit, hint }) => new Promise((resolve) => {
     const error = h('p', { class: 'error', role: 'alert', hidden: true });
+    const newBoxes = {};
+    const made = new Map();
     const controls = fields.map((field) => {
       const id = `f-${field.name}`;
       const current = values[field.name] ?? (field.type === 'checkbox' ? false : '');
       let control;
       if (field.type === 'select') {
-        control = h('select', { id, name: field.name }, [
+        control = h('select', { id, name: field.name, onchange: field.create ? () => {
+          const box = newBoxes[field.name];
+          box.hidden = control.value !== NEW;
+          if (!box.hidden) box.focus();
+        } : null }, [
           h('option', { value: '' }, field.blank ?? '(none)'),
           ...field.options.map((o) => h('option', { value: o.value, selected: String(o.value) === String(current) }, o.label)),
+          field.create ? h('option', { value: NEW }, field.create.label) : null,
         ]);
+        if (field.create) {
+          newBoxes[field.name] = h('input', { id: `${id}-new`, type: 'text', hidden: true, placeholder: field.create.placeholder ?? 'Name', 'aria-label': field.create.label, autocomplete: 'off' });
+        }
       } else if (field.type === 'textarea') {
         control = h('textarea', { id, name: field.name, rows: 3 }, String(current));
       } else if (field.type === 'checkbox') {
@@ -69,7 +83,7 @@
       }
       const label = h('label', { for: id }, field.label, field.required ? h('span', { class: 'req', 'aria-hidden': 'true' }, ' *') : null);
       return h('div', { class: field.type === 'checkbox' ? 'field check' : 'field' },
-        field.type === 'checkbox' ? [control, label] : [label, control], field.help ? h('p', { class: 'help' }, field.help) : null);
+        field.type === 'checkbox' ? [control, label] : [label, control], newBoxes[field.name] ?? null, field.help ? h('p', { class: 'help' }, field.help) : null);
     });
     const save = h('button', { type: 'submit', class: 'primary' }, submit);
     const cancel = h('button', { type: 'button', onclick: () => dialog.close() }, 'Cancel');
@@ -102,18 +116,39 @@
       const all = read();
       const editing = values.id != null;
       const payload = editing ? { id: values.id } : {};
-      for (const field of fields) {
-        const now = all[field.name];
-        if (editing) {
-          const text = field.type === 'text' || field.type === 'textarea' || field.type === undefined;
-          const before = field.type === 'checkbox' ? Boolean(values[field.name]) : (values[field.name] ?? (text ? '' : null));
-          if (now !== before) payload[field.name] = now;
-        } else if (now !== '' && now !== null && now !== false) {
-          payload[field.name] = now;
+      const pending = fields.filter((f) => f.create && all[f.name] === NEW).sort((a, b) => (a.create.priority ?? 0) - (b.create.priority ?? 0));
+      for (const field of pending) {
+        if (!newBoxes[field.name].value.trim()) {
+          error.textContent = `Give the new ${field.create.noun ?? 'one'} a name.`;
+          error.hidden = false;
+          newBoxes[field.name].focus();
+          return;
         }
       }
+      const fill = () => {
+        for (const field of fields) {
+          const now = all[field.name];
+          if (editing) {
+            const text = field.type === 'text' || field.type === 'textarea' || field.type === undefined;
+            const before = field.type === 'checkbox' ? Boolean(values[field.name]) : (values[field.name] ?? (text ? '' : null));
+            if (now !== before) payload[field.name] = now;
+          } else if (now !== '' && now !== null && now !== false) {
+            payload[field.name] = now;
+          }
+        }
+      };
       save.disabled = true;
       try {
+        for (const field of pending) {
+          const name = newBoxes[field.name].value.trim();
+          let record = made.get(field.name);
+          if (!record || record.name !== name) {
+            record = { name, id: await field.create.make(name, all) };
+            made.set(field.name, record);
+          }
+          all[field.name] = record.id;
+        }
+        fill();
         await onSubmit(payload);
         dialog.close('saved');
       } catch (problem) {

@@ -12,7 +12,8 @@
     const books = await AD.call('books');
     const out = [h('div', { class: 'row' }, h('h1', null, 'Books'), h('button', { class: 'primary', onclick: AD.addBook }, 'Add a book'))];
     if (!books.length) {
-      out.push(h('section', { class: 'card empty' }, h('h2', null, 'No books yet'), h('p', { class: 'lead' }, 'Add a book to start your catalog.')));
+      out.push(AD.emptyCard('No books yet', 'Add a book to start your catalog. A title is enough, and the rest can come later.',
+        h('button', { class: 'primary', onclick: AD.addBook }, 'Add a book'), AD.tourButton()));
       return out;
     }
     out.push(h('div', { class: 'tablewrap' }, h('table', null,
@@ -39,9 +40,9 @@
       fields: [
         { name: 'title', label: 'Title', required: true },
         { name: 'subtitle', label: 'Subtitle' },
-        { name: 'series_id', label: 'Series', type: 'select', options: AD.options(names.series, (s) => s.name), blank: '(not in a series)' },
+        { name: 'series_id', label: 'Series', type: 'select', options: AD.options(names.series, (s) => s.name), blank: '(not in a series)', create: AD.creatable.series },
         { name: 'series_number', label: 'Number in the series' },
-        { name: 'pen_name_id', label: 'Pen name', type: 'select', options: AD.options(names.penNames, (p) => p.name), blank: '(none)' },
+        { name: 'pen_name_id', label: 'Pen name', type: 'select', options: AD.options(names.penNames, (p) => p.name), blank: '(none)', create: AD.creatable.penName },
         { name: 'business_status', label: 'Where it is', type: 'select', options: choices(STATUSES), blank: '(choose)' },
         { name: 'notes', label: 'Notes', type: 'textarea' },
       ],
@@ -75,7 +76,7 @@
         { name: 'paper', label: 'Paper' },
         { name: 'cover_status', label: 'Cover', type: 'select', options: choices(PROGRESS), blank: '(choose)' },
         { name: 'files_status', label: 'Final files', type: 'select', options: choices(PROGRESS), blank: '(choose)' },
-        { name: 'publisher_name_id', label: 'Publisher name', type: 'select', options: AD.options(names.publishers, (p) => p.name), blank: '(none)' },
+        { name: 'publisher_name_id', label: 'Publisher name', type: 'select', options: AD.options(names.publishers, (p) => p.name), blank: '(none)', create: AD.creatable.publisher },
         { name: 'notes', label: 'Notes', type: 'textarea' },
       ],
       onSubmit: (fields) => AD.call('saveEdition', edition ? fields : { ...fields, book_id: page.book.id }),

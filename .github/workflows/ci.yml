@@ -30,6 +30,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # The tests that drive the real app through its window need a screen, so on Linux they run under a virtual one.
+      - name: Drive the real app (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:e2e
+        env:
+          RTAD_E2E: '1'
 
   install:
     name: Install and self-test (${{ matrix.os }})

@@ -43,6 +43,11 @@ leaves alpha when the catalog is solid and doesn't wait for the money. The first
 - **An icon of its own**: a round amber badge with a ledger on it, in a different shape and colour family from the other Recon Towers
   apps. The PNG and the Windows icon file are made from one SVG by `npm run icons`.
 
+- **Make a series, a pen name or a publisher name right where you pick one.** The Series, Pen name and Publisher name boxes end with a
+  **New…** choice. A new series made beside a new pen name is filed under it, and a save that fails never makes the same name twice.
+- **Empty screens say what to do and have the button for it.** The Desk, Books, Calendar, Audiobooks and ISBNs each explain what they
+  are for, and offer to add a book, date a release, add an audiobook or take a tour of a made-up catalog.
+
 ### Started early, for 1.1 (the money)
 These are in the test builds, and v1.0 doesn't depend on them.
 - **A reader for Amazon KDP orders and payments reports**, used in tests with made-up files.
