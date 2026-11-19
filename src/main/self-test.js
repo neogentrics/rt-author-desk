@@ -7,6 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { createApi } = require('./api');
 const { readWorkbook } = require('./reports/xlsx');
+const { Settings } = require('./settings');
 const { DATABASE_FILE, Library } = require('./storage/library');
 const { WrongKeyError, openDatabase } = require('./storage/database');
 const { parseMoney, toDecimalString, totals } = require('../shared/money');
@@ -76,6 +77,12 @@ function runChecks(dir) {
   const html = fs.readFileSync(path.join(__dirname, '..', 'renderer', 'index.html'), 'utf8');
   const files = [...html.matchAll(/(?:src|href)="([^"#]+\.(?:js|css))"/g)].map((match) => match[1]);
   check('every page file is in the build', files.length >= 6 && files.every((file) => fs.existsSync(path.join(__dirname, '..', 'renderer', file))), files.join(' '));
+
+  const fonts = [...fs.readFileSync(path.join(__dirname, '..', 'renderer', 'fonts.css'), 'utf8').matchAll(/url\('([^']+)'\)/g)].map((match) => match[1]);
+  check('the fonts are in the build', fonts.length === 6 && fonts.every((file) => fs.existsSync(path.join(__dirname, '..', 'renderer', file))), fonts.join(' '));
+  const looks = new Settings(dir);
+  looks.save({ theme: 'dusk', textSize: 17 });
+  check('the look is remembered', new Settings(dir).values.theme === 'dusk' && new Settings(dir).values.textSize === 17);
 
   return { checks, versions: { sqlite: info.sqlite, cipher: info.cipher, step: info.step } };
 }

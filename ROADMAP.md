@@ -62,10 +62,11 @@ for the money. v1.0 is the catalog, with everything needed to run it on a comput
 **Where it stands (18 November 2026).** The first test build (alpha.0) has been installed and used on a real computer. The
 catalog works: books and series, editions, ISBNs with check digits, audiobook recordings, store listings with their route and
 prices, the store grid, nine clash checks, a release calendar, the all-titles audiobook tracker and the Desk. Using it showed what
-was missing, and that comes first: Preferences with themes and fonts, a Help menu and Help Center, an icon of its own, a way to
-make a series, pen name or publisher name right where a book asks for one, screens that say what to do when they're empty, and
-bringing in books from a file. After that: backups, Trash, getting everything out as CSV and JSON, a simple first run, and
-contributors and credits with the check that depends on them. Nine of the fifteen clash checks are built. The contributor check
+was missing, and that comes first. Built since: Preferences with the suite's themes, Glass, colour-safe colours, fonts and text size.
+Still to come, in this order: a Help menu and Help Center, an icon of its own, a way to make a series, pen name or publisher name
+right where a book asks for one, screens that say what to do when they're empty, and bringing in books from a file. After that:
+backups, Trash, getting everything out as CSV and JSON, a simple first run, and contributors and credits with the check that
+depends on them. Nine of the fifteen clash checks are built. The contributor check
 comes with contributors, the two price checks and the locked-period check with the calculator in v1.1, and the pre-order and
 spacing checks with launch plans in v1.5.
 

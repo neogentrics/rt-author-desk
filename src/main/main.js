@@ -4,6 +4,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { app, BrowserWindow, dialog, ipcMain, Menu, session, shell } = require('electron');
 const { createApi } = require('./api');
+const { buildMenu } = require('./menu');
+const { Settings } = require('./settings');
 const { ImportError } = require('./importer');
 const { Library } = require('./storage/library');
 const { selfTest } = require('./self-test');
@@ -77,13 +79,14 @@ if (selfTestArg) {
       }
     });
 
-    Menu.setApplicationMenu(Menu.buildFromTemplate([
-      ...(process.platform === 'darwin' ? [{ role: 'appMenu' }] : []),
-      { role: 'fileMenu' },
-      { role: 'editMenu' },
-      { role: 'viewMenu' },
-      { role: 'windowMenu' },
-    ]));
+    // How it looks lives beside the library, so it's right before anything is opened.
+    const settings = new Settings(app.getPath('userData'));
+    ipcMain.handle('desk:settings', (event) => (event.senderFrame?.url.startsWith('file://') ? settings.values : null));
+    ipcMain.handle('desk:save-settings', (event, changes) => (event.senderFrame?.url.startsWith('file://') ? settings.save(changes) : null));
+
+    // A menu item names what the window should do, and the window does it.
+    const send = (name, arg) => window?.webContents.send('desk:menu', name, arg);
+    Menu.setApplicationMenu(buildMenu({ send }));
 
     window = new BrowserWindow({
       width: 1200,

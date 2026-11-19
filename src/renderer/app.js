@@ -56,7 +56,18 @@
 
   window.addEventListener('hashchange', AD.refresh);
 
+  // The menu bar names what to do, and this does it.
+  window.desk.onMenu((name, where) => {
+    if (name === 'preferences') AD.openPreferences();
+    else if (name === 'new-book') AD.addBook();
+    else if (name === 'go') location.hash = where === 'desk' ? '#/' : `#/${where}`;
+  });
+
   (async () => {
+    // How it looks comes first, so nothing is drawn in the wrong colours.
+    try {
+      AD.applyLook(await window.desk.settings());
+    } catch { /* the stylesheet's own colours are fine */ }
     try {
       const { library } = await window.desk.info();
       if (!library.ok) {

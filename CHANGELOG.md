@@ -28,6 +28,11 @@ leaves alpha when the catalog is solid and doesn't wait for the money. The first
 - Installers for Windows (installer and portable), macOS (Apple silicon and Intel) and Linux (AppImage and `.deb`), built
   by CI, each checked by installing it and running a self-test.
 
+- **Preferences** (`Ctrl+,`, or `Cmd+,` on a Mac): the suite's fifteen themes, Glass, colour-safe colours (blue, orange and purple instead of
+  green, amber and red), a choice of fonts with Inter and Atkinson Hyperlegible carried with the app, and text size. Everything
+  changes as it's picked and is remembered. Every theme's text is checked for contrast, on the page, the cards and the panel.
+- A real menu bar: File, Edit, View and Window, with no Reload to throw away what is half typed.
+
 ### Started early, for 1.1 (the money)
 These are in the test builds, and v1.0 doesn't depend on them.
 - **A reader for Amazon KDP orders and payments reports**, used in tests with made-up files.
