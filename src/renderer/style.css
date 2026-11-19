@@ -38,7 +38,7 @@ body { margin: 0; background: var(--t-desk) var(--t-desk-image) fixed; color: va
 .skip:focus { left: 8px; top: 8px; }
 
 .shell { display: grid; grid-template-columns: 14rem minmax(0, 1fr); min-height: 100vh; }
-.side { background: linear-gradient(var(--t-panel), var(--t-panel-end)); color: var(--t-on-panel); border-right: 1px solid var(--t-edge); padding: 20px 12px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.side { background: linear-gradient(var(--t-panel), var(--t-panel-end)); color: var(--t-on-panel); border-right: 1px solid var(--t-edge); padding: 20px 12px; position: sticky; top: var(--bars-h, 0px); height: calc(100vh - var(--bars-h, 0px)); overflow-y: auto; }
 .brand { margin: 0 8px 16px; font-weight: 700; font-size: 1.067rem; color: var(--t-on-panel); }
 .side ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .side a { display: flex; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 8px; color: var(--t-on-panel); text-decoration: none; }
@@ -152,3 +152,30 @@ tr.total th, tr.total td { border-top: 2px solid var(--line); font-weight: 700; 
 .prefs-range { display: flex; gap: 12px; align-items: center; }
 .prefs-range input { flex: 1; padding: 0; }
 .prefs-range output { min-width: 4.5em; text-align: right; }
+
+/* The bars above the page: a made-up catalog, or an update. */
+.bars { position: sticky; top: 0; z-index: 6; }
+.bar { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 8px 16px; background: var(--t-accent); color: var(--t-on-accent); }
+.bar button { background: var(--t-on-accent); color: var(--t-accent); border-color: var(--t-on-accent); font-weight: 600; }
+
+/* The tour card floats over the page, so the page stays visible while it is explained. */
+.tour { position: fixed; right: 20px; bottom: 20px; width: min(22rem, calc(100vw - 40px)); z-index: 8; background: var(--surface); color: var(--ink); border: 2px solid var(--accent); border-radius: 12px; padding: 14px 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); }
+.tour h2 { margin: 0 0 6px; }
+.tour p { margin: 0 0 6px; }
+.tour .actions { margin-top: 10px; flex-wrap: wrap; }
+
+/* The Help Center */
+dialog.help-dialog[open] { width: min(60rem, 96vw); height: min(40rem, 88vh); display: flex; flex-direction: column; }
+.help-body { display: grid; grid-template-columns: 15rem minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 12px 18px; flex: 1; min-height: 0; }
+.help-body input[type="search"] { grid-column: 1 / -1; }
+.help-nav { display: grid; align-content: start; gap: 2px; overflow-y: auto; }
+.help-nav button { text-align: left; border: 0; background: none; border-radius: 8px; padding: 6px 10px; }
+.help-nav button:hover { background: var(--bg); }
+.help-nav button.on { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.help-page { overflow-y: auto; padding-right: 8px; min-height: 0; }
+.help-page h2 { margin-top: 0; }
+.help-page h3 { margin-top: 16px; }
+.help-page ol.plain, .help-page ul.plain { padding-left: 22px; }
+.help-page li { margin-bottom: 4px; }
+.help-note { margin: 12px 0; }
+@media (max-width: 760px) { .help-body { grid-template-columns: 1fr; } .help-nav { max-height: 9rem; } }

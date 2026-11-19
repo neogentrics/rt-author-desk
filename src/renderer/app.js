@@ -59,6 +59,9 @@
   // The menu bar names what to do, and this does it.
   window.desk.onMenu((name, where) => {
     if (name === 'preferences') AD.openPreferences();
+    else if (name === 'help') AD.openHelp(where);
+    else if (name === 'tour') AD.startTour();
+    else if (name === 'update-status') { AD.state.update = where; AD.drawBars(); }
     else if (name === 'new-book') AD.addBook();
     else if (name === 'go') location.hash = where === 'desk' ? '#/' : `#/${where}`;
   });
@@ -69,7 +72,11 @@
       AD.applyLook(await window.desk.settings());
     } catch { /* the stylesheet's own colours are fine */ }
     try {
-      const { library } = await window.desk.info();
+      const info = await window.desk.info();
+      const { library } = info;
+      AD.state.update = info.update ?? AD.state.update;
+      AD.state.sample = Boolean(info.sample);
+      AD.drawBars();
       if (!library.ok) {
         drawNav('', 0);
         view.replaceChildren(h('h1', null, 'Your library could not be opened'), h('p', { class: 'error', role: 'alert' }, library.message),

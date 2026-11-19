@@ -140,7 +140,7 @@ function cleanSettings(input) {
   };
 }
 
-const api = { DEFAULT_SETTINGS, LIMITS, THEMES, UI_FONTS, cleanSettings };
+const themesApi = { DEFAULT_SETTINGS, LIMITS, THEMES, UI_FONTS, cleanSettings };
 // The main process loads this as a module, and the window loads it as a plain script.
-if (typeof module !== 'undefined' && module.exports) module.exports = api;
-else window.ADThemes = api;
+if (typeof module !== 'undefined' && module.exports) module.exports = themesApi;
+else window.ADThemes = themesApi;

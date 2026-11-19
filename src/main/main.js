@@ -8,8 +8,12 @@ const { buildMenu } = require('./menu');
 const { Settings } = require('./settings');
 const { ImportError } = require('./importer');
 const { Library } = require('./storage/library');
+const { fillSample } = require('./sample');
+const { RELEASES_URL, Updater } = require('./updater');
+const { today: todayOf } = require('../shared/dates');
 const { selfTest } = require('./self-test');
 
+const REPO_URL = 'https://github.com/neogentrics/rt-author-desk';
 const selfTestArg = process.argv.find((arg) => arg.startsWith('--self-test='));
 
 if (selfTestArg) {
@@ -23,8 +27,14 @@ if (selfTestArg) {
 } else if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  let library = null;
+  let real = null; // { library, api, opened }: the person's own library
+  let sample = null; // { library, api, dir }: the made-up catalog, while the tour or a look around is open
   let window = null;
+  const active = () => sample ?? real;
+  const fromApp = (event) => Boolean(event.senderFrame?.url.startsWith('file://'));
+  const NOT_FROM_APP = { ok: false, message: 'That request did not come from the app.' };
+
+  const updater = new Updater((status) => window?.webContents.send('desk:menu', 'update-status', status));
 
   const show = () => {
     if (window) {
@@ -34,6 +44,44 @@ if (selfTestArg) {
   };
   app.on('second-instance', show);
 
+  // The made-up catalog lives in its own library, which is thrown away when it's left, so it can't touch the real one.
+  const sampleDir = () => path.join(app.getPath('userData'), 'sample-library');
+  const leaveSample = () => {
+    if (!sample) return;
+    sample.library.close();
+    fs.rmSync(sample.dir, { recursive: true, force: true });
+    sample = null;
+  };
+  const startSample = () => {
+    leaveSample();
+    fs.rmSync(sampleDir(), { recursive: true, force: true });
+    const library = new Library(sampleDir()).open();
+    fillSample(library, todayOf());
+    sample = { library, api: createApi(library, { locale: app.getLocale() }), dir: sampleDir() };
+  };
+
+  function showAbout() {
+    dialog.showMessageBox(window, {
+      type: 'none',
+      title: 'About RT Author Desk',
+      message: 'RT Author Desk',
+      detail: `Version ${app.getVersion()}\nThe business side of being an author, on your own computer.\nBuilt by the Recon Towers Dev Department.\n\nYour library is kept in:\n${path.join(app.getPath('userData'), 'library')}`,
+    });
+  }
+
+  async function checkForUpdatesFromMenu() {
+    const result = await updater.check();
+    const messages = {
+      current: `You have the latest version, ${app.getVersion()}.`,
+      downloading: `Version ${result.version} is downloading. You'll be asked to restart when it's ready.`,
+      ready: `Version ${result.version} is ready. Use Restart to update at the top of the window.`,
+      available: `Version ${result.version} is available. Use the download page link at the top of the window.`,
+      off: 'Updates are off in this copy of the app, which is how it behaves when it is run from its source.',
+      error: `Couldn't check for updates: ${result.message}`,
+    };
+    dialog.showMessageBox(window, { type: 'info', message: messages[result.state] ?? messages.current });
+  }
+
   app.whenReady().then(() => {
     // Nothing in the window may reach the network. Reports come in as files you choose.
     session.defaultSession.webRequest.onBeforeRequest((details, callback) => {
@@ -41,27 +89,47 @@ if (selfTestArg) {
     });
     session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
 
+    // A made-up catalog left behind by a crash is cleared away.
+    fs.rmSync(sampleDir(), { recursive: true, force: true });
+
     let opened = null;
     try {
-      library = new Library(path.join(app.getPath('userData'), 'library')).open();
+      const library = new Library(path.join(app.getPath('userData'), 'library')).open();
+      real = { library, api: createApi(library, { locale: app.getLocale() }) };
       opened = { ok: true, ...library.info() };
     } catch (error) {
       opened = { ok: false, message: error.message };
     }
-    ipcMain.handle('desk:info', () => ({ version: app.getVersion(), library: opened }));
+    ipcMain.handle('desk:info', () => ({ version: app.getVersion(), library: opened, sample: Boolean(sample), update: updater.status }));
     // The window's only way to the library: one allowlisted call, and only from this app's own page.
-    const api = library && opened.ok ? createApi(library, { locale: app.getLocale() }) : null;
     ipcMain.handle('desk:call', (event, name, args) => {
-      if (!event.senderFrame?.url.startsWith('file://')) return { ok: false, message: 'That request did not come from the app.' };
-      if (!api) return { ok: false, message: 'Your library is not open.' };
-      return api.call(name, args);
+      if (!fromApp(event)) return NOT_FROM_APP;
+      if (!active()) return { ok: false, message: 'Your library is not open.' };
+      return active().api.call(name, args);
+    });
+
+    ipcMain.handle('desk:start-sample', (event) => {
+      if (!fromApp(event)) return NOT_FROM_APP;
+      try {
+        startSample();
+        return { ok: true };
+      } catch (error) {
+        console.error('[start-sample]', error);
+        return { ok: false, message: "The made-up catalog couldn't be made. Nothing of yours was changed." };
+      }
+    });
+    ipcMain.handle('desk:leave-sample', (event) => {
+      if (!fromApp(event)) return NOT_FROM_APP;
+      leaveSample();
+      return { ok: true };
     });
 
     // A report is chosen here, in the main process, and read here. The window only ever sees what the app says is in it,
     // and then asks to accept it by the number it was given.
     ipcMain.handle('desk:pick-report', async (event) => {
-      if (!event.senderFrame?.url.startsWith('file://')) return { ok: false, message: 'That request did not come from the app.' };
-      if (!api) return { ok: false, message: 'Your library is not open.' };
+      if (!fromApp(event)) return NOT_FROM_APP;
+      if (sample) return { ok: false, message: 'This is a made-up catalog, so there is nothing to import into. Leave it first.' };
+      if (!real) return { ok: false, message: 'Your library is not open.' };
       const choice = await dialog.showOpenDialog(window, {
         title: 'Choose a sales report',
         properties: ['openFile'],
@@ -71,7 +139,7 @@ if (selfTestArg) {
       try {
         const file = choice.filePaths[0];
         if (fs.statSync(file).size > 50 * 1024 * 1024) return { ok: false, message: 'That file is too big to be a sales report.' };
-        return { ok: true, value: api.importer.preview(fs.readFileSync(file), path.basename(file)) };
+        return { ok: true, value: real.api.importer.preview(fs.readFileSync(file), path.basename(file)) };
       } catch (error) {
         if (error instanceof ImportError) return { ok: false, message: error.message };
         console.error('[pick-report]', error);
@@ -81,12 +149,29 @@ if (selfTestArg) {
 
     // How it looks lives beside the library, so it's right before anything is opened.
     const settings = new Settings(app.getPath('userData'));
-    ipcMain.handle('desk:settings', (event) => (event.senderFrame?.url.startsWith('file://') ? settings.values : null));
-    ipcMain.handle('desk:save-settings', (event, changes) => (event.senderFrame?.url.startsWith('file://') ? settings.save(changes) : null));
+    ipcMain.handle('desk:settings', (event) => (fromApp(event) ? settings.values : null));
+    ipcMain.handle('desk:save-settings', (event, changes) => (fromApp(event) ? settings.save(changes) : null));
+
+    // Updates: restarting into a downloaded one, and opening the page for a build that can't replace itself.
+    ipcMain.handle('desk:install-update', (event) => (fromApp(event) ? updater.installNow() : false));
+    ipcMain.handle('desk:open-releases', (event) => {
+      if (fromApp(event)) shell.openExternal(RELEASES_URL);
+    });
 
     // A menu item names what the window should do, and the window does it.
     const send = (name, arg) => window?.webContents.send('desk:menu', name, arg);
-    Menu.setApplicationMenu(buildMenu({ send }));
+    Menu.setApplicationMenu(buildMenu({
+      send,
+      about: showAbout,
+      help: [
+        { label: 'Help Center', accelerator: 'F1', click: () => send('help') },
+        { label: 'Take the Tour of a Made-up Catalog', click: () => send('tour') },
+        { label: 'Keyboard Shortcuts', click: () => send('help', 'shortcuts') },
+        { type: 'separator' },
+        { label: 'Report a Problem…', click: () => shell.openExternal(`${REPO_URL}/issues/new?template=bug_report.yml`) },
+        { label: 'Check for Updates…', click: checkForUpdatesFromMenu },
+      ],
+    }));
 
     window = new BrowserWindow({
       width: 1200,
@@ -111,10 +196,12 @@ if (selfTestArg) {
     window.on('closed', () => {
       window = null;
     });
+    updater.start();
   });
 
   app.on('window-all-closed', () => {
-    library?.close();
+    leaveSample();
+    real?.library.close();
     app.quit();
   });
 }

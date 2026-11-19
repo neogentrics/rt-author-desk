@@ -1,0 +1,121 @@
+'use strict';
+// Update checks against this project's GitHub Releases, copied from RT Story Tracker with one change: test builds count.
+// While the app is before 1.0.0 every release is a pre-release (1.0.0-alpha.1, ...), so an installed test build looks at
+// pre-releases too, and a newer test build is a newer version.
+//  - Installed Windows app and Linux AppImage: the update downloads in the background, then "Restart to update".
+//  - Mac (the app isn't signed yet) and the Linux .deb can't replace themselves, so they're told a new version exists
+//    and given the download page.
+const { app, net } = require('electron');
+
+const OWNER = 'neogentrics';
+const REPO = 'rt-author-desk';
+const RELEASES_URL = `https://github.com/${OWNER}/${REPO}/releases`;
+const FIRST_CHECK_MS = 8000;
+const CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
+
+function canSelfUpdate() {
+  if (process.platform === 'win32') return true;
+  return process.platform === 'linux' && Boolean(process.env.APPIMAGE);
+}
+
+// The CI update test serves a newer build from this machine. Nothing but this machine is accepted.
+function testFeed() {
+  const feed = process.env.RTAD_UPDATE_FEED;
+  return feed && /^http:\/\/127\.0\.0\.1:\d+\/$/.test(feed) ? feed : null;
+}
+
+// Semantic Versioning, including pre-releases: 1.0.0-alpha.2 is newer than 1.0.0-alpha.1, and 1.0.0 is newer than any
+// 1.0.0-alpha. Returns a negative number, zero or a positive number.
+function compareVersions(a, b) {
+  const parse = (value) => {
+    const [core, pre = ''] = String(value).replace(/^v/, '').split('+')[0].split(/-(.+)/);
+    return { core: core.split('.').map((n) => Number(n) || 0), pre: pre ? pre.split('.') : [] };
+  };
+  const [x, y] = [parse(a), parse(b)];
+  for (let at = 0; at < 3; at += 1) {
+    if ((x.core[at] ?? 0) !== (y.core[at] ?? 0)) return (x.core[at] ?? 0) - (y.core[at] ?? 0);
+  }
+  if (!x.pre.length || !y.pre.length) return x.pre.length === y.pre.length ? 0 : x.pre.length ? -1 : 1; // a release beats its pre-releases
+  for (let at = 0; at < Math.max(x.pre.length, y.pre.length); at += 1) {
+    const [p, q] = [x.pre[at], y.pre[at]];
+    if (p === undefined) return -1;
+    if (q === undefined) return 1;
+    const [pn, qn] = [/^\d+$/.test(p), /^\d+$/.test(q)];
+    if (pn && qn) { if (Number(p) !== Number(q)) return Number(p) - Number(q); } else if (pn !== qn) return pn ? -1 : 1;
+    else if (p !== q) return p < q ? -1 : 1;
+  }
+  return 0;
+}
+
+const isNewer = (version, current) => compareVersions(version, current) > 0;
+
+class Updater {
+  constructor(onStatus) {
+    this.onStatus = onStatus;
+    this.status = { state: 'idle' };
+    this.autoUpdater = null;
+    this.running = false;
+  }
+
+  start() {
+    if (!app.isPackaged || process.env.RTAD_DISABLE_UPDATES) return;
+    this.running = true;
+    if (canSelfUpdate()) {
+      ({ autoUpdater: this.autoUpdater } = require('electron-updater'));
+      this.autoUpdater.autoDownload = true;
+      this.autoUpdater.autoInstallOnAppQuit = true;
+      // Test builds are published as pre-releases, so they must be looked at. The file that describes a release is always
+      // latest.yml, whatever the version is called (the publish settings in package.json say the same).
+      this.autoUpdater.allowPrerelease = true;
+      this.autoUpdater.channel = 'latest';
+      this.autoUpdater.allowDowngrade = false;
+      if (testFeed()) this.autoUpdater.setFeedURL({ provider: 'generic', url: testFeed() });
+      this.autoUpdater.on('update-available', (info) => this.emit({ state: 'downloading', version: info.version }));
+      this.autoUpdater.on('update-downloaded', (info) => this.emit({ state: 'ready', version: info.version }));
+      this.autoUpdater.on('error', () => {});
+    }
+    setTimeout(() => this.check(), FIRST_CHECK_MS);
+    setInterval(() => this.check(), CHECK_EVERY_MS).unref();
+  }
+
+  emit(status) {
+    this.status = status;
+    this.onStatus(status);
+  }
+
+  async check() {
+    if (!this.running) return { state: 'off' };
+    try {
+      if (this.autoUpdater) {
+        const result = await this.autoUpdater.checkForUpdates();
+        const latest = result?.updateInfo?.version;
+        if (latest && isNewer(latest, app.getVersion())) {
+          return this.status.state === 'ready' ? this.status : { state: 'downloading', version: latest };
+        }
+        return { state: 'current' };
+      }
+      // GitHub's "latest" release leaves pre-releases out, so ask for the recent ones and take the newest version.
+      const response = await net.fetch(`https://api.github.com/repos/${OWNER}/${REPO}/releases?per_page=15`, {
+        headers: { Accept: 'application/vnd.github+json', 'User-Agent': `RTAuthorDesk/${app.getVersion()}` },
+      });
+      if (response.status === 404) return { state: 'current' };
+      if (!response.ok) throw new Error(`GitHub answered ${response.status}`);
+      const releases = (await response.json()).filter((r) => !r.draft && /^v?\d+\.\d+\.\d+/.test(r.tag_name));
+      const newest = releases.sort((a, b) => compareVersions(b.tag_name, a.tag_name))[0];
+      if (!newest || !isNewer(newest.tag_name, app.getVersion())) return { state: 'current' };
+      const status = { state: 'available', version: String(newest.tag_name).replace(/^v/, ''), url: newest.html_url ?? RELEASES_URL };
+      this.emit(status);
+      return status;
+    } catch (error) {
+      return { state: 'error', message: error.message };
+    }
+  }
+
+  installNow() {
+    if (!this.autoUpdater || this.status.state !== 'ready') return false;
+    setImmediate(() => this.autoUpdater.quitAndInstall(true, true));
+    return true;
+  }
+}
+
+module.exports = { RELEASES_URL, Updater, compareVersions, isNewer };

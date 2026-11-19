@@ -3,14 +3,14 @@
 // to do by name, and the window does it, because every screen lives there.
 const { Menu } = require('electron');
 
-function buildMenu({ send, name = 'RT Author Desk', help = [] }) {
+function buildMenu({ send, about, name = 'RT Author Desk', help = [] }) {
   const isMac = process.platform === 'darwin';
   return Menu.buildFromTemplate([
     ...(isMac
       ? [{
           label: name,
           submenu: [
-            ...(help.find((item) => item.about) ? [{ label: `About ${name}`, click: help.find((item) => item.about).click }, { type: 'separator' }] : []),
+            ...(about ? [{ label: `About ${name}`, click: about }, { type: 'separator' }] : []),
             { label: 'Preferences…', accelerator: 'Cmd+,', click: () => send('preferences') },
             { type: 'separator' },
             { role: 'hide' },
@@ -62,7 +62,7 @@ function buildMenu({ send, name = 'RT Author Desk', help = [] }) {
       ],
     },
     { role: 'windowMenu' },
-    ...(help.length ? [{ label: 'Help', submenu: help }] : []),
+    ...(help.length || about ? [{ label: 'Help', submenu: [...help, ...(isMac || !about ? [] : [{ type: 'separator' }, { label: `About ${name}`, click: about }])] }] : []),
   ]);
 }
 

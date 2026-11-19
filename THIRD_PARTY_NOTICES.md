@@ -13,3 +13,4 @@ application and the Electron `LICENSES.chromium.html`.
 | electron-builder (build tool, not shipped) | 26.18.0 | MIT | https://github.com/electron-userland/electron-builder |
 | Inter (font, ships with the app) | 5.x | SIL Open Font License 1.1 | https://rsms.me/inter/ |
 | Atkinson Hyperlegible (font, ships with the app) | 5.x | SIL Open Font License 1.1 | https://brailleinstitute.org/freefont |
+| electron-updater | 6.8.11 | MIT | https://github.com/electron-userland/electron-builder |

@@ -7,6 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { createApi } = require('./api');
 const { readWorkbook } = require('./reports/xlsx');
+const { fillSample } = require('./sample');
 const { Settings } = require('./settings');
 const { DATABASE_FILE, Library } = require('./storage/library');
 const { WrongKeyError, openDatabase } = require('./storage/database');
@@ -80,6 +81,24 @@ function runChecks(dir) {
 
   const fonts = [...fs.readFileSync(path.join(__dirname, '..', 'renderer', 'fonts.css'), 'utf8').matchAll(/url\('([^']+)'\)/g)].map((match) => match[1]);
   check('the fonts are in the build', fonts.length === 6 && fonts.every((file) => fs.existsSync(path.join(__dirname, '..', 'renderer', file))), fonts.join(' '));
+  // The Help Center's guides, the made-up catalog for the tour, and the library that updates the app are all in the build.
+  check('the Help Center has its guides', require('../shared/help').GUIDES.length >= 12);
+  const demo = new Library(path.join(dir, 'tour')).open();
+  try {
+    fillSample(demo, '2027-01-10');
+    check('the made-up catalog can be made', demo.list('books').length === 3 && demo.list('listings').length >= 6);
+  } finally {
+    demo.close();
+  }
+  let updates = 'loaded';
+  try {
+    // It can only be loaded inside Electron, so outside it the check is that the package is there.
+    require.resolve('electron-updater');
+    if (process.versions.electron) updates = typeof require('electron-updater').autoUpdater === 'object' ? 'loaded' : 'no updater';
+  } catch (error) {
+    updates = error.message.split('\n')[0];
+  }
+  check('the updater is in the build', updates === 'loaded', updates);
   const looks = new Settings(dir);
   looks.save({ theme: 'dusk', textSize: 17 });
   check('the look is remembered', new Settings(dir).values.theme === 'dusk' && new Settings(dir).values.textSize === 17);

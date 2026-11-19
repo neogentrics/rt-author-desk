@@ -33,6 +33,13 @@ leaves alpha when the catalog is solid and doesn't wait for the money. The first
   changes as it's picked and is remembered. Every theme's text is checked for contrast, on the page, the cards and the panel.
 - A real menu bar: File, Edit, View and Window, with no Reload to throw away what is half typed.
 
+- **A Help menu and Help Center** (`F1`): thirteen short guides, searchable, with answers to common questions, a list of keyboard shortcuts,
+  **Report a Problem**, **Check for Updates** and **About** (which also says where your library is kept).
+- **A tour of a made-up catalog.** It opens a separate sample library with a short series, a few problems to find and something coming up,
+  and walks through the Desk, books, store grid, clashes, audiobooks, calendar and ISBNs. Leaving it throws it away, so it can't touch your own books.
+- **The app updates itself, test builds included.** On Windows and the Linux AppImage, a newer test build downloads in the background and asks to
+  restart. On a Mac and with the `.deb`, it tells you and opens the download page. Pre-releases are looked at while the app is before 1.0.0.
+
 ### Started early, for 1.1 (the money)
 These are in the test builds, and v1.0 doesn't depend on them.
 - **A reader for Amazon KDP orders and payments reports**, used in tests with made-up files.
