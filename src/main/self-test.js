@@ -8,12 +8,13 @@ const path = require('node:path');
 const { createApi } = require('./api');
 const { readWorkbook } = require('./reports/xlsx');
 const { fillSample } = require('./sample');
+const { readInstalled, writeInstalled } = require('./installed');
 const { Settings } = require('./settings');
 const { DATABASE_FILE, Library } = require('./storage/library');
 const { WrongKeyError, openDatabase } = require('./storage/database');
 const { parseMoney, toDecimalString, totals } = require('../shared/money');
 
-function runChecks(dir) {
+function runChecks(dir, version) {
   const checks = [];
   const check = (name, passed, detail) => checks.push({ name, passed: Boolean(passed), ...(detail ? { detail } : {}) });
   const secret = `SecretTitle${crypto.randomBytes(6).toString('hex')}`;
@@ -99,6 +100,11 @@ function runChecks(dir) {
     updates = error.message.split('\n')[0];
   }
   check('the updater is in the build', updates === 'loaded', updates);
+  // The installed-list file carries the app's version, so another app can tell which one is here.
+  const shared = path.join(dir, 'link');
+  const wrote = writeInstalled(shared, { version: version ?? '0', launch: process.execPath });
+  const listed = readInstalled(shared)[0];
+  check('the installed-list file says which version is here', wrote && listed?.id === 'rt-author-desk' && listed.version === String(version ?? '0'));
   const looks = new Settings(dir);
   looks.save({ theme: 'dusk', textSize: 17 });
   check('the look is remembered', new Settings(dir).values.theme === 'dusk' && new Settings(dir).values.textSize === 17);
@@ -109,7 +115,7 @@ function runChecks(dir) {
 function selfTest({ packaged, version }) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-self-test-'));
   try {
-    const { checks, versions } = runChecks(dir);
+    const { checks, versions } = runChecks(dir, version);
     return {
       ok: checks.every((item) => item.passed),
       packaged,

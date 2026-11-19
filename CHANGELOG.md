@@ -54,6 +54,10 @@ leaves alpha when the catalog is solid and doesn't wait for the money. The first
   A title already in your library is skipped, so the same file twice adds nothing, and **Books you brought in** has an Undo.
 - The first tests that drive the real app through its window, run in CI on Linux.
 
+- **The installed-list file.** An installed copy leaves `installed/rt-author-desk.json` where the other Recon Towers apps look, with the app's
+  id, name, **version** and the path to start it. It is written each time the app starts, so an update changes the version, and the Windows installer writes
+  it too and takes it away on uninstall.
+
 ### Started early, for 1.1 (the money)
 These are in the test builds, and v1.0 doesn't depend on them.
 - **A reader for Amazon KDP orders and payments reports**, used in tests with made-up files.

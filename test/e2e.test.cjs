@@ -209,3 +209,19 @@ e2e('a file with no title column is stopped in step one, and a repeat import is 
   assert.equal(await app.run("document.querySelector('dialog .actions .primary').disabled"), true, 'nothing new to bring in');
   assert.equal(await app.run("document.querySelector('dialog .actions .primary').textContent"), 'Nothing to bring in');
 }, { env: { RTAD_TEST_FILES: JSON.stringify({ books: csvFile() }) } });
+
+// The installed list: a copy of the app that says it is installed leaves a small file with its own version in it. Run from the source
+// it says nothing, so the test names the program to start (and a folder of its own to leave the file in).
+const shared = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-link-'));
+const stand = path.join(shared, 'program');
+fs.writeFileSync(stand, 'x', { mode: 0o755 });
+e2e('an installed copy leaves the installed-list file, with its version in it', async () => {
+  const file = path.join(shared, 'installed', 'rt-author-desk.json');
+  assert.ok(fs.existsSync(file), 'the file is there once the app has opened');
+  assert.deepEqual(JSON.parse(fs.readFileSync(file, 'utf8')), { id: 'rt-author-desk', name: 'RT Author Desk', version: require('../package.json').version, launch: stand, protocol: 1 });
+}, { env: { NMR_LINK_DIR: shared, RTAD_INSTALLED_LAUNCH: stand } });
+
+const quiet = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-link-'));
+e2e('run from its source, the app does not say it is installed', async () => {
+  assert.deepEqual(fs.readdirSync(quiet), [], 'nothing was written');
+}, { env: { NMR_LINK_DIR: quiet } });

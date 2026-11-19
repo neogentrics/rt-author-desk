@@ -97,7 +97,7 @@ spacing checks with launch plans in v1.5.
 | 🙋 Help Center | M | A Help menu (F1): short searchable guides, a first-run tour of a made-up catalog, About, and Check for Updates. |
 | 🙋 An icon of its own | S | A ledger on a desk, in a different shape and colour family from the other apps, made from one source file by a script. |
 | A simple first run | S | Start your catalog, or try a made-up one. |
-| Installed list | S | Leaves the small file that tells the other apps it's installed. |
+| Installed list | S | Leaves the small file that tells the other apps it's installed, and which version is installed. It is written each time the app starts, so an update changes it, and the Windows installer writes it too. |
 
 **Test:** bring in a real catalog from a CSV file, then find every known clash. Mark a recording as exclusive to one store, list
 it on another, and see the clash. Change the theme, font and text size, and they're still changed after a restart. Install an
@@ -206,7 +206,8 @@ over its limit. Compare a campaign's spend against its sales.
 | Feature | Size | Details |
 |---|:-:|---|
 | 🙋 Link once | M | App Link, with the same rules as the other apps. Off until you turn it on. |
-| 🙋 Apps panel | M | The same panel as every app: what's on this computer, what's running and what's linked. |
+| 🙋 Apps panel | M | The same panel as every app, with a small status icon to open it: what's on this computer, what's running and what's linked. Copied from RT Story Tracker's panel and wording when it exists. |
+| 🙋 Updates and compatibility | M | The Apps panel also tells you when another app has a newer version. Two apps link or not by their App Link version and the kinds of document they accept, never by the app's own version number, so an update never breaks a link. **Update available** ("you have 3.7.1, the latest is 3.9.0") is only a nudge, and the only thing that stops a link is an App Link too old to talk to, which says **Needs an update to link**. The latest versions come from one small file on the Recon Towers site, planned at `https://recontowers.com/apps/versions.json`. It is read only when the panel opens or the app starts, and kept for a day. Nothing about you is sent, no ids and no list of what is installed. When it can't be reached, the panel says **Couldn't check for updates** and carries on. [How it works](https://github.com/neogentrics/rt-markdown-reader/blob/main/docs/app-suite.md#updates-and-compatibility). |
 | 🙋 Link a book | S | Tie a book here to the same book in RT Story Tracker. Each app keeps working without the other. |
 | 🙋 Writing progress | M | Word counts and draft status from RT Story Tracker, shown on the book and the Desk. |
 | 🙋 Published facts | M | Editions, ISBNs, dates, prices and links, for RT Story Tracker's catalog to show. |
@@ -215,7 +216,7 @@ over its limit. Compare a campaign's spend against its sales.
 | Automations | M | Webhooks and n8n can be told about a release, a report or a due date. Off until you turn it on, and the vault and personal money stay out. |
 
 **Test:** install each app on a clean computer, in either order, and each finds the other. A locked RT Story Tracker project
-answers nothing. Change an ISBN here and see it in RT Story Tracker's catalog.
+answers nothing. Change an ISBN here and see it in RT Story Tracker's catalog. Put a newer version of one app in a test copy of the versions file: the panel says **Update available** with both numbers, and a link between the two still works. Go offline: the panel says **Couldn't check for updates**, and nothing else changes.
 
 ## v1.7 — Personal money
 

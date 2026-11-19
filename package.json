@@ -69,7 +69,8 @@
       "createStartMenuShortcut": true,
       "shortcutName": "RT Author Desk",
       "license": "LICENSE",
-      "artifactName": "RTAuthorDesk-${version}-Setup.exe"
+      "artifactName": "RTAuthorDesk-${version}-Setup.exe",
+      "include": "build/installer.nsh"
     },
     "portable": {
       "artifactName": "RTAuthorDesk-${version}-Portable.exe"

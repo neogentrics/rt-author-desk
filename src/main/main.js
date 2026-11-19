@@ -7,6 +7,7 @@ const { createApi } = require('./api');
 const { buildMenu } = require('./menu');
 const { Settings } = require('./settings');
 const { BookImportError } = require('./books-import');
+const { launchPathFor, sharedFolder, writeInstalled } = require('./installed');
 const { ImportError } = require('./importer');
 const { Library } = require('./storage/library');
 const { fillSample } = require('./sample');
@@ -99,6 +100,15 @@ if (selfTestArg) {
       callback({ cancel: !details.url.startsWith('file://') && !details.url.startsWith('devtools://') });
     });
     session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+
+    // Says this app is installed, and which version, for the other Recon Towers apps. It is written each time the app starts, so an
+    // update changes the version in it. Only an installed copy says so: running from the source doesn't (the tests name a path instead).
+    try {
+      const launch = process.env.RTAD_INSTALLED_LAUNCH || (app.isPackaged ? launchPathFor({ execPath: process.execPath, appImage: process.env.APPIMAGE }) : null);
+      if (launch) writeInstalled(sharedFolder({ home: app.getPath('home') }), { version: app.getVersion(), launch });
+    } catch (error) {
+      console.error('[installed list]', error.message); // the app works the same without it
+    }
 
     // A made-up catalog left behind by a crash is cleared away.
     fs.rmSync(sampleDir(), { recursive: true, force: true });
