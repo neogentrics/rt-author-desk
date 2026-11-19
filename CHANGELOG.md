@@ -32,6 +32,7 @@ The first test build: the catalog. There is nothing to download yet.
   Rows are matched to editions by ASIN or ISBN, and anything left over is asked about once and remembered. Rows already imported
   are skipped, a whole batch can be undone, and the original file is kept encrypted inside the library.
 - **Earned and paid**, side by side by currency and month. A report whose own total doesn't match its rows is shown, and stays flagged.
+- **Royalties** by month, book, edition, store and marketplace, in any mix and always by currency. Estimates are kept apart from what was paid. Last month's earnings show on the Desk.
 - Empty slots for the Barnes & Noble Press, ACX, Google Play Books and IngramSpark readers, which wait for a real report.
 
 ### Fixed

@@ -22,7 +22,7 @@ nothing else to install.
 RT Author Desk is part of the **Recon Towers** suite, built by its Dev Department. It was inspired by the owner writing his
 own books.
 
-> **Status: early build.** The catalog works and is being tested, and Amazon KDP reports can now be imported. Royalties and the calculator are next. There is no
+> **Status: early build.** The catalog works and is being tested, and Amazon KDP reports can now be imported and added up. The calculator is next. There is no
 > release to download yet, and until 1.0.0 the builds are test builds, numbered `1.0.0-alpha.1` and so on.
 
 <table>
@@ -75,10 +75,11 @@ to open the app from *System Settings → Privacy & Security*.
 | **The Desk** | The home screen: the next release and what is in its way, and everything that needs you |
 | **Sales reports** | Choose an Amazon KDP orders or payments report and see what it holds before accepting it. Every row is accounted for, rows you already have are skipped, rows that match no book are asked about once, and a whole import can be undone. The original file is kept encrypted |
 | **Earned and paid** | What the reports say you earned, beside what the payment reports say you were paid, by currency and month. A report whose own total doesn't match its rows is flagged and never hidden |
+| **Royalties** | Added up by month, book, edition, store and marketplace, in any mix, always by currency. Estimates from the sales reports are kept apart from what the payment reports say was paid, and last month's earnings show on the Desk |
 | **Private by default** | Your library is an encrypted database on your own computer |
 | **Works offline** | No account, no server, and nothing leaves your computer |
 
-Coming next: royalties by month, book, edition, store and currency, and a royalty and pricing calculator. Barnes & Noble Press, ACX, Google Play
+Coming next: a royalty and pricing calculator. Barnes & Noble Press, ACX, Google Play
 Books and IngramSpark reports can't be read yet: those readers are waiting for a real report to build from. After that:
 costs and profit per book, launches, accounts and a locked vault for logins, links to the other Recon Towers apps, and
 moving off Notion. See the [roadmap](ROADMAP.md).

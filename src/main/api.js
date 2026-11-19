@@ -4,13 +4,14 @@
 const { Catalog, CatalogError } = require('./catalog');
 const { ClashError, dismissClash, findClashes, restoreClash } = require('./clashes');
 const { ImportError, Importer } = require('./importer');
+const { RoyaltyError, royalties } = require('./royalties');
 const { BUILT_IN_STORES } = require('./storage/schema');
 const { audiobookTracker, desk, releaseCalendar, storeGrid } = require('./views');
 const { today: todayOf } = require('../shared/dates');
 const { displayIsbn } = require('../shared/isbn');
 const { MoneyError, format, toDecimalString } = require('../shared/money');
 
-const FRIENDLY = [CatalogError, ClashError, ImportError, MoneyError];
+const FRIENDLY = [CatalogError, ClashError, ImportError, MoneyError, RoyaltyError];
 
 function createApi(library, { now = () => new Date(), locale } = {}) {
   const catalog = new Catalog(library);
@@ -107,6 +108,7 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
     needsMatching: () => importer.needsMatching(),
     matchItem: ({ storeId, storeItem, editionId }) => importer.matchItem({ storeId, storeItem, editionId }),
     earnings: () => importer.earnedVsPaid(),
+    royalties: ({ by, from, to } = {}) => royalties(library, { by, from, to, locale }),
 
     // ---- Names and stores ----
     names: () => ({

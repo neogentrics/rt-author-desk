@@ -12,6 +12,7 @@
     ['books', 'Books'],
     ['audiobooks', 'Audiobooks'],
     ['money', 'Money'],
+    ['royalties', 'Royalties'],
     ['calendar', 'Calendar'],
     ['clashes', 'Clashes'],
     ['isbns', 'ISBNs'],

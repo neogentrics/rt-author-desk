@@ -88,6 +88,12 @@
         h('ul', { class: 'list' }, later.map((r) => h('li', null,
           h('a', { href: `#/book/${encodeURIComponent(r.book_id)}` }, r.title), ` · ${r.format}${r.store ? ` on ${r.store}` : ''} · ${AD.longDate(r.date)} (${AD.days(r.days_away)})`)))));
     }
+    if (home.lastMonth) {
+      const month = new Date(`${home.lastMonth.period}-15T12:00:00`).toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
+      out.push(h('section', { class: 'card', 'aria-labelledby': 'last' }, h('h2', { id: 'last' }, `Last month: ${month}`),
+        h('p', null, home.lastMonth.earned.map((e, i) => [i ? ' and ' : '', h('strong', { class: 'mono' }, e.shown)]), ' earned'),
+        h('p', { class: 'note' }, 'This is what the sales reports say, which the store calls an estimate. ', h('a', { href: '#/royalties' }, 'See the royalties'), '.')));
+    }
     if (home.toCheck.length) {
       out.push(h('section', { class: 'card check', 'aria-labelledby': 'look' }, h('h2', { id: 'look' }, 'Worth a look'),
         h('ul', { class: 'list' }, home.toCheck.map((c) => AD.clashItem(c)))));
