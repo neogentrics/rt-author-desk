@@ -6,7 +6,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
-The first test build: the catalog. There is nothing to download yet.
+Heading for 1.0, which is the catalog. The money is 1.1: the owner decided, after trying the first test build, that the app
+leaves alpha when the catalog is solid and doesn't wait for the money. The first test build is `1.0.0-alpha.0`.
 
 ### Added
 - **Books and series**, under any number of pen names and publisher names.
@@ -24,10 +25,12 @@ The first test build: the catalog. There is nothing to download yet.
 - **The release calendar**, and **the Desk**, a home screen that shows the next release and what is in its way.
 - **An encrypted library** in the app's own folder, with a numbered, forward-only set of upgrades and a backup copy made
   before each one.
-- **A reader for Amazon KDP orders and payments reports**, used in tests with made-up files.
 - Installers for Windows (installer and portable), macOS (Apple silicon and Intel) and Linux (AppImage and `.deb`), built
   by CI, each checked by installing it and running a self-test.
 
+### Started early, for 1.1 (the money)
+These are in the test builds, and v1.0 doesn't depend on them.
+- **A reader for Amazon KDP orders and payments reports**, used in tests with made-up files.
 - **Sales reports go into the library.** Choose a KDP orders or payments report, see what it holds, and accept it as one batch.
   Rows are matched to editions by ASIN or ISBN, and anything left over is asked about once and remembered. Rows already imported
   are skipped, a whole batch can be undone, and the original file is kept encrypted inside the library.

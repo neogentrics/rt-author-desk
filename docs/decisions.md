@@ -15,9 +15,12 @@ tags: [plan, decisions]
 2. **How sales come in.** ✅ By importing report files, so it needs no outside accounts.
 3. **The first release.** ✅ The catalog and the money together in 1.0. *Catalog first* was recommended, because a smaller first
    release reaches him sooner. To keep the risk down, 1.0 reaches him as two test builds.
+   **Changed on 18 November 2026, by the owner, after trying the first test build.** 1.0 is the catalog alone, and the money is
+   1.1. The app leaves alpha when the catalog is solid, and doesn't wait for the money, so the original recommendation
+   (*catalog first*) is what was done. Every later release moved up by one: Every store is 1.2, and Two computers is 1.10.
 4. **Which stores.** ✅ KDP, Barnes & Noble Press, ACX, Google Play Books, IngramSpark, Draft2Digital, Kobo, Apple Books and Lulu,
-   with a screen for matching columns for any other. The first five are in 1.0 and the rest in 1.1. Google Play Books moved up
-   on 6 November: he self-publishes there, so it's one of his main platforms.
+   with a screen for matching columns for any other. The first five are in 1.1 and the rest in 1.2. Google Play Books moved up
+   on 6 November: he self-publishes there, so it's one of his main platforms, and it stays in the first batch of readers.
 5. **Passwords.** ✅ A locked vault. *No passwords* was recommended, because it makes this app a password manager, which needs
    its own review. See [the design](design/vault-and-privacy.md).
 6. **How far the money goes.** ✅ Costs, profit per book and series, direct sales, author copies, and a year-end summary. No tax

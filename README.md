@@ -22,8 +22,9 @@ nothing else to install.
 RT Author Desk is part of the **Recon Towers** suite, built by its Dev Department. It was inspired by the owner writing his
 own books.
 
-> **Status: early build.** The catalog works and is being tested, and Amazon KDP reports can now be imported and added up. The calculator is next. There is no
-> release to download yet, and until 1.0.0 the builds are test builds, numbered `1.0.0-alpha.1` and so on.
+> **Status: early build, heading for 1.0.** 1.0 is the catalog: it leaves alpha when the catalog is solid, and doesn't wait for the
+> money. The money (sales reports, royalties and a calculator) is 1.1, and some of it already works in the test builds.
+> Until 1.0.0 the builds are test builds, numbered `1.0.0-alpha.1` and so on.
 
 <table>
 <tr>
@@ -73,16 +74,17 @@ to open the app from *System Settings → Privacy & Security*.
 | **Clash checks** | Nine kinds of real problem, such as an ebook in an exclusive program that is also on sale elsewhere, or a free store ISBN used at another store. Each can be dismissed with a reason |
 | **The release calendar** | Every dated release, soonest first |
 | **The Desk** | The home screen: the next release and what is in its way, and everything that needs you |
-| **Sales reports** | Choose an Amazon KDP orders or payments report and see what it holds before accepting it. Every row is accounted for, rows you already have are skipped, rows that match no book are asked about once, and a whole import can be undone. The original file is kept encrypted |
-| **Earned and paid** | What the reports say you earned, beside what the payment reports say you were paid, by currency and month. A report whose own total doesn't match its rows is flagged and never hidden |
-| **Royalties** | Added up by month, book, edition, store and marketplace, in any mix, always by currency. Estimates from the sales reports are kept apart from what the payment reports say was paid, and last month's earnings show on the Desk |
+| **Sales reports** (early, part of 1.1) | Choose an Amazon KDP orders or payments report and see what it holds before accepting it. Every row is accounted for, rows you already have are skipped, rows that match no book are asked about once, and a whole import can be undone. The original file is kept encrypted |
+| **Earned and paid** (early, part of 1.1) | What the reports say you earned, beside what the payment reports say you were paid, by currency and month. A report whose own total doesn't match its rows is flagged and never hidden |
+| **Royalties** (early, part of 1.1) | Added up by month, book, edition, store and marketplace, in any mix, always by currency. Estimates from the sales reports are kept apart from what the payment reports say was paid, and last month's earnings show on the Desk |
 | **Private by default** | Your library is an encrypted database on your own computer |
 | **Works offline** | No account, no server, and nothing leaves your computer |
 
-Coming next: a royalty and pricing calculator. Barnes & Noble Press, ACX, Google Play
-Books and IngramSpark reports can't be read yet: those readers are waiting for a real report to build from. After that:
-costs and profit per book, launches, accounts and a locked vault for logins, links to the other Recon Towers apps, and
-moving off Notion. See the [roadmap](ROADMAP.md).
+Coming next, for 1.0: themes and fonts, a Help Center, bringing in your books from a file, backups, Trash and getting everything out as
+CSV and JSON. Then 1.1, the money: a royalty and pricing calculator, and readers for Barnes & Noble Press, ACX, Google Play
+Books and IngramSpark, which are waiting for a real report to build from. After that: the other stores, costs and profit per book,
+launches, accounts and a locked vault for logins, links to the other Recon Towers apps, and moving off Notion. See the
+[roadmap](ROADMAP.md).
 
 ## What it won't do
 

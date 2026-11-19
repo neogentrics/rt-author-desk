@@ -20,7 +20,7 @@ how do the stores compare?
 - **Try a deal.** See what a promotion earns per copy, and how many copies it takes to match your usual month.
 - **Check against reality.** Once reports are in, the calculator shows what a store actually took per copy next to its estimate.
   KDP's reports carry the real delivery and manufacturing cost, so the app can show when an estimate is off.
-- **Find break-even.** With costs in (v1.3), how many copies at this price pay for the book.
+- **Find break-even.** With costs in (v1.4), how many copies at this price pay for the book.
 
 ## Rate cards
 
