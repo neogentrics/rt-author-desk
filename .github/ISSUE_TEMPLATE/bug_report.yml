@@ -1,0 +1,33 @@
+name: Bug report
+description: Something shows wrong or the app misbehaves
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please don't paste real sales reports, account numbers, logins or anything private. Describe what you did, or use made-up numbers.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect to see, and what did you see instead? Screenshots help a lot.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps that cause it
+      description: What you clicked or entered, in order.
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: The version in the name of the file you installed, for example 1.0.0-alpha.1.
+      placeholder: "1.0.0-alpha.1"
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [Windows 11, Windows 10, macOS, Linux]
+    validations:
+      required: true
