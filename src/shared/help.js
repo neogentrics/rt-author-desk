@@ -197,11 +197,11 @@ const GUIDES = [
   },
   {
     slug: 'updates',
-    title: 'Updates and test builds',
-    summary: 'How the app updates itself, and what a test build is.',
+    title: 'Updates',
+    summary: 'How the app updates itself.',
     keywords: 'update upgrade version alpha test build release check restart download',
     blocks: [
-      { type: 'p', text: 'Until version 1.0.0 the app is released as **test builds**, numbered like 1.0.0-alpha.1. They are real, working versions that are still being finished, and each can be updated to the next.' },
+      { type: 'p', text: 'The first versions of the app were **test builds**, numbered like 1.0.0-alpha.1. Version 1.0.0 is the first full release, and a test build updates to it by itself. After that, each release updates to the next.' },
       { type: 'ul', items: [
         'Choose **Help, then Check for Updates…** at any time. The app also checks by itself a few seconds after it opens, and every few hours.',
         'On **Windows** and the Linux **AppImage**, an update downloads in the background and you are asked to restart when it is ready.',

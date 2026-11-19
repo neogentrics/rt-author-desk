@@ -26,7 +26,7 @@ losing anything, and pass its automated tests on Windows, Mac and Linux.
 | Release | Theme | Status |
 |---|---|---|
 | [Step zero](#step-zero--settle-the-foundations) | Settle the foundations | Built. The installers for Windows, Mac and Linux are built and checked by CI |
-| [v1.0](#v10--the-catalog) | The catalog | **In progress.** The first test build (alpha.0) has been tried on a real computer, and what it showed is being fixed first |
+| [v1.0](#v10--the-catalog) | The catalog | **Built, ready to publish as 1.0.0.** Contributors and credits follow in the first update |
 | [v1.1](#v11--the-money) | The money | **Started early, as test code.** KDP import and royalties exist, and the calculator isn't started |
 | [v1.2](#v12--every-store) | Every store | Planned |
 | [v1.3](#v13--accounts-and-the-vault) | Accounts and the vault | Planned |
@@ -59,22 +59,24 @@ Not a release: the choices that are expensive to change later.
 for the money. v1.0 is the catalog, with everything needed to run it on a computer every day. The money is
 [v1.1](#v11--the-money).
 
-**Where it stands (18 November 2026).** The first test build (alpha.0) has been installed and used on a real computer. The
-catalog works: books and series, editions, ISBNs with check digits, audiobook recordings, store listings with their route and
-prices, the store grid, nine clash checks, a release calendar, the all-titles audiobook tracker and the Desk. Using it showed what
-was missing, and that comes first. Built since: Preferences with the suite's themes, Glass, colour-safe colours, fonts and text size, and a Help menu and Help Center
-with a tour of a made-up catalog, About, and updates that include test builds, and an icon of its own.
-Series, pen names and publisher names can be made right where a book asks for one, and empty screens say what to do.
-Books can be brought in from a CSV file, and the catalog now has backups, a Trash and a way to get everything out as CSV and JSON. Still to come, in this order:
-a simple first run, and contributors and credits with the check that
-depends on them. Nine of the fifteen clash checks are built. The contributor check
-comes with contributors, the two price checks and the locked-period check with the calculator in v1.1, and the pre-order and
-spacing checks with launch plans in v1.5.
+**Where it stands (18 November 2026).** Built, and ready to publish as **1.0.0**. The first test build (alpha.0) was installed and used on
+a real computer, and what it showed was missing is now done: Preferences with the suite's themes, Glass, colour-safe colours, fonts and text
+size; a Help menu and Help Center with a tour of a made-up catalog, About, and updates that include test builds; an icon of its own;
+series, pen names and publisher names made right where a book asks for one; screens that say what to do when they're empty; and bringing
+in books from a CSV file. The catalog also has backups, a Trash for 30 days, a way to get everything out as CSV and JSON, the
+installed-list file with its version, and a short welcome the first time. It works on a made-up catalog and has been driven end to end by
+tests, and the Windows and Mac installers are built and checked by CI.
+
+**Not in 1.0.0:** contributors and credits, and the clash check that depends on them, come in the first update after it. Nine of the
+fifteen clash checks are built. The two price checks and the locked-period check come with the calculator in v1.1, and the pre-order and
+spacing checks with launch plans in v1.5. The Money and Royalties screens are in the menu marked "early": they are v1.1's work, started
+early.
 
 | Feature | Size | Details |
 |---|:-:|---|
 | 🙋 Books and series | M | Works for one novel or a long series, under any number of pen names and publisher names. A new series, pen name or publisher name can be made right where a book asks for one. A book can be planned, in progress, live, pulled or being reworked. |
-| 🙋 Editions | M | Ebook, paperback, hardcover, large print and audiobook, each with its own details: page count, trim size, narrator, contributors. |
+| 🙋 Editions | M | Ebook, paperback, hardcover, large print and audiobook, each with its own details: page count, trim size, narrator. |
+| 🙋 Contributors and credits | M | Editors, narrators, artists and others, credited on each edition and on each store, with the check that finds one credited differently on two stores. Comes in the first update after 1.0.0. |
 | 🙋 Store listings | L | An edition on a store: its store ID, price in each marketplace, link, status, the publisher name the store shows, and how it got there, directly or through a distributor. |
 | 🙋 Recordings | M | Each audiobook recording of a book: human or synthesized voice, who read it, and what rights it has, such as an exclusive deal and when it ends. [How it works](docs/design/data-model.md#recordings). |
 | 🙋 Audiobook tracker | M | Every title on every store: which recording is live, its voice, its rights, and which are waiting to be replaced and by what. |
@@ -96,7 +98,7 @@ spacing checks with launch plans in v1.5.
 | 🙋 Preferences, themes & fonts | M | The suite's themes, Glass, colour-safe colours, fonts and text size, in a Preferences window (Ctrl+,). |
 | 🙋 Help Center | M | A Help menu (F1): short searchable guides, a first-run tour of a made-up catalog, About, and Check for Updates. |
 | 🙋 An icon of its own | S | A ledger on a desk, in a different shape and colour family from the other apps, made from one source file by a script. |
-| A simple first run | S | Start your catalog, or try a made-up one. |
+| A simple first run | S | A short welcome the first time: start your catalog, bring in a file, or look around a made-up one. |
 | Installed list | S | Leaves the small file that tells the other apps it's installed, and which version is installed. It is written each time the app starts, so an update changes it, and the Windows installer writes it too. |
 
 **Test:** bring in a real catalog from a CSV file, then find every known clash. Mark a recording as exclusive to one store, list

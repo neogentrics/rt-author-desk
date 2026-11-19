@@ -4,7 +4,7 @@
 
 <br>
 
-[![Status](https://img.shields.io/badge/status-early%20build-f0a52b?style=for-the-badge&labelColor=0a1a33)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0-f0a52b?style=for-the-badge&labelColor=0a1a33)](CHANGELOG.md)
 [![Tests](https://img.shields.io/github/actions/workflow/status/neogentrics/rt-author-desk/ci.yml?style=for-the-badge&label=tests&labelColor=0a1a33)](https://github.com/neogentrics/rt-author-desk/actions/workflows/ci.yml)
 [![Platforms](https://img.shields.io/badge/windows%20%7C%20macOS%20%7C%20linux-2a4a80?style=for-the-badge&labelColor=0a1a33)](#download)
 [![Offline](https://img.shields.io/badge/works-offline-2e8fe0?style=for-the-badge&labelColor=0a1a33)](#how-your-library-is-kept)
@@ -22,9 +22,8 @@ nothing else to install.
 RT Author Desk is part of the **Recon Towers** suite, built by its Dev Department. It was inspired by the owner writing his
 own books.
 
-> **Status: early build, heading for 1.0.** 1.0 is the catalog: it leaves alpha when the catalog is solid, and doesn't wait for the
-> money. The money (sales reports, royalties and a calculator) is 1.1, and some of it already works in the test builds.
-> Until 1.0.0 the builds are test builds, numbered `1.0.0-alpha.1` and so on.
+> **Version 1.0 is the catalog.** Books, editions, ISBNs, store listings, audiobooks and clashes, with backups, a Trash, and a way to get everything
+> out. The money (sales reports, royalties and a calculator) is 1.1, and some of it already works, marked "early" in the menu.
 
 <table>
 <tr>
@@ -89,7 +88,7 @@ to open the app from *System Settings → Privacy & Security*.
 | **Private by default** | Your library is an encrypted database on your own computer |
 | **Works offline** | No account, no server, and nothing leaves your computer |
 
-Coming next, for 1.0: a simple first run and contributors and credits. Then 1.1, the money: a royalty and pricing calculator, and readers for Barnes & Noble Press, ACX, Google Play
+Coming next: contributors and credits in the first update, then 1.1, the money: a royalty and pricing calculator, and readers for Barnes & Noble Press, ACX, Google Play
 Books and IngramSpark, which are waiting for a real report to build from. After that: the other stores, costs and profit per book,
 launches, accounts and a locked vault for logins, links to the other Recon Towers apps, and moving off Notion. See the
 [roadmap](ROADMAP.md).

@@ -314,3 +314,93 @@ e2e('Export Everything puts the library, spreadsheets and reports in a new folde
   assert.deepEqual(json.tables.books.map((b) => b.title), ['Tidewater']);
   assert.ok(fs.existsSync(path.join(exportParent, made, 'csv', 'books.csv')));
 }, { env: { RTAD_TEST_FILES: JSON.stringify({ exportFolder: exportParent }) } });
+
+// The first run. These start without the welcome already seen, which every other test does.
+const manual = (name, fn) => test(name, { skip: !enabled && 'run npm run test:e2e (or set RTAD_E2E=1) to try the real app', timeout: 90_000 }, fn);
+const settingsOf = (dir) => JSON.parse(fs.readFileSync(path.join(dir, 'settings.json'), 'utf8'));
+// The setting is saved a moment after the dialog closes, so wait for it rather than guessing.
+const welcomedIn = async (dir) => {
+  for (let i = 0; i < 40; i += 1) {
+    try { if (settingsOf(dir).welcomed === true) return true; } catch { /* not written yet */ }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  return false;
+};
+const choose = (title) => `[...document.querySelectorAll('dialog button.choice')].find((b) => b.querySelector('strong').textContent === ${JSON.stringify(title)}).click()`;
+const welcomeOpen = "[...document.querySelectorAll('dialog h2')].some((h) => h.textContent === 'Welcome to RT Author Desk')";
+
+manual('a new library is welcomed once, with three ways to begin, and starting a catalog opens the first book', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-first-'));
+  let app = await launch({ userData: dir, welcome: true });
+  try {
+    await app.until(welcomeOpen, 'the welcome');
+    const choices = await app.run("[...document.querySelectorAll('dialog button.choice strong')].map((b) => b.textContent)");
+    assert.deepEqual(choices, ['Start my own catalog', 'Bring in my books from a file', 'Look around a made-up catalog first']);
+    await app.run(choose('Start my own catalog'));
+    await app.until("document.querySelector('dialog #f-title')", 'the Add a book form');
+    assert.equal(await welcomedIn(dir), true);
+    assert.deepEqual(app.problems, []);
+  } finally {
+    await app.close();
+  }
+  // The next time, nothing is said.
+  app = await launch({ userData: dir, welcome: true });
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+    assert.equal(await app.run(welcomeOpen), false, 'not welcomed twice');
+  } finally {
+    await app.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+manual('closing the welcome without choosing counts, and a library that already has books is never welcomed', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-first-'));
+  let app = await launch({ userData: dir, welcome: true });
+  try {
+    await app.until(welcomeOpen);
+    await app.clickText("I'll look around myself", 'dialog');
+    await app.until('!document.querySelector("dialog")');
+    assert.equal(await welcomedIn(dir), true);
+  } finally {
+    await app.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+
+  // A copy of the app that already holds someone's books (an earlier test build, say) is left alone, and not welcomed later either.
+  const old = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-first-'));
+  const { Library } = require('../src/main/storage/library');
+  const { Catalog } = require('../src/main/catalog');
+  const library = new Library(path.join(old, 'library')).open();
+  new Catalog(library).saveBook({ title: 'Already here' });
+  library.close();
+  app = await launch({ userData: old, welcome: true });
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    assert.equal(await app.run(welcomeOpen), false);
+    await app.until("document.querySelector('main .card')", 'the Desk');
+    assert.equal(await welcomedIn(old), true, 'marked, so it can never turn up later');
+  } finally {
+    await app.close();
+    fs.rmSync(old, { recursive: true, force: true });
+  }
+});
+
+manual('the welcome can start the tour of a made-up catalog, and leaving the tour puts the empty library back', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-first-'));
+  const app = await launch({ userData: dir, welcome: true });
+  try {
+    await app.until(welcomeOpen);
+    await app.run(choose('Look around a made-up catalog first'));
+    await app.until("document.querySelector('.tour') && document.querySelector('.bar')", 'the tour and the bar that says where you are');
+    assert.match(await app.run("document.querySelector('.bar').textContent"), /A made-up catalog/);
+    assert.equal((await app.call('books')).length, 3);
+    await app.clickText('Leave it', '.bar');
+    await app.until("!document.querySelector('.bar')", 'the made-up catalog to go');
+    assert.equal((await app.call('books')).length, 0, 'the real library was never touched');
+    assert.equal(fs.existsSync(path.join(dir, 'sample-library')), false, 'and the sample library is thrown away');
+  } finally {
+    await app.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});

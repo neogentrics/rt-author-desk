@@ -193,3 +193,8 @@ tr.skipped td { color: var(--ink-soft); }
 .backup-folder { word-break: break-all; color: var(--ink-soft); }
 .tally { background: color-mix(in srgb, var(--t-on-panel) 22%, transparent); color: inherit; border-radius: 999px; padding: 0 8px; font-size: 0.867rem; font-weight: 700; }
 a[aria-current="page"] .tally { background: var(--t-panel); color: var(--t-on-panel); }
+
+/* The first-run welcome */
+.choices { display: grid; gap: 10px; }
+button.choice { display: grid; gap: 2px; text-align: left; padding: 12px 14px; border-radius: 10px; }
+button.choice span { color: inherit; opacity: 0.85; font-weight: 400; }

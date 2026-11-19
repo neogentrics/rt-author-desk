@@ -20,6 +20,8 @@
     ['trash', 'Trash'],
   ];
 
+  const EARLY = new Set(['money', 'royalties']);
+
   function where() {
     const [, name = '', id] = (location.hash || '#/').split('/');
     return { name: name === 'book' || LINKS.some(([key]) => key === name) ? name : '', id: id ? decodeURIComponent(id) : null };
@@ -30,7 +32,9 @@
     nav.replaceChildren(...LINKS.map(([key, text]) => h('li', null,
       h('a', { href: `#/${key}`, 'aria-current': key === section ? 'page' : null },
         text, key === 'clashes' && problems ? h('span', { class: 'count', 'aria-label': `${problems} to fix` }, problems) : null,
-        key === 'trash' && binned ? h('span', { class: 'tally', 'aria-label': `${binned} in the Trash` }, binned) : null))));
+        key === 'trash' && binned ? h('span', { class: 'tally', 'aria-label': `${binned} in the Trash` }, binned) : null,
+        // Money is the next release's work, started early. It is real and tested, and it says so.
+        EARLY.has(key) ? h('span', { class: 'tally', title: 'Early: part of the next release, the money' }, 'early') : null))));
   }
 
   AD.refresh = async function refresh() {
@@ -72,8 +76,10 @@
 
   (async () => {
     // How it looks comes first, so nothing is drawn in the wrong colours.
+    let settings = null;
     try {
-      AD.applyLook(await window.desk.settings());
+      settings = await window.desk.settings();
+      AD.applyLook(settings);
     } catch { /* the stylesheet's own colours are fine */ }
     try {
       const info = await window.desk.info();
@@ -91,6 +97,7 @@
       view.replaceChildren(h('h1', null, 'Something went wrong'), h('p', { class: 'error', role: 'alert' }, problem.message));
       return;
     }
-    AD.refresh();
+    await AD.refresh();
+    if (!AD.state.sample) AD.maybeWelcome(settings);
   })();
 })();

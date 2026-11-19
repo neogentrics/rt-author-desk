@@ -6,8 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
-Heading for 1.0, which is the catalog. The money is 1.1: the owner decided, after trying the first test build, that the app
-leaves alpha when the catalog is solid and doesn't wait for the money. The first test build is `1.0.0-alpha.0`.
+## [1.0.0] - 2026-11-18
+
+The catalog. Version 1.0 is the catalog and everything needed to run it on a computer every day. The owner decided, after trying the first test
+build (`1.0.0-alpha.0`), that the app leaves alpha when the catalog is solid and doesn't wait for the money, which is 1.1.
+
+Not in 1.0.0: contributors and credits, and the clash check that depends on them, come in the first update after it.
 
 ### Added
 - **Books and series**, under any number of pen names and publisher names.
@@ -66,8 +70,8 @@ leaves alpha when the catalog is solid and doesn't wait for the money. The first
 - **Export everything** (`Ctrl+E`): your whole library as one JSON file, a spreadsheet (CSV) for each kind of thing with names filled in beside the ids and amounts
   as decimals, and each original report as it was imported, in a new folder. The library's key is never written.
 
-### Started early, for 1.1 (the money)
-These are in the test builds, and v1.0 doesn't depend on them.
+### Early, for 1.1 (the money)
+These are in this version, marked "early" in the menu, and nothing in the catalog depends on them.
 - **A reader for Amazon KDP orders and payments reports**, used in tests with made-up files.
 - **Sales reports go into the library.** Choose a KDP orders or payments report, see what it holds, and accept it as one batch.
   Rows are matched to editions by ASIN or ISBN, and anything left over is asked about once and remembered. Rows already imported

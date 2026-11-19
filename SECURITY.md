@@ -13,7 +13,7 @@ disclosing the issue publicly.
 
 ## Supported versions
 
-Only the latest release receives security fixes. Until 1.0.0, that means the latest test build.
+Only the latest release receives security fixes.
 
 ## Design notes
 

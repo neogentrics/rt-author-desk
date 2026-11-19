@@ -21,8 +21,10 @@ function freePort() {
   });
 }
 
-async function launch({ seed, env: extraEnv = {} } = {}) {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-e2e-'));
+async function launch({ seed, env: extraEnv = {}, userData: given = null, welcome = false } = {}) {
+  const userData = given ?? fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-e2e-'));
+  // Most tests aren't about the welcome, so they start with it already seen. A test that is passes welcome: true.
+  if (!welcome && !fs.existsSync(path.join(userData, 'settings.json'))) fs.writeFileSync(path.join(userData, 'settings.json'), '{ "welcomed": true }\n');
   if (seed) await seed(userData);
   const port = await freePort();
   const env = { ...process.env, ...extraEnv };
@@ -95,7 +97,7 @@ async function launch({ seed, env: extraEnv = {} } = {}) {
       try { ws.close(); } catch { /* already gone */ }
       app.kill();
       await sleep(300);
-      fs.rmSync(userData, { recursive: true, force: true, maxRetries: 3 });
+      if (!given) fs.rmSync(userData, { recursive: true, force: true, maxRetries: 3 });
     },
   };
   await page.until("window.AD && AD.routes && document.getElementById('nav')?.children.length > 0", 'the app to open');
