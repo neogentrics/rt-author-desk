@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RT Author Desk</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#view">Skip to the page</a>
+<div class="shell">
+  <nav class="side" aria-label="Main">
+    <p class="brand">RT Author Desk</p>
+    <ul id="nav"></ul>
+  </nav>
+  <main id="view" tabindex="-1"><p class="lead">Opening your library…</p></main>
+</div>
+<p id="toast" class="toast" role="status" aria-live="polite" hidden></p>
+<script src="dom.js"></script>
+<script src="screens-desk.js"></script>
+<script src="screens-books.js"></script>
+<script src="screens-lists.js"></script>
+<script src="screens-audio.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

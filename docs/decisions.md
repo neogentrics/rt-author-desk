@@ -54,6 +54,22 @@ These are recommendations the plan already follows. Approving the plan approves 
 21. **The feed uses a folder, not a network port.** See [the design](design/vault-and-privacy.md#the-feed-folder). His n8n runs
     on another machine, so RT Markdown Reader's address on this computer would mean unencrypted bank data on the network.
 
+## Small choices made while building
+
+These follow the plan and fill gaps in it. Any can be changed.
+
+22. **Each ISBN is in the register once.** An edition can hold several (a store's free one and one you own), but a number can't
+    be on two editions, so "an ISBN is on two editions" can't happen: adding it again says where it already is. A number that
+    fails its check digit is refused when you type it, and flagged if it arrives from elsewhere, such as the move from Notion.
+23. **The nine stores come built in, with fixed IDs,** so two computers that each start a library agree on them. They can be
+    switched off but not removed. Your own stores are ordinary records beside them.
+24. **A price belongs to a marketplace and a date.** A new date adds to the history, and the same date corrects that day.
+25. **An exclusive program or recording deal names its store,** because the clash checks can't judge "elsewhere" without it.
+26. **A store listing's route is recorded,** and the same edition can be on one store both directly and through a distributor.
+27. **Dismissing a clash needs a reason,** and it stays dismissed until the records it names change.
+28. **Nine of the fifteen clash checks are built.** The rest wait for the data they need: contributors, rate cards, spacing
+    rules and pre-order deadlines.
+
 ## To check before or during the build
 
 These are facts, not choices.
@@ -65,6 +81,10 @@ These are facts, not choices.
   non-exclusive, with the old 40% and 25% ending at the end of 2026. Check this against ACX and the contract for each title.
 - **KDP's ebook band.** The owner's own guide says the 70% rate reaches $12.99 since 7 July 2026, citing KDP's pricing page, and
   some outside sources still say $9.99. KDP's page decides.
+- **The sample KDP report doesn't add up.** In the December 2024 orders file, the Summary says 50.38 USD, 0.52 GBP, 0.03 EUR and 0.06 CAD,
+  but the detail sheets hold 49.53 USD and nothing in the other currencies. The cause isn't known: a filtered export, royalties that
+  only the Summary counts (such as pages read), or a layout we haven't understood. The reader reports the difference and doesn't hide it.
+  A recent report from the owner will settle it, and until then totals are labeled estimates.
 - **How KENP royalties appear.** The sample report has pages read but no rows that show a KENP royalty. A report from a month
   with Kindle Unlimited reads will settle it.
 - **Google Play Books.** Notion says he publishes audiobooks and physical books there. Print sales on Google weren't confirmed for

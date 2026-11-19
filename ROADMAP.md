@@ -9,8 +9,8 @@ tags: [roadmap, planning]
 # Roadmap
 
 RT Author Desk is the business side of being an author. This page lists the releases, each one something that can be tested
-on its own. Nothing here is built yet: **building starts when the owner approves this plan.** The reasons behind it are in
-the [product plan](docs/product-plan.md), and the choices are in [decisions](docs/decisions.md).
+on its own. **Building has started, on the catalog first.** The reasons behind it are in the
+[product plan](docs/product-plan.md), and the choices are in [decisions](docs/decisions.md).
 
 > [!TIP]
 > This file is written in Markdown, so it looks best opened in RT Markdown Reader.
@@ -25,8 +25,8 @@ losing anything, and pass its automated tests on Windows, Mac and Linux.
 
 | Release | Theme | Status |
 |---|---|---|
-| [Step zero](#step-zero--settle-the-foundations) | Settle the foundations | Waiting for approval |
-| [v1.0](#v10--the-catalog-and-the-money) | The catalog and the money | Planned |
+| [Step zero](#step-zero--settle-the-foundations) | Settle the foundations | Built. The Linux installers pass their check, and Windows and Mac wait for CI |
+| [v1.0](#v10--the-catalog-and-the-money) | The catalog and the money | **In progress.** The catalog's first test build works. The money has its KDP reader only |
 | [v1.1](#v11--every-store) | Every store | Planned |
 | [v1.2](#v12--accounts-and-the-vault) | Accounts and the vault | Planned |
 | [v1.3](#v13--what-a-book-really-made) | What a book really made | Planned |
@@ -56,6 +56,15 @@ Not a release: the choices that are expensive to change later.
 
 🙋 The owner chose both for the first release. It reaches him as two test builds: the catalog first, then the money. Each is
 tested alone, so a problem in one doesn't hold up the other.
+
+**Where it stands (18 November 2026).** The catalog's first test build works on the real app: books and series, editions,
+ISBNs with check digits, audiobook recordings, store listings with their route and prices, the store grid, nine clash checks,
+a release calendar, the all-titles audiobook tracker and the Desk. It has been used by hand on a made-up library, and its tests pass. What's left in the
+catalog: contributors and credits (and the clash that depends on them), and the clash checks that need
+rate cards, spacing rules or pre-order deadlines. In the money, the KDP orders and payments reader exists, and
+the rest of the readers, matching, royalties and the calculator are not started. Nothing under "For every app" is built yet
+except the encrypted library and the Linux installer. The open finding about the sample KDP report is in
+[decisions](docs/decisions.md#to-check-before-or-during-the-build).
 
 **The catalog**
 
