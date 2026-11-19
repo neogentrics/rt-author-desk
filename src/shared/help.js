@@ -15,7 +15,7 @@ const GUIDES = [
       { type: 'p', text: 'RT Author Desk keeps the business side of your books in one place on your own computer: what you\'ve published, where it\'s sold, at what price, and what\'s wrong.' },
       { type: 'h', text: 'The quickest way in' },
       { type: 'ol', items: [
-        '[Add a book](go:books). A title is enough. The rest can come later.',
+        '[Add a book](go:books). A title is enough. The rest can come later. Or [bring in a list you already have](help:bring-in-books).',
         'Open the book and add an **edition** for each format: ebook, paperback, hardcover, large print or audiobook.',
         'Put each edition on the stores that sell it. A store is a square in the **store grid**, and clicking an empty square lists the book there.',
         'Look at [Clashes](go:clashes). It finds real problems and says what to do about each.',
@@ -40,6 +40,29 @@ const GUIDES = [
         'A book that is not in a series can be given one at any time: open the book, choose **Edit**, and pick or make the series and its number.',
       ] },
       { type: 'note', text: 'Two spellings of one series name, such as "The Tide Books" and "Tide Books", stop a store grouping them. Clashes points that out.' },
+    ],
+  },
+  {
+    slug: 'bring-in-books',
+    title: 'Bring in your books from a file',
+    summary: 'Use a spreadsheet, or a Notion export, instead of typing every book.',
+    keywords: 'import csv notion spreadsheet excel file columns match undo export bring in list',
+    blocks: [
+      { type: 'p', text: 'If you already keep a list of your books, in a spreadsheet or in Notion, you can bring it in as a **CSV file**. In Notion, open the table, choose **Export**, and pick **CSV**. In a spreadsheet, choose **Save as** and pick CSV.' },
+      { type: 'ol', items: [
+        'Choose **Bring in books from a file…** on the [Books](go:books) page, or **Bring In Books from a File…** in the File menu.',
+        '**Match your columns.** The app guesses which column is the title, the series, the status, the formats, the release date, the Amazon link and the notes. Correct anything it got wrong. Only the title is needed.',
+        '**Check what it found.** You see every book it would make, and which rows it will skip and why. A word it doesn\'t know, such as a status of "Parked", is listed so you can say what it means.',
+        '**Bring them in.** It all happens in one step, or not at all.',
+      ] },
+      { type: 'h', text: 'What it does with each column' },
+      { type: 'ul', items: [
+        '**Series.** A series that already exists is used, and a new one is made. Notion\'s page addresses are removed from the name.',
+        '**Formats.** "Ebook, Paperback, Audiobook" makes an edition of each. Words like Kindle, Print and Audio are understood.',
+        '**Release date.** Dates written out (March 1, 2025) or as 2025-03-01 just work. For 3/1/2025 you say whether the month or the day comes first. A range uses its first day.',
+        '**Amazon link.** The link\'s code is kept on a KDP listing for the ebook, or the link is kept in the notes. It is never guessed which edition a link belongs to.',
+      ] },
+      { type: 'note', text: 'A book whose title is already in your library is skipped, so importing the same file twice adds nothing. **Books you brought in** on the Books page has an **Undo**, which takes the whole import back and leaves anything you\'ve added to since.' },
     ],
   },
   {

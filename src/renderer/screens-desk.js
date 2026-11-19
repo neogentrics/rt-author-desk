@@ -105,7 +105,7 @@
       out.push(h('section', { class: 'card empty' },
         h('h2', null, 'Start your catalog'),
         h('p', { class: 'lead' }, 'Add a book, then its editions, where it is sold and what it costs. Your desk will show what needs you.'),
-        h('p', { class: 'row' }, h('button', { class: 'primary', onclick: AD.addBook }, 'Add your first book'), AD.tourButton())));
+        h('p', { class: 'row' }, h('button', { class: 'primary', onclick: AD.addBook }, 'Add your first book'), h('button', { onclick: AD.importBooks }, 'Bring in books from a file…'), AD.tourButton())));
       return out;
     }
 

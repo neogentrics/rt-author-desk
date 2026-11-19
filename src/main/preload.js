@@ -12,5 +12,6 @@ contextBridge.exposeInMainWorld('desk', {
   leaveSample: () => ipcRenderer.invoke('desk:leave-sample'),
   installUpdate: () => ipcRenderer.invoke('desk:install-update'),
   openReleases: () => ipcRenderer.invoke('desk:open-releases'),
+  pickBooksFile: () => ipcRenderer.invoke('desk:pick-books-file'),
   pickReport: () => ipcRenderer.invoke('desk:pick-report'),
 });

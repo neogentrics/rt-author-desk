@@ -122,7 +122,7 @@ class Catalog {
     return this.library.db.prepare(
       `SELECT * FROM editions WHERE book_id = ?
        ORDER BY CASE format WHEN 'ebook' THEN 1 WHEN 'paperback' THEN 2 WHEN 'hardcover' THEN 3 WHEN 'large print' THEN 4 ELSE 5 END,
-                created_at, id`,
+                created_at, rowid`,
     ).all(bookId);
   }
 

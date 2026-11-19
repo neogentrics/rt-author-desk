@@ -10,11 +10,13 @@
 
   AD.routes.books = async () => {
     const books = await AD.call('books');
-    const out = [h('div', { class: 'row' }, h('h1', null, 'Books'), h('button', { class: 'primary', onclick: AD.addBook }, 'Add a book'))];
+    const out = [h('div', { class: 'row' }, h('h1', null, 'Books'),
+      h('span', { class: 'row start' }, h('button', { onclick: AD.importBooks }, 'Bring in books from a file…'), h('button', { class: 'primary', onclick: AD.addBook }, 'Add a book')))];
     if (!books.length) {
-      out.push(AD.emptyCard('No books yet', 'Add a book to start your catalog. A title is enough, and the rest can come later.',
-        h('button', { class: 'primary', onclick: AD.addBook }, 'Add a book'), AD.tourButton()));
-      return out;
+      out.push(AD.emptyCard('No books yet', 'Add a book to start your catalog. A title is enough, and the rest can come later. If you keep a list of your books in a spreadsheet, or in Notion, you can bring it in as a CSV file.',
+        h('button', { class: 'primary', onclick: AD.addBook }, 'Add a book'), h('button', { onclick: AD.importBooks }, 'Bring in books from a file…'), AD.tourButton()));
+      out.push(await AD.importsCard());
+      return out.filter(Boolean);
     }
     out.push(h('div', { class: 'tablewrap' }, h('table', null,
       h('caption', { class: 'note' }, 'Your books, with their series together.'),
@@ -26,6 +28,7 @@
         h('td', null, b.formats.join(', ')),
         h('td', null, h('span', { class: `chip ${b.business_status === 'live' ? 'live' : ''}` }, cap(b.business_status))),
         h('td', null, b.clash_count ? h('span', { class: 'chip problem' }, b.clash_count) : '')))))));
+    out.push(await AD.importsCard());
     return out;
   };
 

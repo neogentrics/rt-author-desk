@@ -3,6 +3,7 @@
 // back plain data or a plain-words problem. Kept apart from Electron so it's tested like any other module.
 const { Catalog, CatalogError } = require('./catalog');
 const { ClashError, dismissClash, findClashes, restoreClash } = require('./clashes');
+const { BookImportError, BookImporter } = require('./books-import');
 const { ImportError, Importer } = require('./importer');
 const { RoyaltyError, royalties } = require('./royalties');
 const { BUILT_IN_STORES } = require('./storage/schema');
@@ -11,11 +12,12 @@ const { today: todayOf } = require('../shared/dates');
 const { displayIsbn } = require('../shared/isbn');
 const { MoneyError, format, toDecimalString } = require('../shared/money');
 
-const FRIENDLY = [CatalogError, ClashError, ImportError, MoneyError, RoyaltyError];
+const FRIENDLY = [BookImportError, CatalogError, ClashError, ImportError, MoneyError, RoyaltyError];
 
 function createApi(library, { now = () => new Date(), locale } = {}) {
   const catalog = new Catalog(library);
   const importer = new Importer(library, { locale, now });
+  const booksImporter = new BookImporter(library);
   const today = () => todayOf(now());
   const options = () => ({ today: today(), locale });
   const named = (table) => (id) => (id ? library.get(table, id)?.name ?? null : null);
@@ -110,6 +112,12 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
     earnings: () => importer.earnedVsPaid(),
     royalties: ({ by, from, to } = {}) => royalties(library, { by, from, to, locale }),
 
+    // ---- Bringing books in from a spreadsheet. The file is chosen and read in the main process (booksImporter.open). ----
+    planBooksImport: (args) => booksImporter.plan(args),
+    acceptBooksImport: (args) => booksImporter.accept(args),
+    undoBooksImport: ({ id }) => booksImporter.undo({ id }),
+    booksImports: () => booksImporter.history(),
+
     // ---- Names and stores ----
     names: () => ({
       series: library.list('series'),
@@ -139,7 +147,7 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
     }
   }
 
-  return { call, names: [...allowed], importer };
+  return { call, names: [...allowed], importer, booksImporter };
 }
 
 module.exports = { createApi };

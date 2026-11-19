@@ -63,6 +63,7 @@
     else if (name === 'tour') AD.startTour();
     else if (name === 'update-status') { AD.state.update = where; AD.drawBars(); }
     else if (name === 'new-book') AD.addBook();
+    else if (name === 'import-books') AD.importBooks();
     else if (name === 'go') location.hash = where === 'desk' ? '#/' : `#/${where}`;
   });
 

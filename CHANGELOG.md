@@ -48,6 +48,12 @@ leaves alpha when the catalog is solid and doesn't wait for the money. The first
 - **Empty screens say what to do and have the button for it.** The Desk, Books, Calendar, Audiobooks and ISBNs each explain what they
   are for, and offer to add a book, date a release, add an audiobook or take a tour of a made-up catalog.
 
+- **Bring in your books from a CSV file**, such as a Notion export. Show the app which column is which (it guesses first), see every
+  book it would make and every row it would skip and why, say what any word it doesn't know means, and bring them in in one step.
+  Series, formats, statuses, dates written out or as 3/1/2025, and an Amazon link (kept as a KDP listing's code, or in the notes) are understood.
+  A title already in your library is skipped, so the same file twice adds nothing, and **Books you brought in** has an Undo.
+- The first tests that drive the real app through its window, run in CI on Linux.
+
 ### Started early, for 1.1 (the money)
 These are in the test builds, and v1.0 doesn't depend on them.
 - **A reader for Amazon KDP orders and payments reports**, used in tests with made-up files.

@@ -180,3 +180,12 @@ dialog.help-dialog[open] { width: min(60rem, 96vw); height: min(40rem, 88vh); di
 .help-page li { margin-bottom: 4px; }
 .help-note { margin: 12px 0; }
 @media (max-width: 760px) { .help-body { grid-template-columns: 1fr; } .help-nav { max-height: 9rem; } }
+
+/* Bringing books in from a file */
+dialog.import-dialog[open] { width: min(64rem, 96vw); max-height: 92vh; }
+.import-body h3 { margin: 16px 0 6px; }
+.import-body select { width: auto; max-width: 100%; }
+.import-body .tablewrap { margin-bottom: 8px; }
+.import-list { max-height: 18rem; overflow: auto; }
+tr.attention td { background: var(--check-bg); }
+tr.skipped td { color: var(--ink-soft); }

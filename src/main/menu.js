@@ -25,6 +25,7 @@ function buildMenu({ send, about, name = 'RT Author Desk', help = [] }) {
       label: 'File',
       submenu: [
         { label: 'New Book…', accelerator: 'CmdOrCtrl+N', click: () => send('new-book') },
+        { label: 'Bring In Books from a File…', accelerator: 'CmdOrCtrl+Shift+I', click: () => send('import-books') },
         ...(isMac
           ? []
           : [

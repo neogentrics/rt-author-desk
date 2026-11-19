@@ -6,6 +6,7 @@ const { app, BrowserWindow, dialog, ipcMain, Menu, session, shell } = require('e
 const { createApi } = require('./api');
 const { buildMenu } = require('./menu');
 const { Settings } = require('./settings');
+const { BookImportError } = require('./books-import');
 const { ImportError } = require('./importer');
 const { Library } = require('./storage/library');
 const { fillSample } = require('./sample');
@@ -43,6 +44,16 @@ if (selfTestArg) {
     }
   };
   app.on('second-instance', show);
+
+  // Asks for a file. The tests that drive the real app can't click a native dialog, so when the app is run from its source (never
+  // an installed copy) they can name the file in RTAD_TEST_FILES, as {"books": "/path"} or {"report": "/path"}.
+  const chooseFile = async (kind, options) => {
+    if (!app.isPackaged && process.env.RTAD_TEST_FILES) {
+      const file = JSON.parse(process.env.RTAD_TEST_FILES)[kind];
+      return file ? { canceled: false, filePaths: [file] } : { canceled: true, filePaths: [] };
+    }
+    return dialog.showOpenDialog(window, options);
+  };
 
   // The made-up catalog lives in its own library, which is thrown away when it's left, so it can't touch the real one.
   const sampleDir = () => path.join(app.getPath('userData'), 'sample-library');
@@ -130,7 +141,7 @@ if (selfTestArg) {
       if (!fromApp(event)) return NOT_FROM_APP;
       if (sample) return { ok: false, message: 'This is a made-up catalog, so there is nothing to import into. Leave it first.' };
       if (!real) return { ok: false, message: 'Your library is not open.' };
-      const choice = await dialog.showOpenDialog(window, {
+      const choice = await chooseFile('report', {
         title: 'Choose a sales report',
         properties: ['openFile'],
         filters: [{ name: 'Sales reports (.xlsx)', extensions: ['xlsx'] }],
@@ -144,6 +155,27 @@ if (selfTestArg) {
         if (error instanceof ImportError) return { ok: false, message: error.message };
         console.error('[pick-report]', error);
         return { ok: false, message: "That file couldn't be read, and nothing was imported." };
+      }
+    });
+
+    // A spreadsheet of books is chosen and read here too. The window gets the headings and a few rows to match columns with.
+    ipcMain.handle('desk:pick-books-file', async (event) => {
+      if (!fromApp(event)) return NOT_FROM_APP;
+      if (!active()) return { ok: false, message: 'Your library is not open.' };
+      const choice = await chooseFile('books', {
+        title: 'Choose a spreadsheet of books',
+        properties: ['openFile'],
+        filters: [{ name: 'Spreadsheets saved as CSV', extensions: ['csv', 'txt', 'tsv'] }],
+      });
+      if (choice.canceled || !choice.filePaths[0]) return { ok: true, value: null };
+      try {
+        const file = choice.filePaths[0];
+        if (fs.statSync(file).size > 20 * 1024 * 1024) return { ok: false, message: 'That file is too big to be a list of books.' };
+        return { ok: true, value: active().api.booksImporter.open(fs.readFileSync(file), path.basename(file)) };
+      } catch (error) {
+        if (error instanceof BookImportError) return { ok: false, message: error.message };
+        console.error('[pick-books-file]', error);
+        return { ok: false, message: "That file couldn't be read, and nothing was brought in." };
       }
     });
 

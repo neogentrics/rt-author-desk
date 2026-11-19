@@ -21,11 +21,11 @@ function freePort() {
   });
 }
 
-async function launch({ seed } = {}) {
+async function launch({ seed, env: extraEnv = {} } = {}) {
   const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-e2e-'));
   if (seed) await seed(userData);
   const port = await freePort();
-  const env = { ...process.env };
+  const env = { ...process.env, ...extraEnv };
   delete env.ELECTRON_RUN_AS_NODE;
   const electron = require('electron');
   const app = spawn(electron, [repo, '--no-sandbox', `--remote-debugging-port=${port}`, `--user-data-dir=${userData}`], { env, stdio: 'ignore' });

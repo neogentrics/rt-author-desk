@@ -39,6 +39,7 @@ const TABLES = {
     'paid_date', 'method', 'earned_currency', 'accrued', 'tax_withheld', 'adjustments', 'net', 'source', 'fx_rate',
     'payout_currency', 'payout', 'status'],
   item_matches: ['store_id', 'store_item', 'edition_id'],
+  catalog_imports: ['kind', 'file_name', 'status', 'counts', 'created'],
 };
 
 // The stores every library starts with. Their IDs are fixed, so two computers that each made a new library agree on
@@ -280,6 +281,20 @@ const STEPS = [
           edition_id TEXT NOT NULL, ${stamps}
         );
         CREATE UNIQUE INDEX item_matches_one_each ON item_matches (store_id, store_item);
+      `);
+    },
+  },
+  {
+    version: 6,
+    up(db) {
+      // One row for each time books were brought in from a file, with the id of everything it made, so the whole import can be undone.
+      db.exec(`
+        CREATE TABLE catalog_imports (
+          id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('books-csv')), file_name TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'accepted' CHECK (status IN ('accepted', 'undone')),
+          counts TEXT NOT NULL DEFAULT '{}', created TEXT NOT NULL DEFAULT '{}',
+          created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
+        );
       `);
     },
   },
