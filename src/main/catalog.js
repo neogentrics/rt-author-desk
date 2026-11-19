@@ -175,12 +175,12 @@ class Catalog {
   }
 
   isbnsOf(editionId) {
-    return this.library.db.prepare('SELECT * FROM isbns WHERE edition_id = ? ORDER BY created_at, id').all(editionId);
+    return this.library.db.prepare('SELECT * FROM isbns WHERE edition_id = ? ORDER BY created_at, rowid').all(editionId);
   }
 
   // Numbers you own that no edition uses yet.
   spareIsbns() {
-    return this.library.db.prepare('SELECT * FROM isbns WHERE edition_id IS NULL ORDER BY created_at, id').all();
+    return this.library.db.prepare('SELECT * FROM isbns WHERE edition_id IS NULL ORDER BY created_at, rowid').all();
   }
 
   // ---- Recordings -----------------------------------------------------------------------------------------------
@@ -213,7 +213,7 @@ class Catalog {
   }
 
   recordingsOf(editionId) {
-    return this.library.db.prepare('SELECT * FROM recordings WHERE edition_id = ? ORDER BY created_at, id').all(editionId);
+    return this.library.db.prepare('SELECT * FROM recordings WHERE edition_id = ? ORDER BY created_at, rowid').all(editionId);
   }
 
   // ---- Listings -------------------------------------------------------------------------------------------------
@@ -263,7 +263,7 @@ class Catalog {
   }
 
   listingsOf(editionId) {
-    return this.library.db.prepare('SELECT * FROM listings WHERE edition_id = ? ORDER BY created_at, id').all(editionId);
+    return this.library.db.prepare('SELECT * FROM listings WHERE edition_id = ? ORDER BY created_at, rowid').all(editionId);
   }
 
   // A listing's prices go with it, because a price means nothing without the listing it belongs to.

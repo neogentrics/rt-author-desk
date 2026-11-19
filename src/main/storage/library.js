@@ -92,7 +92,7 @@ class Library {
 
   list(table) {
     Library.columns(table);
-    return this.db.prepare(`SELECT * FROM ${table} ORDER BY created_at, id`).all();
+    return this.db.prepare(`SELECT * FROM ${table} ORDER BY created_at, rowid`).all();
   }
 
   // A removal leaves a marker, so another computer learns the record is gone rather than sending it back.
