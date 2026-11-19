@@ -131,3 +131,15 @@ test('money is sent as text, never as a number that could lose a cent', () => {
   assert.deepEqual(prices.map((p) => [p.marketplace, p.amount, typeof p.amount]), [['JP', '1500', 'string'], ['US', '0.10', 'string']]);
   library.close();
 });
+
+test('the audiobook tracker is one of the calls, and answers in plain data', () => {
+  const { library, ok } = start();
+  const book = ok('saveBook', { title: 'Book One' });
+  const edition = ok('saveEdition', { book_id: book.id, format: 'audiobook' });
+  const recording = ok('saveRecording', { edition_id: edition.id, voice: 'synthesized', read_by: 'Auto-narrated', replacing: 'waiting' });
+  ok('saveListing', { edition_id: edition.id, store_id: 'store-google-play-books', status: 'live', recording_id: recording.id });
+  const tracker = ok('audiobooks');
+  assert.equal(tracker.counts.waiting, 1);
+  assert.equal(tracker.rows[0].cells['store-google-play-books'][0].recording.voice, 'synthesized');
+  library.close();
+});

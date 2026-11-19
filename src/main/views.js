@@ -78,6 +78,77 @@ function releaseCalendar(library, { today, includePast = false }) {
     .sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title) || (a.store ?? '').localeCompare(b.store ?? ''));
 }
 
+// Every audiobook against every place an audiobook is sold: which recording is live there, whose voice it is, what rights
+// it carries, and which are waiting to be replaced and by what. One row per audiobook edition. The columns are the audio
+// stores, Google Play Books (it sells audiobooks too), and any other store where one of your audiobooks is listed.
+function audiobookTracker(library, { today }) {
+  const catalog = new Catalog(library);
+  const clashes = findClashes(library, { today });
+  const audioEditions = library.list('editions').filter((edition) => edition.format === 'audiobook');
+  const listingsByEdition = new Map(audioEditions.map((edition) => [edition.id, catalog.listingsOf(edition.id)]));
+  const used = new Set([...listingsByEdition.values()].flat().map((listing) => listing.store_id));
+  const stores = catalog.stores().filter((store) => used.has(store.id) || (store.active && (store.kind === 'audio' || store.id === 'store-google-play-books')));
+
+  const recordingFacts = (recording, byId) => {
+    const replacement = recording.replaced_by_id ? byId.get(recording.replaced_by_id) : null;
+    return {
+      id: recording.id,
+      voice: recording.voice,
+      read_by: recording.read_by,
+      exclusive: Boolean(recording.exclusive),
+      exclusive_store: recording.exclusive ? library.get('stores', recording.exclusive_store_id)?.name ?? null : null,
+      exclusive_until: recording.exclusive_until,
+      royalty_share: Boolean(recording.royalty_share),
+      waiting: recording.replacing === 'waiting',
+      // What it is waiting for: a recording already made (and when), or nothing yet.
+      replacement: replacement && { id: replacement.id, voice: replacement.voice, read_by: replacement.read_by, finished_on: replacement.finished_on },
+      replaced_on: recording.replaced_on,
+    };
+  };
+
+  const rows = audioEditions.map((edition) => {
+    const book = library.get('books', edition.book_id);
+    const recordings = catalog.recordingsOf(edition.id);
+    const byId = new Map(recordings.map((recording) => [recording.id, recording]));
+    const listings = listingsByEdition.get(edition.id);
+    const cells = {};
+    for (const store of stores) {
+      cells[store.id] = listings.filter((listing) => listing.store_id === store.id).map((listing) => {
+        const recording = listing.recording_id ? byId.get(listing.recording_id) : null;
+        return {
+          id: listing.id,
+          status: listing.status,
+          route: listing.route,
+          recording: recording ? recordingFacts(recording, byId) : null,
+          clashes: clashes.filter((clash) => clash.subjects.some((s) => (s.table === 'listings' && s.id === listing.id) || (recording && s.table === 'recordings' && s.id === recording.id))).map((c) => c.key),
+        };
+      });
+    }
+    return {
+      book: { id: book?.id ?? edition.book_id, title: book?.title || 'Untitled' },
+      edition: { id: edition.id, label: label(edition), release_date: edition.release_date },
+      recordings: recordings.map((recording) => recordingFacts(recording, byId)),
+      // On sale, with no recording named: the app can't say what is live there.
+      unnamed: listings.filter((listing) => listing.status === 'live' && !listing.recording_id).length,
+      cells,
+    };
+  }).sort((a, b) => a.book.title.localeCompare(b.book.title) || a.edition.label.localeCompare(b.edition.label));
+
+  const everyRecording = rows.flatMap((row) => row.recordings);
+  return {
+    stores: stores.map((store) => ({ id: store.id, name: store.name })),
+    rows,
+    counts: {
+      titles: rows.length,
+      recordings: everyRecording.length,
+      waiting: everyRecording.filter((r) => r.waiting).length,
+      waitingWithReplacement: everyRecording.filter((r) => r.waiting && r.replacement).length,
+      synthesized: everyRecording.filter((r) => r.voice !== 'human').length,
+      unnamed: rows.reduce((sum, row) => sum + row.unnamed, 0),
+    },
+  };
+}
+
 // The home screen: what needs you today. Not totals. It answers "what's next, and what's in its way?"
 function desk(library, { today }) {
   const clashes = findClashes(library, { today });
@@ -100,4 +171,4 @@ function desk(library, { today }) {
   };
 }
 
-module.exports = { desk, releaseCalendar, storeGrid };
+module.exports = { audiobookTracker, desk, releaseCalendar, storeGrid };

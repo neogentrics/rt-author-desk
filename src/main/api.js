@@ -4,7 +4,7 @@
 const { Catalog, CatalogError } = require('./catalog');
 const { ClashError, dismissClash, findClashes, restoreClash } = require('./clashes');
 const { BUILT_IN_STORES } = require('./storage/schema');
-const { desk, releaseCalendar, storeGrid } = require('./views');
+const { audiobookTracker, desk, releaseCalendar, storeGrid } = require('./views');
 const { today: todayOf } = require('../shared/dates');
 const { displayIsbn } = require('../shared/isbn');
 const { MoneyError, format, toDecimalString } = require('../shared/money');
@@ -31,6 +31,7 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
     // ---- The Desk and the lists around it ----
     desk: () => desk(library, options()),
     calendar: ({ includePast = false } = {}) => releaseCalendar(library, { today: today(), includePast }),
+    audiobooks: () => audiobookTracker(library, { today: today() }),
     clashes: ({ includeDismissed = false } = {}) => findClashes(library, { today: today(), includeDismissed }),
     dismissClash: ({ key, reason }) => (dismissClash(library, key, reason), true),
     restoreClash: ({ key }) => restoreClash(library, key),

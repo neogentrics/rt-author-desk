@@ -59,8 +59,8 @@ tested alone, so a problem in one doesn't hold up the other.
 
 **Where it stands (18 November 2026).** The catalog's first test build works on the real app: books and series, editions,
 ISBNs with check digits, audiobook recordings, store listings with their route and prices, the store grid, nine clash checks,
-a release calendar and the Desk. It has been used by hand on a made-up library, and its tests pass. What's left in the
-catalog: contributors and credits (and the clash that depends on them), the all-titles audiobook tracker, and the clash checks that need
+a release calendar, the all-titles audiobook tracker and the Desk. It has been used by hand on a made-up library, and its tests pass. What's left in the
+catalog: contributors and credits (and the clash that depends on them), and the clash checks that need
 rate cards, spacing rules or pre-order deadlines. In the money, the KDP orders and payments reader exists, and
 the rest of the readers, matching, royalties and the calculator are not started. Nothing under "For every app" is built yet
 except the encrypted library and the Linux installer. The open finding about the sample KDP report is in

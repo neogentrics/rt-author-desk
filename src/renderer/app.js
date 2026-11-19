@@ -10,6 +10,7 @@
   const LINKS = [
     ['', 'Desk'],
     ['books', 'Books'],
+    ['audiobooks', 'Audiobooks'],
     ['calendar', 'Calendar'],
     ['clashes', 'Clashes'],
     ['isbns', 'ISBNs'],

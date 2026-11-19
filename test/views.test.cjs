@@ -6,7 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { Catalog } = require('../src/main/catalog');
 const { Library } = require('../src/main/storage/library');
-const { desk, releaseCalendar, storeGrid } = require('../src/main/views');
+const { audiobookTracker, desk, releaseCalendar, storeGrid } = require('../src/main/views');
 
 const TODAY = '2027-01-10';
 const temp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-test-'));
@@ -117,5 +117,81 @@ test('the Desk of an empty library says so, instead of showing zeros', () => {
   assert.equal(home.isEmpty, true);
   assert.equal(home.nextRelease, null);
   assert.deepEqual([home.problems, home.toCheck, home.comingSoon], [[], [], []]);
+  library.close();
+});
+
+function audio() {
+  const library = new Library(temp()).open();
+  const catalog = new Catalog(library);
+  const one = catalog.saveBook({ title: 'Book One' });
+  const two = catalog.saveBook({ title: 'Another Book' });
+  const oneAudio = catalog.saveEdition({ book_id: one.id, format: 'audiobook' });
+  const twoAudio = catalog.saveEdition({ book_id: two.id, format: 'audiobook' });
+  catalog.saveEdition({ book_id: one.id, format: 'ebook' });
+  return { library, catalog, one, two, oneAudio, twoAudio };
+}
+
+test('the audiobook tracker has one row per audiobook, and the audio stores across the top', () => {
+  const { library } = audio();
+  const tracker = audiobookTracker(library, { today: TODAY });
+  assert.deepEqual(tracker.rows.map((r) => r.book.title), ['Another Book', 'Book One'], 'ebooks are not in it');
+  assert.deepEqual(tracker.stores.map((s) => s.name), ['ACX', 'Google Play Books']);
+  assert.equal(tracker.counts.titles, 2);
+  assert.equal(tracker.counts.recordings, 0);
+  library.close();
+});
+
+test('it shows which recording is live where, with its voice and rights', () => {
+  const { library, catalog, oneAudio } = audio();
+  const human = catalog.saveRecording({ edition_id: oneAudio.id, voice: 'human', read_by: 'Made-up Narrator', exclusive: true, exclusive_store_id: 'store-acx', exclusive_until: '2030-01-01', royalty_share: true });
+  const google = catalog.saveRecording({ edition_id: oneAudio.id, voice: 'synthesized', read_by: 'Auto-narrated' });
+  catalog.saveListing({ edition_id: oneAudio.id, store_id: 'store-acx', status: 'live', recording_id: human.id });
+  catalog.saveListing({ edition_id: oneAudio.id, store_id: 'store-google-play-books', status: 'live', recording_id: google.id });
+  const row = audiobookTracker(library, { today: TODAY }).rows.find((r) => r.book.title === 'Book One');
+  const acx = row.cells['store-acx'][0].recording;
+  assert.equal(acx.voice, 'human');
+  assert.equal(acx.exclusive_store, 'ACX');
+  assert.equal(acx.exclusive_until, '2030-01-01');
+  assert.equal(acx.royalty_share, true);
+  assert.equal(row.cells['store-google-play-books'][0].recording.voice, 'synthesized');
+  assert.equal(row.unnamed, 0);
+  library.close();
+});
+
+test('a recording waiting to be replaced says by what, or that nothing has been made yet', () => {
+  const { library, catalog, oneAudio, twoAudio } = audio();
+  const auto = catalog.saveRecording({ edition_id: oneAudio.id, voice: 'synthesized', read_by: 'Auto-narrated', replacing: 'waiting' });
+  const studio = catalog.saveRecording({ edition_id: oneAudio.id, voice: 'human', read_by: 'Made-up Narrator', finished_on: '2027-01-05' });
+  catalog.saveRecording({ id: auto.id, replaced_by_id: studio.id });
+  catalog.saveRecording({ edition_id: twoAudio.id, voice: 'synthesized', read_by: 'Auto-narrated', replacing: 'waiting' });
+  const tracker = audiobookTracker(library, { today: TODAY });
+  const first = tracker.rows.find((r) => r.book.title === 'Book One').recordings.find((r) => r.waiting);
+  assert.equal(first.replacement.read_by, 'Made-up Narrator');
+  assert.equal(first.replacement.finished_on, '2027-01-05');
+  const second = tracker.rows.find((r) => r.book.title === 'Another Book').recordings[0];
+  assert.equal(second.waiting, true);
+  assert.equal(second.replacement, null);
+  assert.equal(tracker.counts.waiting, 2);
+  assert.equal(tracker.counts.waitingWithReplacement, 1);
+  assert.equal(tracker.counts.synthesized, 2);
+  library.close();
+});
+
+test('a store with an audiobook listing appears as a column, and a live listing with no recording named is counted', () => {
+  const { library, catalog, oneAudio } = audio();
+  catalog.saveListing({ edition_id: oneAudio.id, store_id: 'store-kobo', status: 'live' });
+  const tracker = audiobookTracker(library, { today: TODAY });
+  assert.ok(tracker.stores.some((s) => s.id === 'store-kobo'));
+  assert.equal(tracker.counts.unnamed, 1);
+  assert.equal(tracker.rows.find((r) => r.book.title === 'Book One').cells['store-kobo'][0].recording, null);
+  library.close();
+});
+
+test('a clash on a recording shows on the square where it is listed', () => {
+  const { library, catalog, oneAudio } = audio();
+  const exclusive = catalog.saveRecording({ edition_id: oneAudio.id, voice: 'human', read_by: 'Made-up Narrator', exclusive: true, exclusive_store_id: 'store-acx' });
+  catalog.saveListing({ edition_id: oneAudio.id, store_id: 'store-google-play-books', status: 'live', recording_id: exclusive.id });
+  const row = audiobookTracker(library, { today: TODAY }).rows.find((r) => r.book.title === 'Book One');
+  assert.equal(row.cells['store-google-play-books'][0].clashes.length, 1);
   library.close();
 });
