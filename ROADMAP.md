@@ -26,7 +26,7 @@ losing anything, and pass its automated tests on Windows, Mac and Linux.
 | Release | Theme | Status |
 |---|---|---|
 | [Step zero](#step-zero--settle-the-foundations) | Settle the foundations | Built. The installers for Windows, Mac and Linux are built and checked by CI |
-| [v1.0](#v10--the-catalog) | The catalog | **Built, ready to publish as 1.0.0.** Contributors and credits follow in the first update |
+| [v1.0](#v10--the-catalog) | The catalog | **Built, apart from the suite's look-and-feel items below.** 1.0.0 follows once they're in. Contributors and credits come in the first update |
 | [v1.1](#v11--the-money) | The money | **Started early, as test code.** KDP import and royalties exist, and the calculator isn't started |
 | [v1.2](#v12--every-store) | Every store | Planned |
 | [v1.3](#v13--accounts-and-the-vault) | Accounts and the vault | Planned |
@@ -72,6 +72,13 @@ fifteen clash checks are built. The two price checks and the locked-period check
 spacing checks with launch plans in v1.5. The Money and Royalties screens are in the menu marked "early": they are v1.1's work, started
 early.
 
+**Still to build before 1.0.0.** The owner asked that every app follow the suite's
+[look-and-feel standard](https://github.com/neogentrics/rt-markdown-reader/blob/main/docs/app-suite.md), with RT Markdown Reader as the
+reference. Built so far: the themes, Glass, colour-safe colours, fonts, Preferences, the Help Center and tour, About, and updates with
+"Restart to update". Not built yet, and listed in the table below: the Help menu in the suite's exact order, Follow System and
+Customize Theme with a visible theme button, the Ctrl+K command palette, the icon toolbar, the Copy details line and license links in
+About, and the accessibility checks for Windows high contrast and the keyboard.
+
 | Feature | Size | Details |
 |---|:-:|---|
 | 🙋 Books and series | M | Works for one novel or a long series, under any number of pen names and publisher names. A new series, pen name or publisher name can be made right where a book asks for one. A book can be planned, in progress, live, pulled or being reworked. |
@@ -97,6 +104,11 @@ early.
 | Installers & updates | M | Windows, Mac and Linux, as in RT Story Tracker. The app checks for updates itself, test builds included, so an installed test build updates to the next one. |
 | 🙋 Preferences, themes & fonts | M | The suite's themes, Glass, colour-safe colours, fonts and text size, in a Preferences window (Ctrl+,). |
 | 🙋 Help Center | M | A Help menu (F1): short searchable guides, a first-run tour of a made-up catalog, About, and Check for Updates. |
+| 🙋 Short menus and a command palette | S | File, Edit, View and Help, with rarely used commands in submenus, and every command can be run by name with Ctrl+K, then `>`. Help is in the suite's order: Help Center (F1), Tutorial, Check for Updates…, About. **Not built yet.** |
+| 🙋 The About window, in full | S | The icon, name and version, links to the website, what's new, reporting a problem and the source code, a line of Electron, Chromium, Node and system versions with a Copy details button, and links to the license and the open-source notices. **Partly built.** |
+| 🙋 Themes, the rest of the standard | M | Follow System, Customize Theme (your own colours), and a theme button on the main screen, beside the themes, Glass and colour-safe colours already built. **Not built yet.** |
+| 🙋 An icon toolbar | S | Icon buttons for the common commands, each with a name on hover that screen readers read out. **Not built yet.** |
+| Accessibility checks | S | Every button has a name and every theme meets WCAG AA contrast, checked in the tests, and Windows high contrast and full keyboard use too. **Partly built:** button names and theme contrast are tested today. |
 | 🙋 An icon of its own | S | A ledger on a desk, in a different shape and colour family from the other apps, made from one source file by a script. |
 | A simple first run | S | A short welcome the first time: start your catalog, bring in a file, or look around a made-up one. |
 | Installed list | S | Leaves the small file that tells the other apps it's installed, and which version is installed. It is written each time the app starts, so an update changes it, and the Windows installer writes it too. |
@@ -300,9 +312,12 @@ It can't reach the vault at any level. Draft a description with a local model an
 | Code signing | S | Windows and Mac, as for the other apps. |
 | Tutorial & Help Center | M | A first-run tutorial and a Help Center that grow with each release. Any author has to be able to start alone. |
 | Accessibility | S | Screen readers, contrast and keyboard use, checked in the tests. |
+| 🙋 Metallic finish | S | A third look beside Solid and Glass, copied from RT Markdown Reader once its 3.13 ships. It's built there and still being tested, so nothing is copied yet. |
+| Changeable shortcuts | S | Change any keyboard shortcut in Preferences, as in the other apps. |
+| Adjustable toolbar | S | Hide, reorder and shrink the toolbar buttons, copied from RT Markdown Reader's 3.13 once it ships. |
 | Rate cards | S | Rates checked against each store's own pages before each release. |
 | Report layouts | S | Readers updated when a store changes its reports. |
-| Languages | L | The app in other languages. |
+| Languages | L | The app in Spanish, French and German, with right-to-left layouts. All the app's words are kept in one table for each feature from the start, so this stays cheap. |
 | Recon Towers App Store | S | Listed once 1.0 is out. Until then it stays on The Bench. |
 
 ## Open decisions
