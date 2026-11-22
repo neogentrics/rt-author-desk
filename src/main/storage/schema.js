@@ -23,10 +23,27 @@ const TABLES = {
   ],
   listings: [
     'edition_id', 'store_id', 'store_item_id', 'url', 'status', 'publisher_shown', 'route', 'via_store_id', 'program',
-    'program_exclusive', 'program_from', 'program_until', 'isbn_id', 'recording_id', 'release_date', 'notes',
+    'program_exclusive', 'program_from', 'program_until', 'isbn_id', 'recording_id', 'release_date', 'credits_recorded', 'notes',
   ],
   prices: ['listing_id', 'marketplace', 'currency', 'amount', 'from_date', 'notes'],
   dismissed_clashes: ['clash_key', 'reason'],
+  report_files: ['store_id', 'kind', 'file_name', 'fingerprint', 'period_start', 'period_end', 'status', 'rows_in_file', 'counts',
+    'accounting', 'problems', 'mismatch_accepted', 'original'],
+  sale_lines: ['report_id', 'fingerprint', 'store_id', 'store_item', 'title', 'author', 'marketplace', 'period', 'royalty_date',
+    'royalty_type', 'transaction_type', 'units_sold', 'units_refunded', 'net_units', 'currency', 'list_price', 'offer_price',
+    'delivery_cost', 'royalty', 'estimate', 'edition_id', 'listing_id'],
+  pages_read: ['report_id', 'fingerprint', 'store_id', 'store_item', 'title', 'marketplace', 'read_date', 'period', 'pages', 'edition_id'],
+  order_counts: ['report_id', 'fingerprint', 'store_id', 'store_item', 'title', 'marketplace', 'kind', 'order_date', 'period',
+    'paid_units', 'free_units', 'edition_id'],
+  payments: ['report_id', 'fingerprint', 'store_id', 'marketplace', 'period_start', 'period_end', 'payment_number', 'detail',
+    'paid_date', 'method', 'earned_currency', 'accrued', 'tax_withheld', 'adjustments', 'net', 'source', 'fx_rate',
+    'payout_currency', 'payout', 'status'],
+  item_matches: ['store_id', 'store_item', 'edition_id'],
+  catalog_imports: ['kind', 'file_name', 'status', 'counts', 'created'],
+  trash_items: ['kind', 'label', 'payload'],
+  people: ['name', 'notes'],
+  credits: ['edition_id', 'person_id', 'role', 'notes'],
+  listing_credits: ['listing_id', 'credit_id'],
 };
 
 // The stores every library starts with. Their IDs are fixed, so two computers that each made a new library agree on
@@ -196,6 +213,133 @@ const STEPS = [
           created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
         );
         CREATE UNIQUE INDEX dismissed_clashes_one_each ON dismissed_clashes (clash_key);
+      `);
+    },
+  },
+  {
+    version: 5,
+    up(db) {
+      const date = (column) => `${column} TEXT CHECK (${column} IS NULL OR ${column} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]')`;
+      const month = (column) => `${column} TEXT NOT NULL CHECK (${column} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]')`;
+      // An amount that can be negative (a refund): whole units of the smallest denomination, as text.
+      const signed = (column, extra = 'NOT NULL') => `${column} TEXT ${extra} CHECK (${column} IS NULL OR (length(${column}) > 0 AND ${column} NOT GLOB '*[^0-9-]*' AND ${column} NOT GLOB '*?-*'))`;
+      const stamps = 'created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL';
+      db.exec(`
+        CREATE TABLE report_files (
+          id TEXT PRIMARY KEY, store_id TEXT NOT NULL, kind TEXT NOT NULL, file_name TEXT NOT NULL DEFAULT '',
+          fingerprint TEXT NOT NULL, ${date('period_start')}, ${date('period_end')},
+          status TEXT NOT NULL DEFAULT 'accepted' CHECK (status IN ('accepted', 'undone')),
+          rows_in_file INTEGER NOT NULL, counts TEXT NOT NULL DEFAULT '{}', accounting TEXT NOT NULL DEFAULT '[]',
+          problems TEXT NOT NULL DEFAULT '[]', mismatch_accepted INTEGER NOT NULL DEFAULT 0 CHECK (mismatch_accepted IN (0, 1)),
+          original BLOB, ${stamps}
+        );
+        CREATE UNIQUE INDEX report_files_one_live ON report_files (fingerprint) WHERE status = 'accepted';
+
+        CREATE TABLE sale_lines (
+          id TEXT PRIMARY KEY, report_id TEXT NOT NULL, fingerprint TEXT NOT NULL, store_id TEXT NOT NULL,
+          store_item TEXT NOT NULL DEFAULT '', title TEXT NOT NULL DEFAULT '', author TEXT NOT NULL DEFAULT '',
+          marketplace TEXT NOT NULL DEFAULT '', ${month('period')}, royalty_date TEXT NOT NULL DEFAULT '',
+          royalty_type TEXT NOT NULL DEFAULT '', transaction_type TEXT NOT NULL DEFAULT '',
+          units_sold INTEGER NOT NULL DEFAULT 0, units_refunded INTEGER NOT NULL DEFAULT 0, net_units INTEGER NOT NULL DEFAULT 0,
+          currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'),
+          ${signed('list_price', '')}, ${signed('offer_price', '')}, ${signed('delivery_cost', '')}, ${signed('royalty')},
+          estimate INTEGER NOT NULL DEFAULT 1 CHECK (estimate IN (0, 1)), edition_id TEXT, listing_id TEXT, ${stamps}
+        );
+        CREATE UNIQUE INDEX sale_lines_one_each ON sale_lines (fingerprint);
+        CREATE INDEX sale_lines_by_report ON sale_lines (report_id);
+        CREATE INDEX sale_lines_by_edition ON sale_lines (edition_id);
+        CREATE INDEX sale_lines_by_item ON sale_lines (store_id, store_item);
+
+        CREATE TABLE pages_read (
+          id TEXT PRIMARY KEY, report_id TEXT NOT NULL, fingerprint TEXT NOT NULL, store_id TEXT NOT NULL,
+          store_item TEXT NOT NULL DEFAULT '', title TEXT NOT NULL DEFAULT '', marketplace TEXT NOT NULL DEFAULT '',
+          read_date TEXT NOT NULL DEFAULT '', ${month('period')}, pages INTEGER NOT NULL DEFAULT 0, edition_id TEXT, ${stamps}
+        );
+        CREATE UNIQUE INDEX pages_read_one_each ON pages_read (fingerprint);
+        CREATE INDEX pages_read_by_report ON pages_read (report_id);
+
+        CREATE TABLE order_counts (
+          id TEXT PRIMARY KEY, report_id TEXT NOT NULL, fingerprint TEXT NOT NULL, store_id TEXT NOT NULL,
+          store_item TEXT NOT NULL DEFAULT '', title TEXT NOT NULL DEFAULT '', marketplace TEXT NOT NULL DEFAULT '',
+          kind TEXT NOT NULL CHECK (kind IN ('processed', 'placed')), order_date TEXT NOT NULL DEFAULT '', ${month('period')},
+          paid_units INTEGER NOT NULL DEFAULT 0, free_units INTEGER NOT NULL DEFAULT 0, edition_id TEXT, ${stamps}
+        );
+        CREATE UNIQUE INDEX order_counts_one_each ON order_counts (fingerprint);
+        CREATE INDEX order_counts_by_report ON order_counts (report_id);
+
+        CREATE TABLE payments (
+          id TEXT PRIMARY KEY, report_id TEXT NOT NULL, fingerprint TEXT NOT NULL, store_id TEXT NOT NULL,
+          marketplace TEXT NOT NULL DEFAULT '', ${date('period_start')}, ${date('period_end')},
+          payment_number TEXT NOT NULL DEFAULT '', detail TEXT NOT NULL DEFAULT '', paid_date TEXT NOT NULL DEFAULT '',
+          method TEXT NOT NULL DEFAULT '', earned_currency TEXT CHECK (earned_currency IS NULL OR earned_currency GLOB '[A-Z][A-Z][A-Z]'),
+          ${signed('accrued', '')}, ${signed('tax_withheld', '')}, ${signed('adjustments', '')}, ${signed('net', '')},
+          source TEXT NOT NULL DEFAULT '', fx_rate TEXT NOT NULL DEFAULT '',
+          payout_currency TEXT CHECK (payout_currency IS NULL OR payout_currency GLOB '[A-Z][A-Z][A-Z]'), ${signed('payout', '')},
+          status TEXT NOT NULL DEFAULT '', ${stamps}
+        );
+        CREATE UNIQUE INDEX payments_one_each ON payments (fingerprint);
+        CREATE INDEX payments_by_report ON payments (report_id);
+
+        CREATE TABLE item_matches (
+          id TEXT PRIMARY KEY, store_id TEXT NOT NULL, store_item TEXT NOT NULL CHECK (length(store_item) > 0),
+          edition_id TEXT NOT NULL, ${stamps}
+        );
+        CREATE UNIQUE INDEX item_matches_one_each ON item_matches (store_id, store_item);
+      `);
+    },
+  },
+  {
+    version: 6,
+    up(db) {
+      // One row for each time books were brought in from a file, with the id of everything it made, so the whole import can be undone.
+      db.exec(`
+        CREATE TABLE catalog_imports (
+          id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('books-csv')), file_name TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'accepted' CHECK (status IN ('accepted', 'undone')),
+          counts TEXT NOT NULL DEFAULT '{}', created TEXT NOT NULL DEFAULT '{}',
+          created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
+        );
+      `);
+    },
+  },
+  {
+    version: 7,
+    up(db) {
+      // What was removed from the catalog waits here for 30 days: a whole copy of the records, so putting them back is exact.
+      // The time it was removed is the row's own created_at.
+      db.exec(`
+        CREATE TABLE trash_items (
+          id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('book', 'edition', 'listing')), label TEXT NOT NULL DEFAULT '',
+          payload TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
+        );
+      `);
+    },
+  },
+  {
+    version: 8,
+    up(db) {
+      // The people who work on a book (an editor, an artist, a narrator), credited on an edition in a role. A listing can also say
+      // which of those credits its store shows, and whether that has been written down at all, so a store that was never looked at
+      // isn't taken to show nothing.
+      db.exec(`
+        CREATE TABLE people (
+          id TEXT PRIMARY KEY, name TEXT NOT NULL DEFAULT '', notes TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
+        );
+        CREATE TABLE credits (
+          id TEXT PRIMARY KEY, edition_id TEXT NOT NULL, person_id TEXT NOT NULL, role TEXT NOT NULL CHECK (length(role) > 0),
+          notes TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX credits_one_each ON credits (edition_id, person_id, role);
+        CREATE INDEX credits_by_person ON credits (person_id);
+        CREATE TABLE listing_credits (
+          id TEXT PRIMARY KEY, listing_id TEXT NOT NULL, credit_id TEXT NOT NULL,
+          created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX listing_credits_one_each ON listing_credits (listing_id, credit_id);
+        CREATE INDEX listing_credits_by_credit ON listing_credits (credit_id);
+        ALTER TABLE listings ADD COLUMN credits_recorded INTEGER NOT NULL DEFAULT 0 CHECK (credits_recorded IN (0, 1));
       `);
     },
   },

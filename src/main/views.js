@@ -3,6 +3,7 @@
 // Desk. Plain functions of the library and a date, so each is tested without a window.
 const { Catalog } = require('./catalog');
 const { findClashes } = require('./clashes');
+const { earnedIn } = require('./royalties');
 const { daysBetween } = require('../shared/dates');
 const { format: formatMoney } = require('../shared/money');
 
@@ -149,8 +150,16 @@ function audiobookTracker(library, { today }) {
   };
 }
 
+// The month before today, and what the sales reports say it earned, or null when none has been imported for it.
+function lastMonth(library, today, locale) {
+  const [year, month] = today.split('-').map(Number);
+  const before = month === 1 ? `${year - 1}-12` : `${year}-${String(month - 1).padStart(2, '0')}`;
+  const earned = earnedIn(library, before, locale);
+  return earned && { period: before, earned, estimate: true };
+}
+
 // The home screen: what needs you today. Not totals. It answers "what's next, and what's in its way?"
-function desk(library, { today }) {
+function desk(library, { today, locale }) {
   const clashes = findClashes(library, { today });
   const releases = releaseCalendar(library, { today });
   const next = releases[0] ?? null;
@@ -165,9 +174,9 @@ function desk(library, { today }) {
     comingSoon: releases.filter((r) => r.days_away <= SOON_DAYS).slice(0, 8),
     problems: clashes.filter((c) => c.severity === 'problem'),
     toCheck: clashes.filter((c) => c.severity === 'check'),
-    // These arrive with the money (reports due, last month's earnings). They're named here so the screen has a place for them.
+    // Reports due arrive with the stores' report schedules (v1.1). Last month's earnings are the sales reports' estimates.
     reportsDue: [],
-    lastMonth: null,
+    lastMonth: lastMonth(library, today, locale),
   };
 }
 

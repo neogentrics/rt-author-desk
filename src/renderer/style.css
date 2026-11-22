@@ -1,40 +1,72 @@
+/* Every colour comes from the theme (--t-*), which look.js sets from the person's settings. The values here are the light theme,
+   for the moment before the settings arrive. The names the rest of this file uses (--ink, --surface, ...) are worked out from them. */
 :root {
-  --bg: #eef1f6; --surface: #fff; --ink: #18212f; --ink-soft: #465266; --line: #dae0ea; --accent: #1d55b8; --accent-ink: #fff;
-  --problem: #a8261c; --problem-bg: #fbeceb; --check: #8a5a00; --check-bg: #fdf3dc; --good: #1f6b3a; --good-bg: #e6f4ea;
-  --focus: #1d55b8;
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --t-desk: #e7e3ee; --t-desk-image: linear-gradient(135deg, #cfc6ee, #e7e3ee, #bfe2da);
+  --t-panel: #f6f4fa; --t-panel-end: #ebe7f4; --t-edge: #d9d3e6; --t-ink: #221f2b; --t-ink-soft: #57516a; --t-sheet: #ffffff;
+  --t-accent: #5b3fd6; --t-on-accent: #ffffff; --t-on-panel: #221f2b; --t-on-panel-soft: #57516a; --t-danger: #b3261e; --t-danger-bg: #fbe9e7;
+  --ui-font: 'Inter', 'Segoe UI', system-ui, sans-serif; --text-size: 15px;
   color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0e1219; --surface: #171d28; --ink: #e8ecf4; --ink-soft: #b7c0cf; --line: #2a3345; --accent: #8fb4ff; --accent-ink: #0e1219;
-    --problem: #ff9d94; --problem-bg: #3a1815; --check: #f2c76b; --check-bg: #33270c; --good: #8fd6a6; --good-bg: #12301d; --focus: #8fb4ff;
+  :root:not([data-theme]) {
+    --t-desk: #15131c; --t-desk-image: linear-gradient(135deg, #12172c, #1b2550, #0f4444);
+    --t-panel: #1f1c29; --t-panel-end: #262236; --t-edge: #363046; --t-ink: #ece9f4; --t-ink-soft: #a9a3b8; --t-sheet: #26232f;
+    --t-accent: #a896ff; --t-on-accent: #17132b; --t-on-panel: #ece9f4; --t-on-panel-soft: #a9a3b8; --t-danger: #ffb4ab; --t-danger-bg: #4a1c18;
   }
 }
+:root {
+  font-family: var(--ui-font);
+  font-size: var(--text-size);
+  --ink: var(--t-ink); --ink-soft: var(--t-ink-soft); --line: var(--t-edge); --accent: var(--t-accent); --accent-ink: var(--t-on-accent);
+  --focus: var(--t-accent); --problem: var(--t-danger); --problem-bg: var(--t-danger-bg);
+  /* The panel's own line, and the washes for a hovered link and a count on it. A theme leaves these as they are here, and Customize Theme
+     replaces them with ones worked out from the panel colour you chose, so the words on them can still be read. */
+  /* The border of a field, a swatch and the like has to be seen to know where the control is (WCAG asks 3 to 1 for that), which the
+     faint line used between cards is not. It is the ink mixed into the page, and a test measures it in every theme. */
+  --field-line: color-mix(in srgb, var(--ink) 66%, var(--page));
+  --t-panel-edge: var(--t-edge);
+  --t-hover: color-mix(in srgb, var(--t-on-panel) 14%, transparent);
+  --t-chip: color-mix(in srgb, var(--t-on-panel) 22%, transparent);
+  /* The page is the theme's sheet. Cards sit a little off it, and fields and table headings a little further, toward the ink. */
+  --page: var(--t-sheet);
+  --surface: color-mix(in srgb, var(--t-sheet) 97%, var(--t-ink));
+  --bg: color-mix(in srgb, var(--t-sheet) 93%, var(--t-ink));
+  --check: #8a5a00; --check-bg: #fdf3dc; --good: #1f6b3a; --good-bg: #e6f4ea;
+}
+/* Warnings and good news are never told apart by red and green alone. Colour-safe colours use blue, orange and purple, and every
+   chip also says what it means in words. */
+:root[data-tone="dark"] { --check: #f2c76b; --check-bg: #33270c; --good: #8fd6a6; --good-bg: #12301d; }
+:root[data-colors="safe"] { --problem: #a83f00; --problem-bg: #fdebdd; --check: #7a2f63; --check-bg: #f9e8f2; --good: #00589a; --good-bg: #e2effa; }
+:root[data-colors="safe"][data-tone="dark"] { --problem: #ff9a5c; --problem-bg: #3b1f10; --check: #eaa6d2; --check-bg: #3a1b2d; --good: #7cc4f5; --good-bg: #0f2b40; }
+:root[data-theme="contrast"] { --check: #ffffff; --check-bg: #000000; --good: #ffffff; --good-bg: #000000; }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--ink); font-size: 15px; line-height: 1.55; }
+/* The toolbar stays at the top, so whatever is scrolled to (a focused control, a link to a part of the page) stops below it, not under it. */
+html { scroll-padding-top: calc(var(--bars-h, 0px) + 12px); }
+body { margin: 0; background: var(--t-desk) var(--t-desk-image) fixed; color: var(--ink); font-size: 1rem; line-height: 1.55; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .skip { position: absolute; left: -999px; top: 0; background: var(--surface); padding: 8px 12px; z-index: 10; }
 .skip:focus { left: 8px; top: 8px; }
 
-.shell { display: grid; grid-template-columns: 210px minmax(0, 1fr); min-height: 100vh; }
-.side { background: var(--surface); border-right: 1px solid var(--line); padding: 20px 12px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
-.brand { margin: 0 8px 16px; font-weight: 700; font-size: 16px; }
+.shell { display: grid; grid-template-columns: 14rem minmax(0, 1fr); min-height: 100vh; }
+.side { background: linear-gradient(var(--t-panel), var(--t-panel-end)); color: var(--t-on-panel); border-right: 1px solid var(--t-panel-edge); padding: 20px 12px; position: sticky; top: var(--bars-h, 0px); height: calc(100vh - var(--bars-h, 0px)); overflow-y: auto; }
+.brand { margin: 0 8px 16px; font-weight: 700; font-size: 1.067rem; color: var(--t-on-panel); }
 .side ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.side a { display: flex; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 8px; color: var(--ink); text-decoration: none; }
-.side a:hover { background: var(--bg); }
-.side a[aria-current="page"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
-.count { background: var(--problem); color: #fff; border-radius: 999px; padding: 0 8px; font-size: 13px; font-weight: 700; }
-a[aria-current="page"] .count { background: var(--accent-ink); color: var(--accent); }
+.side a { display: flex; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 8px; color: var(--t-on-panel); text-decoration: none; }
+.side a:hover { background: var(--t-hover); }
+.side :focus-visible { outline-color: var(--t-on-panel); }
+.side a[aria-current="page"] { background: var(--t-on-panel); color: var(--t-panel); font-weight: 600; }
+.count { background: var(--problem); color: var(--problem-bg); border-radius: 999px; padding: 0 8px; font-size: 0.867rem; font-weight: 700; }
+a[aria-current="page"] .count { background: var(--t-panel); color: var(--t-on-panel); }
 
-main { padding: 28px 32px 60px; max-width: 1180px; width: 100%; display: grid; gap: 18px; align-content: start; }
+main { background: var(--page); color: var(--ink); margin: 14px 14px 14px 14px; border-radius: 12px; border: 1px solid var(--t-edge); padding: 28px 32px 60px; width: auto; display: grid; gap: 18px; align-content: start; }
+main > * { max-width: 1180px; }
 main:focus { outline: none; }
 main > * { min-width: 0; }
-h1 { margin: 0; font-size: 28px; line-height: 1.2; }
-h2 { margin: 0 0 8px; font-size: 18px; }
-h3 { margin: 0 0 4px; font-size: 15px; }
-.lead { margin: 0; color: var(--ink-soft); font-size: 16px; }
-.crumb { margin: 0; font-size: 14px; }
+h1 { margin: 0; font-size: 1.867rem; line-height: 1.2; }
+h2 { margin: 0 0 8px; font-size: 1.2rem; }
+h3 { margin: 0 0 4px; font-size: 1rem; }
+.lead { margin: 0; color: var(--ink-soft); font-size: 1.067rem; }
+.crumb { margin: 0; font-size: 0.933rem; }
 .row { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
 .row.start { justify-content: flex-start; }
 a { color: var(--accent); }
@@ -48,22 +80,22 @@ a { color: var(--accent); }
 .card.good { border-left: 4px solid var(--good); }
 .card.accent { border-left: 4px solid var(--accent); }
 .card p { margin: 0 0 6px; }
-.note, .help { color: var(--ink-soft); font-size: 14px; }
+.note, .help { color: var(--ink-soft); font-size: 0.933rem; }
 .stack { display: grid; gap: 12px; }
 .list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .list > li { padding-bottom: 10px; border-bottom: 1px solid var(--line); }
 .list > li:last-child { border-bottom: 0; padding-bottom: 0; }
-.action { color: var(--ink-soft); font-size: 14px; }
+.action { color: var(--ink-soft); font-size: 0.933rem; }
 
 button, .button { font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 6px 12px; cursor: pointer; text-decoration: none; display: inline-block; }
 button:hover, .button:hover { border-color: var(--accent); }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
-button.danger { background: var(--problem); border-color: var(--problem); color: #fff; }
-button.small { padding: 2px 8px; font-size: 14px; }
+button.danger { background: var(--problem); border-color: var(--problem); color: var(--problem-bg); }
+button.small { padding: 2px 8px; font-size: 0.933rem; }
 button.link { border: 0; background: none; color: var(--accent); padding: 0; text-decoration: underline; }
 button:disabled { opacity: 0.6; cursor: default; }
 
-.chip { display: inline-block; border-radius: 999px; padding: 0 9px; font-size: 13px; font-weight: 600; background: var(--bg); border: 1px solid var(--line); color: var(--ink-soft); white-space: nowrap; }
+.chip { display: inline-block; border-radius: 999px; padding: 0 9px; font-size: 0.867rem; font-weight: 600; background: var(--bg); border: 1px solid var(--line); color: var(--ink-soft); white-space: nowrap; }
 .chip.live { background: var(--good-bg); color: var(--good); border-color: var(--good); }
 .chip.pre-order, .chip.planned { background: var(--check-bg); color: var(--check); border-color: var(--check); }
 .chip.pulled { text-decoration: line-through; }
@@ -72,7 +104,7 @@ button:disabled { opacity: 0.6; cursor: default; }
 
 table { border-collapse: collapse; width: 100%; background: var(--surface); }
 th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
-th { background: var(--bg); font-size: 14px; }
+th { background: var(--bg); font-size: 0.933rem; }
 .tablewrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--line); }
 .tablewrap table { border: 0; }
 td.cell { min-width: 112px; }
@@ -81,18 +113,19 @@ td.cell.gap { color: var(--ink-soft); }
 td.cell.has-problem { background: var(--problem-bg); }
 .cellbtn { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 0; color: inherit; }
 .cellbtn:hover { background: none; }
-.price { display: block; font-size: 14px; }
+.price { display: block; font-size: 0.933rem; }
 
 dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); padding: 20px 22px; width: min(520px, 92vw); max-height: 90vh; overflow: auto; }
 dialog.wide { width: min(720px, 94vw); }
 dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
 .field { display: grid; gap: 4px; margin-bottom: 12px; }
 .field.check { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.field label { font-weight: 600; font-size: 14px; }
+.field label { font-weight: 600; font-size: 0.933rem; }
 .field.check label { font-weight: 400; }
 .field .help { margin: 0; width: 100%; }
 .req { color: var(--problem); }
-input, select, textarea { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; width: 100%; }
+input, select, textarea { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--field-line); border-radius: 8px; padding: 6px 10px; width: 100%; }
+input::placeholder, textarea::placeholder { color: var(--ink-soft); opacity: 1; }
 input[type="checkbox"] { width: auto; }
 .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
 .error { color: var(--problem); background: var(--problem-bg); border-radius: 8px; padding: 8px 12px; margin: 0 0 8px; }
@@ -104,16 +137,166 @@ input[type="checkbox"] { width: auto; }
 dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; margin: 0 0 10px; }
 dl.facts dt { color: var(--ink-soft); }
 dl.facts dd { margin: 0; }
-.mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, Consolas, monospace; font-size: 14px; }
+.num { text-align: right; }
+ul.plain { margin: 0 0 8px; padding-left: 20px; }
+tr.total th, tr.total td { border-top: 2px solid var(--line); font-weight: 700; }
+.mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, Consolas, monospace; font-size: 0.933rem; }
 .empty { text-align: center; padding: 28px 18px; }
 .empty h2 { margin-bottom: 6px; }
+.empty .row { justify-content: center; margin-top: 12px; }
+
+/* Glass: the panel, the page and the cards let the colours behind them show through, with a blur so text stays easy to read. */
+:root[data-surface="glass"] .side { background: linear-gradient(color-mix(in srgb, var(--t-panel) 72%, transparent), color-mix(in srgb, var(--t-panel-end) 72%, transparent)); backdrop-filter: blur(16px) saturate(1.3); }
+:root[data-surface="glass"] main { --page: color-mix(in srgb, var(--t-sheet) 86%, transparent); backdrop-filter: blur(16px) saturate(1.3); }
+:root[data-surface="glass"] .card, :root[data-surface="glass"] table { background: color-mix(in srgb, var(--t-sheet) 55%, transparent); }
 
 @media (max-width: 760px) {
   .shell { grid-template-columns: 1fr; }
   .side { border-right: 0; border-bottom: 1px solid var(--line); padding: 10px; position: static; height: auto; }
   .side ul { grid-auto-flow: column; overflow-x: auto; }
-  main { padding: 18px 14px 50px; }
+  main { padding: 18px 14px 50px; margin: 8px; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .toast { transition: opacity 0.2s; }
+}
+
+/* Preferences */
+.prefs-sample { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); margin-bottom: 12px; }
+.prefs-range { display: flex; gap: 12px; align-items: center; }
+.prefs-range input { flex: 1; padding: 0; }
+.prefs-range output { min-width: 4.5em; text-align: right; }
+
+/* The bars above the page: a made-up catalog, or an update. */
+/* The bars and the toolbar stay at the top, and the sidebar starts below them (--bars-h is their height, kept by toolbar.js). */
+.top { position: sticky; top: 0; z-index: 6; }
+.bar { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 8px 16px; background: var(--t-accent); color: var(--t-on-accent); }
+.bar button { background: var(--t-on-accent); color: var(--t-accent); border-color: var(--t-on-accent); font-weight: 600; }
+.bar :focus-visible { outline-color: var(--t-on-accent); }
+
+/* The tour card floats over the page, so the page stays visible while it is explained. */
+.tour { position: fixed; right: 20px; bottom: 20px; width: min(22rem, calc(100vw - 40px)); z-index: 8; background: var(--surface); color: var(--ink); border: 2px solid var(--accent); border-radius: 12px; padding: 14px 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); }
+.tour h2 { margin: 0 0 6px; }
+.tour p { margin: 0 0 6px; }
+.tour .actions { margin-top: 10px; flex-wrap: wrap; }
+
+/* The Help Center */
+dialog.help-dialog[open] { width: min(60rem, 96vw); height: min(40rem, 88vh); display: flex; flex-direction: column; }
+.help-body { display: grid; grid-template-columns: 15rem minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 12px 18px; flex: 1; min-height: 0; }
+.help-body input[type="search"] { grid-column: 1 / -1; }
+.help-nav { display: grid; align-content: start; gap: 2px; overflow-y: auto; }
+.help-nav button { text-align: left; border: 0; background: none; border-radius: 8px; padding: 6px 10px; }
+.help-nav button:hover { background: var(--bg); }
+.help-nav button.on { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.help-page { overflow-y: auto; padding-right: 8px; min-height: 0; }
+.help-page h2 { margin-top: 0; }
+.help-page h3 { margin-top: 16px; }
+.help-page ol.plain, .help-page ul.plain { padding-left: 22px; }
+.help-page li { margin-bottom: 4px; }
+.help-note { margin: 12px 0; }
+@media (max-width: 760px) { .help-body { grid-template-columns: 1fr; } .help-nav { max-height: 9rem; } }
+
+/* Bringing books in from a file */
+dialog.import-dialog[open] { width: min(64rem, 96vw); max-height: 92vh; }
+.import-body h3 { margin: 16px 0 6px; }
+.import-body select { width: auto; max-width: 100%; }
+.import-body .tablewrap { margin-bottom: 8px; }
+.import-list { max-height: 18rem; overflow: auto; }
+tr.attention td { background: var(--check-bg); }
+tr.skipped td { color: var(--ink-soft); }
+
+.backup-folder { word-break: break-all; color: var(--ink-soft); }
+.tally { background: var(--t-chip); color: inherit; border-radius: 999px; padding: 0 8px; font-size: 0.867rem; font-weight: 700; }
+a[aria-current="page"] .tally { background: var(--t-panel); color: var(--t-on-panel); }
+
+/* The first-run welcome */
+.choices { display: grid; gap: 10px; }
+button.choice { display: grid; gap: 2px; text-align: left; padding: 12px 14px; border-radius: 10px; }
+button.choice span { color: inherit; opacity: 0.85; font-weight: 400; }
+
+/* Go to (Ctrl+K): a box near the top of the window. The chosen row uses the button colours, which every theme already keeps readable. */
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+dialog.palette { width: min(40rem, 92vw); padding: 0; margin: 12vh auto auto; overflow: hidden; }
+dialog.palette input { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 14px 16px; font-size: 1.067rem; background: transparent; }
+dialog.palette input:focus-visible { outline-offset: -3px; }
+.palette ul { list-style: none; margin: 0; padding: 6px; max-height: 50vh; overflow-y: auto; }
+.palette-item { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+.palette-item:hover { background: var(--bg); }
+.palette-item[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.pi-label b { font-weight: 800; text-decoration: underline; }
+.pi-detail { color: var(--ink-soft); font-size: 0.867rem; text-align: right; }
+.palette-item[aria-selected="true"] .pi-detail { color: inherit; }
+.palette-empty { color: var(--ink-soft); padding: 12px; }
+.palette-hint { border-top: 1px solid var(--line); margin: 0; padding: 8px 14px; font-size: 0.8rem; color: var(--ink-soft); }
+
+/* About */
+dialog.about { width: min(32rem, 94vw); }
+.about-top { display: flex; align-items: center; gap: 16px; }
+.about-logo { width: 64px; height: 64px; flex: none; }
+.about-top h2 { margin: 0; }
+.about-version { margin: 2px 0 0; color: var(--ink-soft); }
+.about-blurb { margin: 14px 0 6px; }
+.about-links { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 8px; }
+.about-links li { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; }
+.about-links span { color: var(--ink-soft); font-size: 0.867rem; }
+.about-tech, .about-legal { margin: 6px 0 0; color: var(--ink-soft); font-size: 0.867rem; }
+.about .actions { align-items: center; }
+.spacer { flex: 1; }
+
+/* The toolbar: icon buttons on the panel colour. Their names are on hover and for screen readers. */
+.toolbar { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 6px 12px; min-height: 3rem; background: linear-gradient(90deg, var(--t-panel), var(--t-panel-end)); color: var(--t-on-panel); border-bottom: 1px solid var(--t-panel-edge); }
+.tb-group { display: flex; align-items: center; gap: 4px; }
+.tb-spacer { flex: 1; }
+.toolbar .tb-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 2.25rem; min-width: 2.25rem; padding: 0 8px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--t-on-panel); }
+.toolbar .tb-btn:hover { background: var(--t-hover); border-color: transparent; }
+.toolbar .tb-btn.primary { background: var(--t-accent); color: var(--t-on-accent); font-weight: 600; padding: 0 12px 0 10px; }
+.toolbar .tb-btn.primary:hover { background: var(--t-accent); border-color: var(--t-on-accent); }
+.toolbar :focus-visible { outline-color: var(--t-on-panel); }
+.tb-btn svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+:root[data-surface="glass"] .toolbar { background: linear-gradient(90deg, color-mix(in srgb, var(--t-panel) 72%, transparent), color-mix(in srgb, var(--t-panel-end) 72%, transparent)); backdrop-filter: blur(16px) saturate(1.3); }
+
+/* The theme button's pop-up sits under the button, at its right edge. It is the browser's own popover, so Escape and a click outside close it. */
+#theme-button { anchor-name: --theme-button; }
+.popover { position: fixed; inset: auto; top: 3.5rem; right: 12px; margin: 0; width: min(19rem, 92vw); padding: 14px 16px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 18px 50px -12px rgba(0, 0, 0, 0.35); }
+@supports (top: anchor(bottom)) {
+  .popover { position-anchor: --theme-button; top: calc(anchor(bottom) + 6px); right: anchor(right); }
+}
+.popover .label { font-weight: 600; font-size: 0.933rem; }
+.popover select { width: 100%; }
+.seg { display: inline-flex; gap: 0; }
+.seg-btn { border-radius: 0; }
+.seg-btn:first-child { border-radius: 8px 0 0 8px; }
+.seg-btn:last-child { border-radius: 0 8px 8px 0; margin-left: -1px; }
+.seg-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+
+/* Customize Theme */
+.customize-row { border: 0; margin: 0 0 14px; padding: 0; }
+.customize-row legend { font-weight: 600; font-size: 0.933rem; padding: 0; margin-bottom: 6px; }
+.swatches { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.swatch { width: 2rem; height: 2rem; padding: 0; border-radius: 999px; background: var(--c); border: 2px solid var(--field-line); }
+.swatch:hover { border-color: var(--ink); }
+.swatch[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--page), 0 0 0 4px var(--ink); }
+.swatch.none { background: linear-gradient(135deg, var(--page) 45%, var(--problem) 45% 55%, var(--page) 55%); }
+.custom-pick { display: inline-flex; gap: 6px; align-items: center; font-size: 0.933rem; }
+.custom-pick input { width: 2.5rem; height: 2rem; padding: 0; }
+.customize-sample { display: grid; grid-template-columns: 8rem minmax(0, 1fr); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+.customize-sample .panel { background: linear-gradient(var(--t-panel), var(--t-panel-end)); color: var(--t-on-panel); padding: 12px; font-weight: 600; border-right: 1px solid var(--t-panel-edge); }
+.customize-sample .page { background: var(--page); padding: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* A request for more contrast: the faint lines between cards become as strong as the quiet text. */
+@media (prefers-contrast: more) {
+  :root { --line: var(--ink-soft); --t-panel-edge: var(--t-on-panel-soft); }
+}
+
+/* Windows high contrast (forced colours): the system picks every colour, so what colour alone showed is shown another way. The current
+   screen, a chosen choice and the selected row use the system's highlight, counts and bars get an edge, and the swatches keep their own
+   colours because the colour is the thing being chosen. A test turns this mode on and checks it. */
+@media (forced-colors: active) {
+  :focus-visible { outline: 3px solid Highlight; }
+  .side a[aria-current="page"], .help-nav button.on, .palette-item[aria-selected="true"], .seg-btn[aria-pressed="true"] { background: Highlight; color: HighlightText; border-color: Highlight; }
+  .count, .tally { border: 1px solid ButtonText; }
+  .bar { border-bottom: 1px solid CanvasText; }
+  .toast { border: 1px solid CanvasText; }
+  .swatch, .swatch.none { forced-color-adjust: none; border-color: ButtonText; }
+  .swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px Canvas, 0 0 0 4px ButtonText; }
+  td.cell.has-problem { outline: 2px solid CanvasText; outline-offset: -3px; }
 }

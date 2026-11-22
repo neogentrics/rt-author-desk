@@ -37,7 +37,14 @@
       h('p', { class: 'lead' }, 'Every audiobook on every store: which recording is live, whose voice it is, what rights it has, and which are waiting to be replaced.'),
     ];
     if (!tracker.rows.length) {
-      out.push(h('section', { class: 'card empty' }, h('h2', null, 'No audiobooks yet'), h('p', null, 'Open a book and add an audiobook edition. Its recordings and stores will show here.')));
+      const books = await AD.call('books');
+      if (!books.length) {
+        out.push(AD.emptyCard('No audiobooks yet', 'This page shows every audiobook on every store. There are no books yet, so start by adding one.',
+          h('button', { class: 'primary', onclick: AD.addBook }, 'Add a book')));
+      } else {
+        out.push(AD.emptyCard('No audiobooks yet', 'This page shows every audiobook on every store: which recording is live, whose voice it is, and what is waiting to be replaced. Add an audiobook to one of your books to start it.',
+          h('button', { class: 'primary', onclick: AD.addAudiobook }, 'Add an audiobook')));
+      }
       return out;
     }
     const c = tracker.counts;

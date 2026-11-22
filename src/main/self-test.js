@@ -6,11 +6,15 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { createApi } = require('./api');
+const { readWorkbook } = require('./reports/xlsx');
+const { fillSample } = require('./sample');
+const { readInstalled, writeInstalled } = require('./installed');
+const { Settings } = require('./settings');
 const { DATABASE_FILE, Library } = require('./storage/library');
 const { WrongKeyError, openDatabase } = require('./storage/database');
 const { parseMoney, toDecimalString, totals } = require('../shared/money');
 
-function runChecks(dir) {
+function runChecks(dir, version) {
   const checks = [];
   const check = (name, passed, detail) => checks.push({ name, passed: Boolean(passed), ...(detail ? { detail } : {}) });
   const secret = `SecretTitle${crypto.randomBytes(6).toString('hex')}`;
@@ -58,7 +62,21 @@ function runChecks(dir) {
     const page = made('book', { id: selfBook.id });
     check('the catalog holds a priced listing', page.editions[0].listings[0].prices[0].amount === '12.99' && page.grid.rows[0].cells['store-kdp'][0].prices.length === 1);
     check('the clash checks run', made('clashes').some((item) => item.kind === 'release-without-final'));
+    const person = made('savePerson', { name: 'Self-test Editor' });
+    const credit = made('saveCredit', { edition_id: edition.id, person_id: person.id, role: 'editor' });
+    made('setListingCredits', { listingId: listing.id, creditIds: [] });
+    check('credits are kept, and a store that leaves one off is found',
+      made('book', { id: selfBook.id }).editions[0].credits[0].id === credit.id && made('clashes').some((item) => item.kind === 'credits-differ'));
     check('the nine built-in stores are there', made('names').stores.length === 9);
+    check('the money screens have their data', made('earnings').currencies.length === 0 && made('readers').filter((r) => r.ready).length === 1 && made('imports').length === 0);
+    // The spreadsheet reader's two libraries are in the build: a file that isn't a workbook is refused in words, not by a crash.
+    let reader = 'loaded';
+    try {
+      readWorkbook(Buffer.from('not a workbook'));
+    } catch (error) {
+      reader = error.name;
+    }
+    check('the report reader is in the build', reader === 'WorkbookError', reader);
   } finally {
     catalog.close();
   }
@@ -67,13 +85,60 @@ function runChecks(dir) {
   const files = [...html.matchAll(/(?:src|href)="([^"#]+\.(?:js|css))"/g)].map((match) => match[1]);
   check('every page file is in the build', files.length >= 6 && files.every((file) => fs.existsSync(path.join(__dirname, '..', 'renderer', file))), files.join(' '));
 
+  const fonts = [...fs.readFileSync(path.join(__dirname, '..', 'renderer', 'fonts.css'), 'utf8').matchAll(/url\('([^']+)'\)/g)].map((match) => match[1]);
+  check('the fonts are in the build', fonts.length === 6 && fonts.every((file) => fs.existsSync(path.join(__dirname, '..', 'renderer', file))), fonts.join(' '));
+  // The Help Center's guides, the made-up catalog for the tour, and the library that updates the app are all in the build.
+  check('the Help Center has its guides', require('../shared/help').GUIDES.length >= 12);
+  const demo = new Library(path.join(dir, 'tour')).open();
+  try {
+    fillSample(demo, '2027-01-10');
+    check('the made-up catalog can be made', demo.list('books').length === 3 && demo.list('listings').length >= 6);
+  } finally {
+    demo.close();
+  }
+  let updates = 'loaded';
+  try {
+    // It can only be loaded inside Electron, so outside it the check is that the package is there.
+    require.resolve('electron-updater');
+    if (process.versions.electron) updates = typeof require('electron-updater').autoUpdater === 'object' ? 'loaded' : 'no updater';
+  } catch (error) {
+    updates = error.message.split('\n')[0];
+  }
+  check('the updater is in the build', updates === 'loaded', updates);
+  // The installed-list file carries the app's version, so another app can tell which one is here.
+  const shared = path.join(dir, 'link');
+  const wrote = writeInstalled(shared, { version: version ?? '0', launch: process.execPath });
+  const listed = readInstalled(shared)[0];
+  check('the installed-list file says which version is here', wrote && listed?.id === 'rt-author-desk' && listed.version === String(version ?? '0'));
+  const looks = new Settings(dir);
+  looks.save({ theme: 'dusk', textSize: 17, brand: { accent: '#e8590c' } });
+  check('the look is remembered, with your own colours', new Settings(dir).values.theme === 'dusk' && new Settings(dir).values.textSize === 17 && new Settings(dir).values.brand.accent === '#e8590c');
+  // The menus and the commands Go to can run, your own colours worked out to be readable, and what About says and shows are all in the build.
+  const { collectCommands, menuTemplate } = require('./menu');
+  const commands = collectCommands(menuTemplate({ send() {}, version: version ?? '0', platform: process.platform })).size;
+  check('the menus and their commands are in the build', commands > 30, String(commands));
+  const { brandTokens } = require('../shared/brand');
+  const { THEMES } = require('../shared/themes');
+  check('your own colours can be worked out', Object.keys(brandTokens(THEMES.light, { accent: '#e8590c', panel: '#14432f' })).length >= 8);
+  const { aboutLinks, detailsText } = require('../shared/about');
+  check('About has its links and its details', aboutLinks('1.0.0').length === 4 && detailsText({ version: '1', electron: '1', chrome: '1', node: '1', os: 'x' }).split('\n').length === 3);
+  check('the icon About shows is in the build', fs.existsSync(path.join(__dirname, '..', 'renderer', 'icon.svg')));
+  // A built copy holds only the app: its source, its dependencies, its package file and its two license files, and none of the project's docs,
+  // tests or scripts (nor anything private that happens to be in the folder it was built from). Run from the source, the whole folder is
+  // there, so this is only asked of a built copy.
+  const root = path.join(__dirname, '..', '..');
+  if (/app\.asar$/.test(root)) {
+    const found = fs.readdirSync(root).sort();
+    check('the app carries only what it needs', JSON.stringify(found) === JSON.stringify(['LICENSE', 'THIRD_PARTY_NOTICES.md', 'node_modules', 'package.json', 'src']), found.join(' '));
+  }
+
   return { checks, versions: { sqlite: info.sqlite, cipher: info.cipher, step: info.step } };
 }
 
 function selfTest({ packaged, version }) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-self-test-'));
   try {
-    const { checks, versions } = runChecks(dir);
+    const { checks, versions } = runChecks(dir, version);
     return {
       ok: checks.every((item) => item.passed),
       packaged,

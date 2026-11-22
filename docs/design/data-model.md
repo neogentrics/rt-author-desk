@@ -17,6 +17,9 @@ flowchart LR
   Book --> Edition
   Edition --> Listing
   Edition --> Recording
+  Person --> Credit
+  Credit --> Edition
+  Credit -.shown on.-> Listing
   Recording --> Listing
   ISBN --> Edition
   Store --> Listing
@@ -38,12 +41,13 @@ flowchart LR
 | **Pen name** | A name you write under. |
 | **Series** | A name, and the order of its books. |
 | **Book** | Title, subtitle, series and number, pen name, and an optional link to the same book in RT Story Tracker. A status for the business side: planned, in progress, live, pulled, being reworked. |
-| **Person** | An editor, an artist or a narrator. |
+| **Person** | An editor, an artist, a narrator or anyone else you credit. Each is in the list once, by name, so a credit shown differently on two stores can be found by the person. |
+| **Credit** | One person in one role on one edition: editor, proofreader, cover artist, illustrator, narrator, translator, formatter or other. The same person can hold two roles on an edition, and the same role can be held by more than one person. |
 | **Edition** | One format of a book: ebook, paperback, hardcover, large print or audiobook. Page count, trim size, paper, length, cover status, credits. A book can have several of one format, such as a new paperback after a rework. |
 | **ISBN** | The number, who issued it (bought, or a store's free one), where it may be used, and which edition has it. |
 | **Recording** | One audio version of a book. See [recordings](#recordings). |
 | **Store** | A place that sells or distributes books. Stores are data, so a new one needs no new code. |
-| **Listing** | One edition on one store. Store ID, link, status, publisher name shown, credits shown, program (such as an exclusive term with start and end dates), and the **route**. |
+| **Listing** | One edition on one store. Store ID, link, status, publisher name shown, the credits it shows (chosen from the edition's own credits, and marked as written down or not), program (such as an exclusive term with start and end dates), and the **route**. |
 | **Price** | A listing's price in one marketplace, from a date. Old prices are kept, so a sale can be compared with the price at the time. |
 
 **The route.** Some listings are yours directly, and some reach a store through a distributor. A book at one store can come

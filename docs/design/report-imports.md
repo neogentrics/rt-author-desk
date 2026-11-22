@@ -41,12 +41,12 @@ count once. **Any import can be undone** as a batch.
 
 | Store | What's known | In |
 |---|---|---|
-| KDP | Real files read: see below | 1.0 |
-| Barnes & Noble Press | Sales reports export to a spreadsheet, with sale date, title, format and BN ID or ISBN (its help center). Not seen yet | 1.0 |
-| ACX | A monthly earnings statement as a multi-sheet Excel file, and a CSV from Sales Overview (its help pages). Not seen yet. Final figures arrive at the end of the following month | 1.0 |
-| Google Play Books | Not seen yet. It's a report from Partner Center, including audiobooks | 1.0 |
-| IngramSpark | Not seen yet | 1.0 |
-| Draft2Digital, Kobo, Apple Books, Lulu | Not seen yet | 1.1 |
+| KDP | Real files read: see below | 1.1 |
+| Barnes & Noble Press | Sales reports export to a spreadsheet, with sale date, title, format and BN ID or ISBN (its help center). Not seen yet | 1.1 |
+| ACX | A monthly earnings statement as a multi-sheet Excel file, and a CSV from Sales Overview (its help pages). Not seen yet. Final figures arrive at the end of the following month | 1.1 |
+| Google Play Books | Not seen yet. It's a report from Partner Center, including audiobooks | 1.1 |
+| IngramSpark | Not seen yet | 1.1 |
+| Draft2Digital, Kobo, Apple Books, Lulu | Not seen yet | 1.2 |
 
 ### What a KDP report holds
 
@@ -81,7 +81,7 @@ Stores report a sale first and pay for it later, sometimes months later and in a
 
 When a payment arrives, the app matches it to its sales period and shows any difference.
 
-## Match your columns (1.1)
+## Match your columns (1.2)
 
 For a store with no reader. You open a file, point at the columns for the date, title or ID, units, money and currency, and name
 the store. The app saves that as a layout, and the same checks apply. A layout can be exported and shared.

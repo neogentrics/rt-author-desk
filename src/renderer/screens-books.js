@@ -10,10 +10,13 @@
 
   AD.routes.books = async () => {
     const books = await AD.call('books');
-    const out = [h('div', { class: 'row' }, h('h1', null, 'Books'), h('button', { class: 'primary', onclick: AD.addBook }, 'Add a book'))];
+    const out = [h('div', { class: 'row' }, h('h1', null, 'Books'),
+      h('span', { class: 'row start' }, h('button', { onclick: AD.importBooks }, 'Bring in books from a file…'), h('button', { class: 'primary', onclick: AD.addBook }, 'Add a book')))];
     if (!books.length) {
-      out.push(h('section', { class: 'card empty' }, h('h2', null, 'No books yet'), h('p', { class: 'lead' }, 'Add a book to start your catalog.')));
-      return out;
+      out.push(AD.emptyCard('No books yet', 'Add a book to start your catalog. A title is enough, and the rest can come later. If you keep a list of your books in a spreadsheet, or in Notion, you can bring it in as a CSV file.',
+        h('button', { class: 'primary', onclick: AD.addBook }, 'Add a book'), h('button', { onclick: AD.importBooks }, 'Bring in books from a file…'), AD.tourButton()));
+      out.push(await AD.importsCard());
+      return out.filter(Boolean);
     }
     out.push(h('div', { class: 'tablewrap' }, h('table', null,
       h('caption', { class: 'note' }, 'Your books, with their series together.'),
@@ -25,6 +28,7 @@
         h('td', null, b.formats.join(', ')),
         h('td', null, h('span', { class: `chip ${b.business_status === 'live' ? 'live' : ''}` }, cap(b.business_status))),
         h('td', null, b.clash_count ? h('span', { class: 'chip problem' }, b.clash_count) : '')))))));
+    out.push(await AD.importsCard());
     return out;
   };
 
@@ -39,9 +43,9 @@
       fields: [
         { name: 'title', label: 'Title', required: true },
         { name: 'subtitle', label: 'Subtitle' },
-        { name: 'series_id', label: 'Series', type: 'select', options: AD.options(names.series, (s) => s.name), blank: '(not in a series)' },
+        { name: 'series_id', label: 'Series', type: 'select', options: AD.options(names.series, (s) => s.name), blank: '(not in a series)', create: AD.creatable.series },
         { name: 'series_number', label: 'Number in the series' },
-        { name: 'pen_name_id', label: 'Pen name', type: 'select', options: AD.options(names.penNames, (p) => p.name), blank: '(none)' },
+        { name: 'pen_name_id', label: 'Pen name', type: 'select', options: AD.options(names.penNames, (p) => p.name), blank: '(none)', create: AD.creatable.penName },
         { name: 'business_status', label: 'Where it is', type: 'select', options: choices(STATUSES), blank: '(choose)' },
         { name: 'notes', label: 'Notes', type: 'textarea' },
       ],
@@ -51,9 +55,10 @@
   }
 
   async function removeBook(page) {
-    if (!(await AD.confirm(`Remove "${page.book.title}"? It has no editions, so nothing else is lost.`))) return;
+    if (!(await AD.confirm(`Remove "${page.book.title}"? It has no editions, so nothing else goes with it. It waits in the Trash for 30 days, and you can bring it back.`, 'Move to the Trash'))) return;
     try {
       await AD.call('removeBook', { id: page.book.id });
+      AD.toast('Moved to the Trash. You can bring it back for 30 days.');
       location.hash = '#/books';
     } catch (problem) {
       AD.toast(problem.message);
@@ -75,7 +80,7 @@
         { name: 'paper', label: 'Paper' },
         { name: 'cover_status', label: 'Cover', type: 'select', options: choices(PROGRESS), blank: '(choose)' },
         { name: 'files_status', label: 'Final files', type: 'select', options: choices(PROGRESS), blank: '(choose)' },
-        { name: 'publisher_name_id', label: 'Publisher name', type: 'select', options: AD.options(names.publishers, (p) => p.name), blank: '(none)' },
+        { name: 'publisher_name_id', label: 'Publisher name', type: 'select', options: AD.options(names.publishers, (p) => p.name), blank: '(none)', create: AD.creatable.publisher },
         { name: 'notes', label: 'Notes', type: 'textarea' },
       ],
       onSubmit: (fields) => AD.call('saveEdition', edition ? fields : { ...fields, book_id: page.book.id }),
@@ -85,12 +90,12 @@
 
   async function removeEdition(page, edition) {
     const listings = edition.listings.length;
-    const message = `Remove this ${edition.format}?${listings ? ` Its ${AD.plural(listings, 'listing')} and prices will go too.` : ''}${edition.isbns.length ? ' Its ISBNs stay in your register.' : ''}`;
-    if (!(await AD.confirm(message))) return;
-    await AD.act(async () => {
-      for (const listing of edition.listings) await AD.call('removeListing', { id: listing.id });
-      await AD.call('removeEdition', { id: edition.id });
-    }, 'Removed.');
+    const recordings = edition.recordings.length;
+    const credits = edition.credits.length;
+    const goes = [listings && `its ${AD.plural(listings, 'listing')} and prices`, recordings && `its ${AD.plural(recordings, 'recording')}`, credits && `its ${AD.plural(credits, 'credit')}`].filter(Boolean);
+    const message = `Remove this ${edition.format}?${goes.length ? ` ${goes.join(' and ')[0].toUpperCase()}${goes.join(' and ').slice(1)} go with it.` : ''}${edition.isbns.length ? ' Its ISBNs go back in your register.' : ''} It waits in the Trash for 30 days, and you can bring it all back.`;
+    if (!(await AD.confirm(message, 'Move to the Trash'))) return;
+    await AD.act(() => AD.call('removeEdition', { id: edition.id }), 'Moved to the Trash. You can bring it back for 30 days.');
   }
 
   async function isbnForm(edition) {
@@ -143,6 +148,49 @@
     if (saved) AD.refresh();
   }
 
+  // Who is credited on an edition, one person in one role at a time.
+  async function creditForm(edition, credit) {
+    const names = await AD.call('names');
+    const saved = await AD.form({
+      title: credit ? 'Edit the credit' : 'Credit someone on this edition',
+      hint: credit ? null : 'An editor, a cover artist, a narrator and so on. The same person can be credited in two roles, one at a time.',
+      values: credit ?? {},
+      fields: [
+        { name: 'person_id', label: 'Who', type: 'select', required: true, blank: '(choose)', options: AD.options(names.people, (p) => p.name), create: AD.creatable.person },
+        { name: 'role', label: 'What they did', type: 'select', required: true, blank: '(choose)', options: names.roles },
+        { name: 'notes', label: 'Notes', type: 'textarea', help: 'For "Other", say what it was.' },
+      ],
+      onSubmit: (fields) => AD.call('saveCredit', credit ? fields : { ...fields, edition_id: edition.id }),
+    });
+    if (saved) AD.refresh();
+  }
+
+  // Which of an edition's credits a store shows. Nothing is ticked until you say so, so a credit the store leaves out can be found.
+  function creditsShownDialog(edition, listing, store, done) {
+    const error = h('p', { class: 'error', role: 'alert', hidden: true });
+    const shown = new Set(listing.credit_ids);
+    const boxes = edition.credits.map((credit) => h('div', { class: 'field check' },
+      h('input', { id: `lc-${credit.id}`, type: 'checkbox', value: credit.id, checked: shown.has(credit.id) }),
+      h('label', { for: `lc-${credit.id}` }, `${credit.person_name}, ${credit.role_label.toLowerCase()}`)));
+    const form = h('form', { method: 'dialog', novalidate: true },
+      h('p', { class: 'hint' }, `Open the ${edition.format}'s page on ${store.name} and tick the credits it shows. Leave one unticked if the store leaves it out, and the app will point it out.`),
+      boxes, error,
+      h('div', { class: 'actions' }, h('button', { type: 'button', onclick: () => dialog.close() }, 'Cancel'), h('button', { class: 'primary', type: 'submit' }, 'Save')));
+    const dialog = AD.dialog(`Credits shown on ${store.name}`, form);
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        const creditIds = [...form.querySelectorAll('input[type=checkbox]')].filter((box) => box.checked).map((box) => box.value);
+        await AD.call('setListingCredits', { listingId: listing.id, creditIds });
+        dialog.close('saved');
+        done();
+      } catch (problem) {
+        error.textContent = problem.message;
+        error.hidden = false;
+      }
+    });
+  }
+
   async function listingForm(edition, store, listing, stores) {
     const saved = await AD.form({
       title: listing ? `Edit the listing on ${store.name}` : `List this ${edition.format} on ${store.name}`,
@@ -186,6 +234,8 @@
           listing.program ? [h('dt', null, 'Program'), h('dd', null, `${listing.program}${listing.program_exclusive ? ' (exclusive)' : ''}`)] : null,
           listing.publisher_shown ? [h('dt', null, 'Shows publisher'), h('dd', null, listing.publisher_shown)] : null,
           listing.release_date ? [h('dt', null, 'Release'), h('dd', null, AD.longDate(listing.release_date))] : null),
+        h('h3', null, 'Credits shown here'),
+        creditsLine(edition, listing, store, reopen),
         h('h3', null, 'Prices today'),
         listing.prices.length
           ? h('ul', { class: 'list' }, listing.prices.map((p) => h('li', { class: 'row' },
@@ -198,7 +248,7 @@
           h('button', { onclick: async () => { if (await priceDialog(listing, null)) reopen(); } }, 'Set a price'),
           h('button', { onclick: async () => { if (await listingForm(edition, store, listing, page.stores)) reopen(); } }, 'Edit the listing'),
           h('button', { class: 'danger', onclick: async () => {
-            if (!(await AD.confirm('Remove this listing and its prices?'))) return;
+            if (!(await AD.confirm('Remove this listing and its prices? It waits in the Trash for 30 days, and you can bring it back.', 'Move to the Trash'))) return;
             try { await AD.call('removeListing', { id: listing.id }); reopen(); } catch (problem) { AD.toast(problem.message); }
           } }, 'Remove'))));
     }
@@ -209,6 +259,14 @@
       } }, listings.length ? (listings[0].route === 'direct' ? 'Also list it through a distributor' : 'Also list it directly') : `List it on ${store.name}`)));
     }
     body.append(h('div', { class: 'actions' }, h('button', { onclick: () => dialog.close() }, 'Done')));
+  }
+
+  function creditsLine(edition, listing, store, reopen) {
+    if (!edition.credits.length) return h('p', { class: 'note' }, 'This edition has no credits yet. Add them on the edition first.');
+    const names = edition.credits.filter((c) => listing.credit_ids.includes(c.id)).map((c) => `${c.person_name} (${c.role_label.toLowerCase()})`);
+    return h('div', null,
+      h('p', { class: listing.credits_recorded ? '' : 'note' }, listing.credits_recorded ? (names.length ? names.join(', ') : 'None. This store shows no credits.') : 'Not written down yet.'),
+      h('p', null, h('button', { class: 'small', onclick: () => creditsShownDialog(edition, listing, store, reopen) }, listing.credits_recorded ? 'Change what it shows' : 'Write down what it shows')));
   }
 
   // A price is always saved whole, so this uses its own small form rather than the changed-fields-only one.
@@ -286,6 +344,15 @@
         h('span', { class: 'row start' }, h('button', { class: 'small', onclick: () => editionForm(page, edition) }, 'Edit'),
           h('button', { class: 'small', onclick: () => removeEdition(page, edition) }, 'Remove'))),
       h('dl', { class: 'facts' }, facts.flatMap(([k, v]) => [h('dt', null, k), h('dd', null, String(v))])),
+      h('h3', null, 'Credits'),
+      edition.credits.length
+        ? h('ul', { class: 'list' }, edition.credits.map((c) => h('li', { class: 'row' },
+          h('span', null, h('strong', null, c.person_name), ` · ${c.role_label}`, c.notes ? h('span', { class: 'note' }, ` · ${c.notes}`) : null),
+          h('span', { class: 'row start' },
+            h('button', { class: 'small', onclick: () => creditForm(edition, c) }, 'Edit'),
+            h('button', { class: 'small', onclick: () => AD.act(() => AD.call('removeCredit', { id: c.id }), 'Credit removed.') }, 'Remove')))))
+        : h('p', { class: 'note' }, 'No one credited yet.'),
+      h('p', null, h('button', { class: 'small', onclick: () => creditForm(edition, null) }, 'Credit someone')),
       h('h3', null, 'ISBNs'),
       edition.isbns.length
         ? h('ul', { class: 'list' }, edition.isbns.map((i) => h('li', null, h('span', { class: 'mono' }, i.shown), ' ',

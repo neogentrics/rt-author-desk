@@ -5,6 +5,7 @@
 const { isRealDate } = require('../shared/dates');
 const { parseIsbn } = require('../shared/isbn');
 const { MoneyError, money, parseMoney } = require('../shared/money');
+const { ROLES, roleLabel: roleName } = require('../shared/credits');
 const { BUILT_IN_STORES } = require('./storage/schema');
 
 const FORMATS = ['ebook', 'paperback', 'hardcover', 'large print', 'audiobook'];
@@ -41,7 +42,7 @@ class Catalog {
     this.library.remove('books', id);
   }
 
-  // ---- Names: series, pen names, publisher names and stores ----------------------------------------------------
+  // ---- Names: series, pen names, publisher names, people and stores ----------------------------------------------------
 
   saveSeries(fields) {
     this.#mustHaveName('series', fields, 'A series needs a name.');
@@ -52,6 +53,28 @@ class Catalog {
   savePenName(fields) {
     this.#mustHaveName('pen_names', fields, 'A pen name needs a name.');
     return this.library.put('pen_names', fields);
+  }
+
+  // The people you credit. Each is in the list once, because the check for a credit shown differently on two stores
+  // goes by the person, and two spellings of one name would hide it.
+  savePerson(fields) {
+    this.#mustHaveName('people', fields, 'A person needs a name.');
+    if ('name' in fields) {
+      const name = String(fields.name).trim();
+      const twin = this.library.list('people').find((p) => p.id !== fields.id && p.name.trim().toLowerCase() === name.toLowerCase());
+      if (twin) throw new CatalogError(`${twin.name} is already in your list of people. Credit them from there instead of adding them again.`);
+      fields = { ...fields, name };
+    }
+    return this.library.put('people', fields);
+  }
+
+  // A person who is still credited on an edition can't be removed, because the credit would be left pointing at nobody.
+  removePerson(id) {
+    const person = this.library.get('people', id);
+    if (!person) throw new CatalogError("That person isn't in your list.");
+    const used = this.library.db.prepare('SELECT count(*) AS n FROM credits WHERE person_id = ?').get(id).n;
+    if (used) throw new CatalogError(`${person.name} is credited on ${used} edition${used === 1 ? '' : 's'}. Remove ${used === 1 ? 'that credit' : 'those credits'} first.`);
+    this.library.remove('people', id);
   }
 
   // A publisher name with the dates it applied, because a name can change and old listings still show the old one.
@@ -122,7 +145,7 @@ class Catalog {
     return this.library.db.prepare(
       `SELECT * FROM editions WHERE book_id = ?
        ORDER BY CASE format WHEN 'ebook' THEN 1 WHEN 'paperback' THEN 2 WHEN 'hardcover' THEN 3 WHEN 'large print' THEN 4 ELSE 5 END,
-                created_at, id`,
+                created_at, rowid`,
     ).all(bookId);
   }
 
@@ -130,8 +153,63 @@ class Catalog {
   removeEdition(id) {
     this.library.db.transaction(() => {
       for (const isbn of this.isbnsOf(id)) this.library.put('isbns', { id: isbn.id, edition_id: null });
+      for (const credit of this.creditsOf(id)) this.removeCredit(credit.id);
       this.library.remove('editions', id);
     })();
+  }
+
+  // ---- Credits: who is credited on an edition, and what each store shows -----------------------------------------
+
+  // One person in one role on one edition. The same person can hold two roles on it (editor and proofreader).
+  saveCredit(fields) {
+    const existing = fields.id === undefined ? null : this.library.get('credits', fields.id);
+    if (!existing && (!fields.edition_id || !fields.person_id)) throw new CatalogError('A credit is a person on an edition.');
+    const merged = { ...existing, ...fields };
+    if (!this.library.get('editions', merged.edition_id)) throw new CatalogError("That edition isn't in your library.");
+    const person = this.library.get('people', merged.person_id);
+    if (!person) throw new CatalogError("That person isn't in your list.");
+    if (!ROLES.some(([role]) => role === merged.role)) throw new CatalogError(`What did ${person.name} do? Choose ${ROLES.map(([, label]) => label.toLowerCase()).join(', ')}.`);
+    const twin = this.library.db.prepare('SELECT id FROM credits WHERE edition_id = ? AND person_id = ? AND role = ? AND id IS NOT ?')
+      .get(merged.edition_id, merged.person_id, merged.role, existing?.id ?? null);
+    if (twin) throw new CatalogError(`${person.name} is already credited as ${roleName(merged.role).toLowerCase()} on ${this.describeEdition(merged.edition_id)}.`);
+    return this.library.put('credits', fields);
+  }
+
+  creditsOf(editionId) {
+    return this.library.db.prepare('SELECT * FROM credits WHERE edition_id = ? ORDER BY created_at, rowid').all(editionId);
+  }
+
+  // Taking a credit off an edition takes it off every store's list too.
+  removeCredit(id) {
+    if (!this.library.get('credits', id)) throw new CatalogError("That credit isn't in your library.");
+    this.library.db.transaction(() => {
+      for (const row of this.library.db.prepare('SELECT id FROM listing_credits WHERE credit_id = ?').all(id)) this.library.remove('listing_credits', row.id);
+      this.library.remove('credits', id);
+    })();
+  }
+
+  // What one store shows: which of the edition's credits it names. Saving this says the store has been looked at, even when
+  // it names no one, and only then can a credit it leaves out be called a difference.
+  setListingCredits(listingId, creditIds) {
+    const listing = this.library.get('listings', listingId);
+    if (!listing) throw new CatalogError("That listing isn't in your library.");
+    const wanted = [...new Set(creditIds ?? [])];
+    for (const id of wanted) {
+      const credit = this.library.get('credits', id);
+      if (!credit || credit.edition_id !== listing.edition_id) throw new CatalogError("One of those credits isn't on this listing's edition.");
+    }
+    const db = this.library.db;
+    db.transaction(() => {
+      const have = db.prepare('SELECT id, credit_id FROM listing_credits WHERE listing_id = ?').all(listingId);
+      for (const row of have) if (!wanted.includes(row.credit_id)) this.library.remove('listing_credits', row.id);
+      for (const id of wanted) if (!have.some((row) => row.credit_id === id)) this.library.put('listing_credits', { listing_id: listingId, credit_id: id });
+      if (!listing.credits_recorded) this.library.put('listings', { id: listingId, credits_recorded: 1 });
+    })();
+    return this.library.get('listings', listingId);
+  }
+
+  creditsShownOn(listingId) {
+    return this.library.db.prepare('SELECT credit_id FROM listing_credits WHERE listing_id = ? ORDER BY created_at, rowid').all(listingId).map((r) => r.credit_id);
   }
 
   // "Book title: paperback", for messages and lists.
@@ -270,6 +348,7 @@ class Catalog {
   removeListing(id) {
     this.library.db.transaction(() => {
       for (const price of this.library.db.prepare('SELECT id FROM prices WHERE listing_id = ?').all(id)) this.library.remove('prices', price.id);
+      for (const row of this.library.db.prepare('SELECT id FROM listing_credits WHERE listing_id = ?').all(id)) this.library.remove('listing_credits', row.id);
       this.library.remove('listings', id);
     })();
   }

@@ -2,17 +2,25 @@
 // Everything the window may ask the app to do. The window never sees the database: it names one of these calls, and gets
 // back plain data or a plain-words problem. Kept apart from Electron so it's tested like any other module.
 const { Catalog, CatalogError } = require('./catalog');
+const { ROLES, roleLabel } = require('../shared/credits');
 const { ClashError, dismissClash, findClashes, restoreClash } = require('./clashes');
+const { BookImportError, BookImporter } = require('./books-import');
+const { ImportError, Importer } = require('./importer');
+const { RoyaltyError, royalties } = require('./royalties');
+const { Trash } = require('./trash');
 const { BUILT_IN_STORES } = require('./storage/schema');
 const { audiobookTracker, desk, releaseCalendar, storeGrid } = require('./views');
 const { today: todayOf } = require('../shared/dates');
 const { displayIsbn } = require('../shared/isbn');
 const { MoneyError, format, toDecimalString } = require('../shared/money');
 
-const FRIENDLY = [CatalogError, ClashError, MoneyError];
+const FRIENDLY = [BookImportError, CatalogError, ClashError, ImportError, MoneyError, RoyaltyError];
 
 function createApi(library, { now = () => new Date(), locale } = {}) {
   const catalog = new Catalog(library);
+  const importer = new Importer(library, { locale, now });
+  const booksImporter = new BookImporter(library);
+  const trash = new Trash(library, { now });
   const today = () => todayOf(now());
   const options = () => ({ today: today(), locale });
   const named = (table) => (id) => (id ? library.get(table, id)?.name ?? null : null);
@@ -54,7 +62,7 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
         || Number(a.series_number ?? Infinity) - Number(b.series_number ?? Infinity) || a.title.localeCompare(b.title));
     },
     saveBook: (fields) => catalog.saveBook(fields),
-    removeBook: ({ id }) => catalog.removeBook(id) ?? true,
+    removeBook: ({ id }) => (trash.removeBook(id), true),
     book: ({ id }) => {
       const book = library.get('books', id);
       if (!book) throw new CatalogError("That book isn't in your library.");
@@ -62,8 +70,10 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
         ...edition,
         isbns: catalog.isbnsOf(edition.id).map((isbn) => ({ ...isbn, shown: displayIsbn(isbn.isbn), store_name: storeName(isbn.store_id) })),
         recordings: catalog.recordingsOf(edition.id).map((r) => ({ ...r, exclusive_store_name: storeName(r.exclusive_store_id) })),
+        credits: catalog.creditsOf(edition.id).map((credit) => ({ ...credit, person_name: named('people')(credit.person_id) ?? 'Someone', role_label: roleLabel(credit.role) })),
         listings: catalog.listingsOf(edition.id).map((listing) => ({
           ...listing,
+          credit_ids: catalog.creditsShownOn(listing.id),
           store_name: storeName(listing.store_id),
           via_name: storeName(listing.via_store_id),
           prices: priceRows(listing.id),
@@ -80,7 +90,7 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
 
     // ---- Editions, ISBNs, recordings, listings and prices ----
     saveEdition: (fields) => catalog.saveEdition(fields),
-    removeEdition: ({ id }) => catalog.removeEdition(id) ?? true,
+    removeEdition: ({ id }) => (trash.removeEdition(id), true),
     addIsbn: (fields) => catalog.addIsbn(fields),
     assignIsbn: ({ isbnId, editionId }) => catalog.assignIsbn(isbnId, editionId),
     editionChoices: () => library.list('editions').map((edition) => ({ id: edition.id, label: catalog.describeEdition(edition.id) }))
@@ -91,22 +101,57 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
     })),
     saveRecording: (fields) => catalog.saveRecording(fields),
     saveListing: (fields) => catalog.saveListing(fields),
-    removeListing: ({ id }) => catalog.removeListing(id) ?? true,
+    removeListing: ({ id }) => (trash.removeListing(id), true),
     setPrice: (fields) => {
       const row = catalog.setPrice(fields);
       return { id: row.id };
     },
+
+    // ---- Credits: the people on an edition, and which credits each store shows ----
+    saveCredit: (fields) => catalog.saveCredit(fields),
+    removeCredit: ({ id }) => (catalog.removeCredit(id), true),
+    setListingCredits: ({ listingId, creditIds }) => (catalog.setListingCredits(listingId, creditIds), true),
+
+    // ---- The Trash: what was removed waits 30 days ----
+    trash: () => trash.list(),
+    restoreTrash: ({ id }) => trash.restore(id),
+    deleteTrash: ({ id }) => (trash.deleteForever(id), true),
+    emptyTrash: () => trash.empty(),
+
+    // ---- Sales reports. Reading a file happens in the main process (importer.preview), so the window never holds one. ----
+    acceptReport: ({ previewId, knowingMismatch }) => importer.accept({ previewId, knowingMismatch }),
+    undoReport: ({ id }) => importer.undo({ id }),
+    imports: () => importer.reports(),
+    readers: () => importer.readers(),
+    needsMatching: () => importer.needsMatching(),
+    matchItem: ({ storeId, storeItem, editionId }) => importer.matchItem({ storeId, storeItem, editionId }),
+    earnings: () => importer.earnedVsPaid(),
+    royalties: ({ by, from, to } = {}) => royalties(library, { by, from, to, locale }),
+
+    // ---- Bringing books in from a spreadsheet. The file is chosen and read in the main process (booksImporter.open). ----
+    planBooksImport: (args) => booksImporter.plan(args),
+    acceptBooksImport: (args) => booksImporter.accept(args),
+    undoBooksImport: ({ id }) => booksImporter.undo({ id }),
+    booksImports: () => booksImporter.history(),
 
     // ---- Names and stores ----
     names: () => ({
       series: library.list('series'),
       penNames: library.list('pen_names'),
       publishers: library.list('publisher_names'),
+      people: library.list('people').map((person) => ({
+        ...person,
+        credits: library.db.prepare('SELECT edition_id, role FROM credits WHERE person_id = ? ORDER BY created_at, rowid').all(person.id)
+          .map((c) => ({ edition: catalog.describeEdition(c.edition_id), role: roleLabel(c.role) })),
+      })).sort((a, b) => a.name.localeCompare(b.name)),
+      roles: ROLES.map(([value, label]) => ({ value, label })),
       stores: catalog.stores().map((store) => ({ ...store, built_in: BUILT_IN_STORES.some(([id]) => id === store.id) })),
     }),
     saveSeries: (fields) => catalog.saveSeries(fields),
     savePenName: (fields) => catalog.savePenName(fields),
     savePublisherName: (fields) => catalog.savePublisherName(fields),
+    savePerson: (fields) => catalog.savePerson(fields),
+    removePerson: ({ id }) => (catalog.removePerson(id), true),
     saveStore: (fields) => catalog.saveStore(fields),
     removeStore: ({ id }) => catalog.removeStore(id) ?? true,
   };
@@ -126,7 +171,7 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
     }
   }
 
-  return { call, names: [...allowed] };
+  return { call, names: [...allowed], importer, booksImporter, trash };
 }
 
 module.exports = { createApi };

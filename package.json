@@ -1,7 +1,7 @@
 {
   "name": "rt-author-desk",
   "productName": "RT Author Desk",
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.0",
   "description": "The business side of being an author, on your own computer, for Windows, macOS and Linux.",
   "author": "Recon Towers Dev Department <author@neogentrics.com>",
   "license": "SEE LICENSE IN LICENSE",
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "better-sqlite3-multiple-ciphers": "^13.0.3",
+    "electron-updater": "^6.8.11",
     "fast-xml-parser": "^5.12.0",
     "fflate": "^0.8.3"
   },
@@ -25,12 +26,23 @@
     "dist:win": "electron-builder --win nsis portable --x64 --publish never",
     "dist:mac": "electron-builder --mac dmg --arm64 --x64 --publish never",
     "dist:linux": "electron-builder --linux AppImage deb --x64 --publish never",
-    "check:install": "node scripts/check-install.cjs"
+    "check:install": "node scripts/check-install.cjs",
+    "icons": "electron scripts/make-icons.cjs",
+    "test:e2e": "node --test test/e2e.test.cjs",
+    "screenshots": "node scripts/screenshots.cjs",
+    "test:packaged": "node --test test/packaged.test.cjs",
+    "notices": "node scripts/make-notices.cjs"
   },
   "build": {
     "appId": "com.recontowers.authordesk",
     "productName": "RT Author Desk",
     "npmRebuild": false,
+    "electronFuses": {
+      "runAsNode": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "onlyLoadAppFromAsar": true
+    },
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -41,6 +53,7 @@
       "src/renderer/**",
       "package.json",
       "LICENSE",
+      "THIRD_PARTY_NOTICES.md",
       "!node_modules/node-addon-api/**",
       "!node_modules/better-sqlite3-multiple-ciphers/deps/**",
       "!node_modules/better-sqlite3-multiple-ciphers/src/**",
@@ -48,8 +61,17 @@
     ],
     "copyright": "Copyright © 2026 Recon Towers. All rights reserved.",
     "win": {
-      "target": ["nsis", "portable"],
+      "target": [
+        "nsis",
+        "portable"
+      ],
       "files": [
+        "src/main/**",
+        "src/shared/**",
+        "src/renderer/**",
+        "package.json",
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/darwin-*",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/linux*",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/win32-arm64.node"
@@ -63,17 +85,26 @@
       "createStartMenuShortcut": true,
       "shortcutName": "RT Author Desk",
       "license": "LICENSE",
-      "artifactName": "RTAuthorDesk-${version}-Setup.exe"
+      "artifactName": "RTAuthorDesk-${version}-Setup.exe",
+      "include": "build/installer.nsh"
     },
     "portable": {
       "artifactName": "RTAuthorDesk-${version}-Portable.exe"
     },
     "mac": {
       "category": "public.app-category.business",
-      "target": ["dmg"],
+      "target": [
+        "dmg"
+      ],
       "identity": "-",
       "hardenedRuntime": false,
       "files": [
+        "src/main/**",
+        "src/shared/**",
+        "src/renderer/**",
+        "package.json",
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/win32-*",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/linux*"
       ]
@@ -83,11 +114,20 @@
     },
     "linux": {
       "category": "Office",
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "artifactName": "RTAuthorDesk-${version}-linux-${arch}.${ext}",
       "maintainer": "Recon Towers Dev Department <author@neogentrics.com>",
       "synopsis": "The business side of being an author",
       "files": [
+        "src/main/**",
+        "src/shared/**",
+        "src/renderer/**",
+        "package.json",
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/win32-*",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/darwin-*",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/linux*arm64.node"
@@ -95,6 +135,21 @@
     },
     "deb": {
       "packageCategory": "office"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "neogentrics",
+        "repo": "rt-author-desk",
+        "releaseType": "release",
+        "channel": "latest"
+      }
+    ]
+  },
+  "homepage": "https://github.com/neogentrics/rt-author-desk",
+  "bugs": "https://github.com/neogentrics/rt-author-desk/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/neogentrics/rt-author-desk.git"
   }
 }

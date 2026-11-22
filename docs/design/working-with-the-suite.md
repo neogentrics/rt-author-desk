@@ -50,8 +50,9 @@ exact shape into `app-link.md`, and the others follow it. All are additions to p
 
 | Addition | Details |
 |---|---|
-| Installed list | `installed/rt-author-desk.json`. This app writes it from 1.0 |
-| Apps panel | The same in every app |
+| Installed list | `installed/rt-author-desk.json`, holding the app's id, name, **version**, the path to start it and the protocol. This app writes it from 1.0: each time it starts (so an update changes the version) and from the Windows installer, and the uninstaller takes it away |
+| Apps panel | The same in every app, with the status icon that opens it |
+| Updates and compatibility | Whether two apps link depends only on their App Link version and the kinds of document they accept, never on the app's own version, so a release that doesn't touch App Link can't break a link. A newer version of another app is shown as **Update available** ("you have X, the latest is Y"), which is only a nudge. "Latest" comes from one small file on the Recon Towers site, planned at `https://recontowers.com/apps/versions.json`, read only when the panel opens or the app starts and kept for a day. Nothing about the person is sent, and offline the panel says **Couldn't check for updates**. See [the suite page](https://github.com/neogentrics/rt-markdown-reader/blob/main/docs/app-suite.md#updates-and-compatibility) |
 | `status` | "3 launches planned" or "Importing a report". Never any figures, and nothing when locked |
 
 ### Proposed facts

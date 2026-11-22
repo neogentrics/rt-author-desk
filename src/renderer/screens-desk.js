@@ -9,6 +9,19 @@
   };
   AD.options = (rows, label) => rows.map((row) => ({ value: row.id, label: label(row) }));
 
+  // "New series…", "New pen name…" and "New publisher name…" in a form's drop-down, so none of them has to be made somewhere else first.
+  // A series made beside a pen name is linked to it, and the pen name is made first (priority) so there is an id to link to.
+  const realId = (value) => (value && value !== '__new__' ? value : null);
+  AD.creatable = {
+    series: {
+      label: 'New series…', noun: 'series', placeholder: 'Name of the series', priority: 1,
+      make: async (name, all) => (await AD.call('saveSeries', { name, ...(realId(all.pen_name_id) ? { pen_name_id: all.pen_name_id } : {}) })).id,
+    },
+    penName: { label: 'New pen name…', noun: 'pen name', placeholder: 'The name you write under', make: async (name) => (await AD.call('savePenName', { name })).id },
+    person: { label: 'New person…', noun: 'person', placeholder: 'Their name', make: async (name) => (await AD.call('savePerson', { name })).id },
+    publisher: { label: 'New publisher name…', noun: 'publisher name', placeholder: 'The name you publish under', make: async (name) => (await AD.call('savePublisherName', { name })).id },
+  };
+
   // One clash: what's wrong, what to do, and a way to dismiss it with a reason (or bring it back).
   AD.clashItem = (clash, { hideOpen = false } = {}) => {
     const dismiss = () => AD.form({
@@ -37,15 +50,52 @@
       fields: [
         { name: 'title', label: 'Title', required: true },
         { name: 'subtitle', label: 'Subtitle' },
-        { name: 'series_id', label: 'Series', type: 'select', options: AD.options(names.series, (s) => s.name), blank: '(not in a series)' },
+        { name: 'series_id', label: 'Series', type: 'select', options: AD.options(names.series, (s) => s.name), blank: '(not in a series)', create: AD.creatable.series },
         { name: 'series_number', label: 'Number in the series', placeholder: '1' },
-        { name: 'pen_name_id', label: 'Pen name', type: 'select', options: AD.options(names.penNames, (p) => p.name), blank: '(none)' },
+        { name: 'pen_name_id', label: 'Pen name', type: 'select', options: AD.options(names.penNames, (p) => p.name), blank: '(none)', create: AD.creatable.penName },
         { name: 'business_status', label: 'Where it is', type: 'select', blank: 'Planned',
           options: ['planned', 'in progress', 'live', 'pulled', 'being reworked'].map((v) => ({ value: v, label: v[0].toUpperCase() + v.slice(1) })) },
       ],
       onSubmit: async (fields) => { created = await AD.call('saveBook', fields); },
     });
     if (saved && created) location.hash = `#/book/${encodeURIComponent(created.id)}`;
+  };
+
+  // An empty screen says what it is for and what to do, and has the button that does it.
+  AD.emptyCard = (title, text, ...actions) => h('section', { class: 'card empty' },
+    h('h2', null, title), h('p', { class: 'lead' }, text),
+    actions.length ? h('p', { class: 'row' }, actions) : null);
+  AD.tourButton = () => h('button', { type: 'button', onclick: () => AD.startTour() }, 'Take a tour of a made-up catalog');
+
+  // Gives one of your editions a release date, from the Calendar, without finding the book first.
+  AD.dateAnEdition = async () => {
+    const editions = await AD.call('editionChoices');
+    const saved = await AD.form({
+      title: 'Date a release',
+      hint: 'Pick the edition and the day it comes out. It then shows on the calendar and the Desk.',
+      fields: [
+        { name: 'edition', label: 'Edition', type: 'select', required: true, blank: '(choose)', options: AD.options(editions, (e) => e.label) },
+        { name: 'release_date', label: 'Release date', type: 'date', required: true },
+      ],
+      onSubmit: ({ edition, release_date: day }) => AD.call('saveEdition', { id: edition, release_date: day }),
+    });
+    if (saved) AD.refresh();
+  };
+
+  // Adds an audiobook to a book you already have, from the Audiobooks screen, then opens the book to go on from there.
+  AD.addAudiobook = async () => {
+    const books = await AD.call('books');
+    let made = null;
+    const saved = await AD.form({
+      title: 'Add an audiobook',
+      hint: 'Pick the book. You can add its recording, its stores and its rights on the book\'s page.',
+      fields: [
+        { name: 'book_id', label: 'Book', type: 'select', required: true, blank: '(choose)', options: AD.options(books, (b) => b.title) },
+        { name: 'length_minutes', label: 'Length in minutes', type: 'number' },
+      ],
+      onSubmit: async (fields) => { made = await AD.call('saveEdition', { ...fields, format: 'audiobook' }); },
+    });
+    if (saved && made) location.hash = `#/book/${encodeURIComponent(made.book_id)}`;
   };
 
   AD.routes[''] = async () => {
@@ -56,7 +106,7 @@
       out.push(h('section', { class: 'card empty' },
         h('h2', null, 'Start your catalog'),
         h('p', { class: 'lead' }, 'Add a book, then its editions, where it is sold and what it costs. Your desk will show what needs you.'),
-        h('p', null, h('button', { class: 'primary', onclick: AD.addBook }, 'Add your first book'))));
+        h('p', { class: 'row' }, h('button', { class: 'primary', onclick: AD.addBook }, 'Add your first book'), h('button', { onclick: AD.importBooks }, 'Bring in books from a file…'), AD.tourButton())));
       return out;
     }
 
@@ -87,6 +137,12 @@
       out.push(h('section', { class: 'card', 'aria-labelledby': 'soon' }, h('h2', { id: 'soon' }, 'Coming up in the next 30 days'),
         h('ul', { class: 'list' }, later.map((r) => h('li', null,
           h('a', { href: `#/book/${encodeURIComponent(r.book_id)}` }, r.title), ` · ${r.format}${r.store ? ` on ${r.store}` : ''} · ${AD.longDate(r.date)} (${AD.days(r.days_away)})`)))));
+    }
+    if (home.lastMonth) {
+      const month = new Date(`${home.lastMonth.period}-15T12:00:00`).toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
+      out.push(h('section', { class: 'card', 'aria-labelledby': 'last' }, h('h2', { id: 'last' }, `Last month: ${month}`),
+        h('p', null, home.lastMonth.earned.map((e, i) => [i ? ' and ' : '', h('strong', { class: 'mono' }, e.shown)]), ' earned'),
+        h('p', { class: 'note' }, 'This is what the sales reports say, which the store calls an estimate. ', h('a', { href: '#/royalties' }, 'See the royalties'), '.')));
     }
     if (home.toCheck.length) {
       out.push(h('section', { class: 'card check', 'aria-labelledby': 'look' }, h('h2', { id: 'look' }, 'Worth a look'),

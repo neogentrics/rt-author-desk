@@ -17,7 +17,7 @@ on its own. **Building has started, on the catalog first.** The reasons behind i
 
 **Legend:** 🙋 requested by the owner · 🛡️ needs a permission step · Size: **S** ≈ a day, **M** ≈ a few days, **L** ≈ a week or more
 
-**Version numbers:** new features are 1.x releases (1.9 is followed by 1.10, 1.11…). The next major version, 2.0, is kept for
+**Version numbers:** new features are 1.x releases (1.10 is followed by 1.11, 1.12…). Test builds before 1.0 are numbered 1.0.0-alpha.1 and so on. The next major version, 2.0, is kept for
 something as big as a companion on phones.
 
 **Every release must:** install on a clean computer with nothing else set up, update from the release before it without
@@ -25,17 +25,18 @@ losing anything, and pass its automated tests on Windows, Mac and Linux.
 
 | Release | Theme | Status |
 |---|---|---|
-| [Step zero](#step-zero--settle-the-foundations) | Settle the foundations | Built. The Linux installers pass their check, and Windows and Mac wait for CI |
-| [v1.0](#v10--the-catalog-and-the-money) | The catalog and the money | **In progress.** The catalog's first test build works. The money has its KDP reader only |
-| [v1.1](#v11--every-store) | Every store | Planned |
-| [v1.2](#v12--accounts-and-the-vault) | Accounts and the vault | Planned |
-| [v1.3](#v13--what-a-book-really-made) | What a book really made | Planned |
-| [v1.4](#v14--launch-a-book) | Launch a book | Planned |
-| [v1.5](#v15--the-recon-towers-suite) | The Recon Towers suite | Planned |
-| [v1.6](#v16--personal-money) | Personal money | Planned |
-| [v1.7](#v17--claude-and-ai) | Claude and AI | Planned |
-| [v1.8](#v18--leaving-notion) | Leaving Notion | Planned |
-| [v1.9](#v19--two-computers) | Two computers | Planned |
+| [Step zero](#step-zero--settle-the-foundations) | Settle the foundations | Built. The installers for Windows, Mac and Linux are built and checked by CI |
+| [v1.0](#v10--the-catalog) | The catalog | **Released as 1.0.0 on 22 November 2026.** Contributors and credits and the suite's look and feel are built |
+| [v1.1](#v11--the-money) | The money | **Started early, as test code.** KDP import and royalties exist, and the calculator isn't started |
+| [v1.2](#v12--every-store) | Every store | Planned |
+| [v1.3](#v13--accounts-and-the-vault) | Accounts and the vault | Planned |
+| [v1.4](#v14--what-a-book-really-made) | What a book really made | Planned |
+| [v1.5](#v15--launch-a-book) | Launch a book | Planned |
+| [v1.6](#v16--the-recon-towers-suite) | The Recon Towers suite | Planned |
+| [v1.7](#v17--personal-money) | Personal money | Planned |
+| [v1.8](#v18--claude-and-ai) | Claude and AI | Planned |
+| [v1.9](#v19--leaving-notion) | Leaving Notion | Planned |
+| [v1.10](#v110--two-computers) | Two computers | Planned |
 | [Later](#later--only-if-needed) | Only if needed | Ideas |
 | [Ongoing](#ongoing--polish--distribution) | Polish & distribution | Ongoing |
 
@@ -52,26 +53,40 @@ Not a release: the choices that are expensive to change later.
 
 **Test:** an empty app installs and opens on all three systems, and a real KDP report opens in a test with every sheet read.
 
-## v1.0 — The catalog and the money
+## v1.0 — The catalog
 
-🙋 The owner chose both for the first release. It reaches him as two test builds: the catalog first, then the money. Each is
-tested alone, so a problem in one doesn't hold up the other.
+🙋 The owner decided, after trying the first test build, that the app leaves alpha when the catalog is solid, and doesn't wait
+for the money. v1.0 is the catalog, with everything needed to run it on a computer every day. The money is
+[v1.1](#v11--the-money).
 
-**Where it stands (18 November 2026).** The catalog's first test build works on the real app: books and series, editions,
-ISBNs with check digits, audiobook recordings, store listings with their route and prices, the store grid, nine clash checks,
-a release calendar, the all-titles audiobook tracker and the Desk. It has been used by hand on a made-up library, and its tests pass. What's left in the
-catalog: contributors and credits (and the clash that depends on them), and the clash checks that need
-rate cards, spacing rules or pre-order deadlines. In the money, the KDP orders and payments reader exists, and
-the rest of the readers, matching, royalties and the calculator are not started. Nothing under "For every app" is built yet
-except the encrypted library and the Linux installer. The open finding about the sample KDP report is in
-[decisions](docs/decisions.md#to-check-before-or-during-the-build).
+**Where it stands (22 November 2026).** Released as **1.0.0**. The first test build (alpha.0) was installed and used on
+a real computer, and what it showed was missing is now done: Preferences with the suite's themes, Glass, colour-safe colours, fonts and text
+size; a Help menu and Help Center with a tour of a made-up catalog, About, and updates that include test builds; an icon of its own;
+series, pen names and publisher names made right where a book asks for one; screens that say what to do when they're empty; and bringing
+in books from a CSV file. The catalog also has backups, a Trash for 30 days, a way to get everything out as CSV and JSON, the
+installed-list file with its version, and a short welcome the first time. It works on a made-up catalog and has been driven end to end by
+tests, and the Windows and Mac installers are built and checked by CI.
 
-**The catalog**
+**Contributors and credits (22 November 2026).** The owner held 1.0.0 for them, and they are built: editors, cover artists, narrators and
+others are credited on each edition, each store's credits can be written down, and a store that leaves someone off is pointed out. Ten of the
+fifteen clash checks are built. The two price checks and the locked-period check come with the calculator in v1.1, and the pre-order and
+spacing checks with launch plans in v1.5. The Money and Royalties screens are in the menu marked "early": they are v1.1's work, started
+early.
+
+**The suite's look and feel (22 November 2026).** The owner asked that every app follow the suite's
+[look-and-feel standard](https://github.com/neogentrics/rt-markdown-reader/blob/main/docs/app-suite.md), with RT Markdown Reader as the
+reference, and it is built: the themes, Follow System, Glass, colour-safe colours, Customize Theme and fonts; Preferences; short menus with
+Help in the suite's order; Go to and the Ctrl+K command palette; an icon toolbar with a visible theme button; the Help Center and tour; the
+full About window; updates with "Restart to update"; and accessibility that is checked by tests, not by eye. Not built: the Apps status
+icon at the right end of the toolbar, which the suite asks this app to build early. Whether it comes before 1.0.0 or with the suite
+release (v1.6) is the owner's call. The Metallic finish, changeable shortcuts and an adjustable toolbar wait for RT Markdown Reader's 3.13
+to ship, and are listed under Ongoing.
 
 | Feature | Size | Details |
 |---|:-:|---|
-| 🙋 Books and series | M | Works for one novel or a long series, under any number of pen names and publisher names. A book can be planned, in progress, live, pulled or being reworked. |
-| 🙋 Editions | M | Ebook, paperback, hardcover, large print and audiobook, each with its own details: page count, trim size, narrator, contributors. |
+| 🙋 Books and series | M | Works for one novel or a long series, under any number of pen names and publisher names. A new series, pen name or publisher name can be made right where a book asks for one. A book can be planned, in progress, live, pulled or being reworked. |
+| 🙋 Editions | M | Ebook, paperback, hardcover, large print and audiobook, each with its own details: page count, trim size, narrator. |
+| 🙋 Contributors and credits | M | Editors, narrators, artists and others, credited on each edition and on each store, with the check that finds one credited differently on two stores. A store is only checked once its credits have been written down. Built. |
 | 🙋 Store listings | L | An edition on a store: its store ID, price in each marketplace, link, status, the publisher name the store shows, and how it got there, directly or through a distributor. |
 | 🙋 Recordings | M | Each audiobook recording of a book: human or synthesized voice, who read it, and what rights it has, such as an exclusive deal and when it ends. [How it works](docs/design/data-model.md#recordings). |
 | 🙋 Audiobook tracker | M | Every title on every store: which recording is live, its voice, its rights, and which are waiting to be replaced and by what. |
@@ -79,37 +94,62 @@ except the encrypted library and the Linux installer. The open finding about the
 | 🙋 The store grid | M | One page per book: editions down the side, stores across the top, so a gap or a wrong price shows at a glance. |
 | 🙋 Clash checks | M | Finds real problems: see [the list](docs/product-plan.md#clash-checks). You can dismiss one with a reason. |
 | 🙋 Release dates | S | Per edition and per store, on a calendar. |
-| The Desk | M | The home screen: what needs you today. The next release and what's blocking it, clashes, reports that are due, and last month's earnings. |
-
-**The money**
-
-| Feature | Size | Details |
-|---|:-:|---|
-| 🙋 Read sales reports | L | KDP, Barnes & Noble Press, ACX, Google Play Books and IngramSpark. Drop a file in, see what it holds, and accept it. [How it works](docs/design/report-imports.md). |
-| 🙋 Every row accounted for | M | Each row is imported, a duplicate, or set aside with a reason. Totals are checked against the report's own. Importing twice does no harm, and any import can be undone. |
-| Matching | M | Report rows are matched to editions by ISBN or store ID. What it can't match, it asks about once and remembers. |
-| 🙋 Royalties | L | By month, book, edition, store, marketplace and currency. Estimates are kept apart from what was actually paid. |
-| Currencies | M | Amounts stay in the currency they were earned in. Paid amounts use the rate on the store's payment report. |
-| 🙋 Royalty and pricing calculator | L | What a price earns per copy at each store, side by side, and what to charge to earn a given amount. Rates are dated, and you can check and change them. [How it works](docs/design/royalties-and-prices.md). |
+| The Desk | M | The home screen: what needs you today. The next release and what's blocking it, and clashes. |
+| 🙋 Bring in your books | M | From a CSV file, such as an export from Notion: show the app which column is the title, the series, the status and so on, check what it found, and accept. Nothing changes until you do, and an import can be undone. |
 
 **For every app**
 
 | Feature | Size | Details |
 |---|:-:|---|
-| Encrypted from the start | M | The library is an encrypted database that nothing else can read. |
-| 🙋 Get it all out | M | Everything as CSV and JSON, at any time, and each original report as you imported it. |
-| Backups | M | On a schedule, to a folder you choose, plus Trash for 30 days. |
-| Installers & updates | M | Windows, Mac and Linux, as in RT Story Tracker. |
-| A simple first run | S | Start your catalog, or try a made-up one. |
-| Themes & fonts | S | The suite's themes and fonts. |
-| Installed list | S | Leaves the small file that tells the other apps it's installed. |
+| Encrypted from the start | M | The library is an encrypted database, so another program can't read it just by opening the file. A password, in a later version, is what makes it a real lock. |
+| 🙋 Get it all out | M | Everything as CSV and JSON, at any time. |
+| Backups and Trash | M | On a schedule, to a folder you choose, plus Trash for 30 days. |
+| Installers & updates | M | Windows, Mac and Linux, as in RT Story Tracker. The app checks for updates itself, test builds included, so an installed test build updates to the next one. |
+| 🙋 Preferences, themes & fonts | M | The suite's themes, Glass, colour-safe colours, fonts and text size, in a Preferences window (Ctrl+,). |
+| 🙋 Help Center | M | A Help menu (F1): short searchable guides, a first-run tour of a made-up catalog, About, and Check for Updates. |
+| 🙋 Short menus and a command palette | S | File, Edit, View and Help, with rarely used commands in submenus, and every command can be run by name with Ctrl+K, then `>`. Help is in the suite's order: Help Center (F1), Tutorial, Check for Updates…, About. **Built.** |
+| 🙋 The About window, in full | S | The icon, name and version, links to the website, what's new, reporting a problem and the source code, a line of Electron, Chromium, Node and system versions with a Copy details button, and links to the license and the open-source notices. **Built.** The website link goes to the Recon Towers projects page until the app has a page of its own. |
+| 🙋 Themes, the rest of the standard | M | Follow System, Customize Theme (your own colours), and a theme button on the main screen, beside the themes, Glass and colour-safe colours already built. **Built.** Whatever colour is chosen, the words on it are changed only as much as it takes to stay readable, and a test checks that over hundreds of colours in every theme. |
+| 🙋 An icon toolbar | S | Icon buttons for the common commands, each with a name on hover that screen readers read out. **Built:** Go to, New Book, Bring in books, the theme button, Preferences and Help Center. |
+| Accessibility checks | S | Every button has a name and every theme meets WCAG AA contrast, checked in the tests, and Windows high contrast and full keyboard use too. **Built.** A program checks every screen and window for names, labels, headings and controls big enough to press, walks the keyboard order, measures the focus ring and the borders of fields in every theme, turns Windows high contrast on, and simulates colour blindness. |
+| 🙋 An icon of its own | S | A ledger on a desk, in a different shape and colour family from the other apps, made from one source file by a script. |
+| A simple first run | S | A short welcome the first time: start your catalog, bring in a file, or look around a made-up one. |
+| Installed list | S | Leaves the small file that tells the other apps it's installed, and which version is installed. It is written each time the app starts, so an update changes it, and the Windows installer writes it too. |
 
-**Test:** enter a real catalog, then find every known clash. Mark a recording as exclusive to one store, list it on another,
-and see the clash. Import two years of real KDP reports: every row is accounted for,
-and each month's total matches the report to the cent. Import the same file again and nothing changes. Export everything and
-find it all in the files.
+**Test:** bring in a real catalog from a CSV file, then find every known clash. Mark a recording as exclusive to one store, list
+it on another, and see the clash. Change the theme, font and text size, and they're still changed after a restart. Install an
+earlier test build and update it from inside the app. Take a backup, delete a book, and bring it back from Trash and from the
+backup. Export everything and find it all in the files.
 
-## v1.1 — Every store
+## v1.1 — The money
+
+🙋 The sales reports, and what the books earn. It follows the catalog, so a problem here never holds up the catalog's release.
+
+**Where it stands (18 November 2026).** It has been started early, as test code that isn't part of v1.0. KDP's orders and
+payments reports go into the library: one batch at a time, rows matched to editions by ASIN or ISBN (with one question for the
+rest), rows already imported skipped, a whole batch undoable, the original file kept encrypted, and earned shown beside paid. A
+report whose own Summary doesn't match its rows is shown, refused unless you say you know, and flagged for good. The Barnes &
+Noble Press, ACX, Google Play Books and IngramSpark readers are empty slots that say they are waiting for a real report.
+Royalties by month, book, edition, store, marketplace and currency are built too, with the estimates kept apart from what was
+paid, and last month's earnings on the Desk. The calculator is not started. The open finding about the sample KDP report is in
+[decisions](docs/decisions.md#to-check-before-or-during-the-build).
+
+| Feature | Size | Details |
+|---|:-:|---|
+| 🙋 Read sales reports | L | KDP (built, on made-up files), and empty slots for Barnes & Noble Press, ACX, Google Play Books and IngramSpark that wait for a real report. Choose a file, see what it holds, and accept it. [How it works](docs/design/report-imports.md). |
+| 🙋 Every row accounted for | M | Built for KDP. Each row is imported, a duplicate, or set aside with a reason. Totals are checked against the report's own. Importing twice does no harm, and any import can be undone. |
+| Matching | M | Built for KDP. Report rows are matched to editions by ISBN or store ID. What it can't match, it asks about once and remembers. |
+| 🙋 Royalties | L | Built. By month, book, edition, store, marketplace and currency. Estimates are kept apart from what was actually paid. |
+| Currencies | M | Amounts stay in the currency they were earned in. Paid amounts use the rate on the store's payment report. |
+| 🙋 Royalty and pricing calculator | L | What a price earns per copy at each store, side by side, and what to charge to earn a given amount. Rates are dated cards that show where they came from and when they were checked, and you can change them. [How it works](docs/design/royalties-and-prices.md). |
+| Price checks | S | The three clash checks that read the rate cards: a print price just under a royalty line, an ebook price outside the band for the rate you want, and a price that changes inside a deal's locked period. |
+| Reports in the export | S | Each original report as you imported it, along with everything else. |
+
+**Test:** import two years of real KDP reports: every row is accounted for, and each month's total matches the report to the cent.
+Import the same file again and nothing changes. Undo a batch. A price worked out by the calculator matches the store's own
+calculator for a set of real books.
+
+## v1.2 — Every store
 
 🙋 Sales from everywhere you sell, and no store left typed in by hand.
 
@@ -123,7 +163,7 @@ find it all in the files.
 **Test:** import a real report from each store. Rename a column in a test file: the app refuses it and says which column,
 and nothing is half imported.
 
-## v1.2 — Accounts and the vault
+## v1.3 — Accounts and the vault
 
 🙋 Every service the business uses, and the logins for them, kept safe.
 
@@ -139,7 +179,7 @@ and nothing is half imported.
 **Test:** search a copied library for a known password and find nothing. Recover using each way in. Get an independent
 review of the vault before release, and the owner decides whether it's enough.
 
-## v1.3 — What a book really made
+## v1.4 — What a book really made
 
 🙋 What a book earned, less what it cost.
 
@@ -156,7 +196,7 @@ review of the vault before release, and the owner decides whether it's enough.
 **Test:** a book's profit, worked out by hand from real reports and costs, matches the app. Sell ten copies at an event
 and see the stock and the money both change. The year-end summary adds up to the monthly figures.
 
-## v1.4 — Launch a book
+## v1.5 — Launch a book
 
 🙋 From a finished manuscript to a book on sale, with nothing forgotten.
 
@@ -174,7 +214,7 @@ and see the stock and the money both change. The year-end summary adds up to the
 **Test:** plan a real launch, move its date and watch the tasks follow. Paste a store's listing from the kit with no field
 over its limit. Compare a campaign's spend against its sales.
 
-## v1.5 — The Recon Towers suite
+## v1.6 — The Recon Towers suite
 
 🙋 The apps know each other, and each fact has one home. Built to
 [the suite's rules](https://github.com/neogentrics/rt-markdown-reader/blob/main/docs/app-suite.md). What's needed is in
@@ -183,7 +223,8 @@ over its limit. Compare a campaign's spend against its sales.
 | Feature | Size | Details |
 |---|:-:|---|
 | 🙋 Link once | M | App Link, with the same rules as the other apps. Off until you turn it on. |
-| 🙋 Apps panel | M | The same panel as every app: what's on this computer, what's running and what's linked. |
+| 🙋 Apps panel | M | The same panel as every app, with a small status icon to open it: what's on this computer, what's running and what's linked. Copied from RT Story Tracker's panel and wording when it exists. |
+| 🙋 Updates and compatibility | M | The Apps panel also tells you when another app has a newer version. Two apps link or not by their App Link version and the kinds of document they accept, never by the app's own version number, so an update never breaks a link. **Update available** ("you have 3.7.1, the latest is 3.9.0") is only a nudge, and the only thing that stops a link is an App Link too old to talk to, which says **Needs an update to link**. The latest versions come from one small file on the Recon Towers site, planned at `https://recontowers.com/apps/versions.json`. It is read only when the panel opens or the app starts, and kept for a day. Nothing about you is sent, no ids and no list of what is installed. When it can't be reached, the panel says **Couldn't check for updates** and carries on. [How it works](https://github.com/neogentrics/rt-markdown-reader/blob/main/docs/app-suite.md#updates-and-compatibility). |
 | 🙋 Link a book | S | Tie a book here to the same book in RT Story Tracker. Each app keeps working without the other. |
 | 🙋 Writing progress | M | Word counts and draft status from RT Story Tracker, shown on the book and the Desk. |
 | 🙋 Published facts | M | Editions, ISBNs, dates, prices and links, for RT Story Tracker's catalog to show. |
@@ -192,9 +233,9 @@ over its limit. Compare a campaign's spend against its sales.
 | Automations | M | Webhooks and n8n can be told about a release, a report or a due date. Off until you turn it on, and the vault and personal money stay out. |
 
 **Test:** install each app on a clean computer, in either order, and each finds the other. A locked RT Story Tracker project
-answers nothing. Change an ISBN here and see it in RT Story Tracker's catalog.
+answers nothing. Change an ISBN here and see it in RT Story Tracker's catalog. Put a newer version of one app in a test copy of the versions file: the panel says **Update available** with both numbers, and a link between the two still works. Go offline: the panel says **Couldn't check for updates**, and nothing else changes.
 
-## v1.6 — Personal money
+## v1.7 — Personal money
 
 🙋 Your own budget, bills and debts, kept apart from the business. Off until you turn it on, and it stays hidden from anyone
 who doesn't want it. [The design](docs/design/vault-and-privacy.md#personal-money).
@@ -214,7 +255,7 @@ who doesn't want it. [The design](docs/design/vault-and-privacy.md#personal-mone
 Leave a sealed file in the folder and it's taken in with the app closed and reopened. Business totals are the same with the
 section on and off.
 
-## v1.7 — Claude and AI
+## v1.8 — Claude and AI
 
 🙋 Must come before leaving Notion, because Claude reads and updates this work there today. AI is an add-on: it's off until you
 turn it on, and the app is complete without it.
@@ -230,7 +271,7 @@ turn it on, and the app is complete without it.
 **Test:** a Claude session reads a book's listings, suggests a change, and it appears to accept, then at each other level.
 It can't reach the vault at any level. Draft a description with a local model and the computer offline.
 
-## v1.8 — Leaving Notion
+## v1.9 — Leaving Notion
 
 🙋 The goal. Everything is ready, so now it moves.
 
@@ -243,7 +284,7 @@ It can't reach the vault at any level. Draft a description with a local model an
 
 **Test:** a month of business work with Notion closed, and nothing missing.
 
-## v1.9 — Two computers
+## v1.10 — Two computers
 
 🙋 The same desk on a desktop and a laptop, with no account.
 
@@ -274,9 +315,12 @@ It can't reach the vault at any level. Draft a description with a local model an
 | Code signing | S | Windows and Mac, as for the other apps. |
 | Tutorial & Help Center | M | A first-run tutorial and a Help Center that grow with each release. Any author has to be able to start alone. |
 | Accessibility | S | Screen readers, contrast and keyboard use, checked in the tests. |
+| 🙋 Metallic finish | S | A third look beside Solid and Glass, copied from RT Markdown Reader once its 3.13 ships. It's built there and still being tested, so nothing is copied yet. |
+| Changeable shortcuts | S | Change any keyboard shortcut in Preferences, as in the other apps. |
+| Adjustable toolbar | S | Hide, reorder and shrink the toolbar buttons, copied from RT Markdown Reader's 3.13 once it ships. |
 | Rate cards | S | Rates checked against each store's own pages before each release. |
 | Report layouts | S | Readers updated when a store changes its reports. |
-| Languages | L | The app in other languages. |
+| Languages | L | The app in Spanish, French and German, with right-to-left layouts. All the app's words are kept in one table for each feature from the start, so this stays cheap. |
 | Recon Towers App Store | S | Listed once 1.0 is out. Until then it stays on The Bench. |
 
 ## Open decisions

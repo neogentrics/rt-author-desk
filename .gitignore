@@ -9,3 +9,6 @@ dist/
 # Real sales reports are private test files and never go in the repo.
 test/private/
 self-test-reports/
+
+# Claude Code's own local folder (its settings and temporary work copies) is never committed.
+.claude/

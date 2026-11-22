@@ -30,6 +30,8 @@ function openDatabase(file, projectKey) {
     db.pragma('journal_mode = WAL');
     db.pragma('synchronous = FULL');
     db.pragma('foreign_keys = ON');
+    // The app's own tables use no functions in views, triggers or defaults that need trust, so a database that asks for any is refused them.
+    db.pragma('trusted_schema = OFF');
     return db;
   } catch (error) {
     db.close();

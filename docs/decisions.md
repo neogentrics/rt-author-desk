@@ -15,9 +15,12 @@ tags: [plan, decisions]
 2. **How sales come in.** ✅ By importing report files, so it needs no outside accounts.
 3. **The first release.** ✅ The catalog and the money together in 1.0. *Catalog first* was recommended, because a smaller first
    release reaches him sooner. To keep the risk down, 1.0 reaches him as two test builds.
+   **Changed on 18 November 2026, by the owner, after trying the first test build.** 1.0 is the catalog alone, and the money is
+   1.1. The app leaves alpha when the catalog is solid, and doesn't wait for the money, so the original recommendation
+   (*catalog first*) is what was done. Every later release moved up by one: Every store is 1.2, and Two computers is 1.10.
 4. **Which stores.** ✅ KDP, Barnes & Noble Press, ACX, Google Play Books, IngramSpark, Draft2Digital, Kobo, Apple Books and Lulu,
-   with a screen for matching columns for any other. The first five are in 1.0 and the rest in 1.1. Google Play Books moved up
-   on 6 November: he self-publishes there, so it's one of his main platforms.
+   with a screen for matching columns for any other. The first five are in 1.1 and the rest in 1.2. Google Play Books moved up
+   on 6 November: he self-publishes there, so it's one of his main platforms, and it stays in the first batch of readers.
 5. **Passwords.** ✅ A locked vault. *No passwords* was recommended, because it makes this app a password manager, which needs
    its own review. See [the design](design/vault-and-privacy.md).
 6. **How far the money goes.** ✅ Costs, profit per book and series, direct sales, author copies, and a year-end summary. No tax
@@ -67,8 +70,36 @@ These follow the plan and fill gaps in it. Any can be changed.
 25. **An exclusive program or recording deal names its store,** because the clash checks can't judge "elsewhere" without it.
 26. **A store listing's route is recorded,** and the same edition can be on one store both directly and through a distributor.
 27. **Dismissing a clash needs a reason,** and it stays dismissed until the records it names change.
-28. **Nine of the fifteen clash checks are built.** The rest wait for the data they need: contributors, rate cards, spacing
-    rules and pre-order deadlines.
+28. **Ten of the fifteen clash checks are built.** The rest wait for the data they need: rate cards, spacing rules and pre-order
+    deadlines. (Nine were built at first. The tenth, a credit shown differently on two stores, came with contributors.)
+29. **Rows nobody owns yet are kept and counted.** A report row that matches no edition is saved with no edition, so the library's
+    totals still agree with the report. The Money screen asks about each ASIN or ISBN once and remembers the answer.
+30. **A report that doesn't match its own total can still be imported, but only on purpose.** The mismatch is shown first, the
+    person ticks that they know, and the batch carries a red flag on the Money screen until it is undone. It is never dropped silently.
+31. **The original file is kept inside the encrypted library**, not beside it, so it is as encrypted as everything else and goes
+    with a backup. Undoing a batch removes it. The batch stays in the list as "undone".
+32. **A payment counts as paid only when its status says Paid.** Anything else is shown as waiting, with the status as written. No
+    real payments report has been seen, so this needs checking against one.
+33. **A month is the unit for sales.** KDP's royalty date is a month, so earned-by-month is exact, and a payment is placed in the month
+    its sales period starts.
+34. **Corrected rows aren't replaced yet.** A row the store has changed counts as a new row, not a correction. "Replaced, with your
+    agreement" in the design isn't built.
+35. **A store's credits are only checked once they've been written down.** A listing says which of its edition's credits the store
+    shows, and whether that has been written down at all. A store nobody has looked at isn't taken to show nothing, so the check never
+    fires for a store the owner hasn't described. Nothing is ticked for you when you write one down, because the point is to find
+    what is missing. This was chosen when contributors were built, ahead of 1.0.0 at the owner's request.
+36. **A person is in the list once, by name,** and a person who is still credited can't be removed. Credits are one person in one role
+    on one edition, from a fixed list of roles (and "other", with a note), so a role needs no new code.
+37. **The menus are the list of commands.** Go to (`Ctrl+K`, then `>`) runs any command in the menus by name, taken from the menus
+    themselves, so a command is written once and the menus can stay short, as RT Markdown Reader's are. The window can only ask for a
+    command by its id, and only a command with an action of its own can be run.
+38. **Your own colours are worked out, not trusted.** Customize Theme keeps three colours as checked `#rrggbb` values, and the words on
+    them are changed only as much as it takes to be read (the maths is Reader's, copied). The window can only set a few named variables,
+    and a test measures the result over hundreds of colours in every theme. High Contrast ignores them, and Glass stays solid while a
+    panel or background colour is in use.
+39. **Accessibility is checked by programs, not by eye.** Names for a screen reader, the keyboard order, the focus ring, the border of a
+    field, Windows high contrast and colour blindness are tested on the real page, and each check was shown to fail when what it guards
+    is taken away. A new button without a name fails a test instead of reaching someone who cannot see the problem.
 
 ## To check before or during the build
 

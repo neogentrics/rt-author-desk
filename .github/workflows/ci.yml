@@ -1,4 +1,6 @@
 name: CI
+# Every outside action is pinned to the full commit it was checked at (the comment names its release), so a tag that is moved later
+# cannot change what runs here. Dependabot proposes the update to each, monthly.
 
 on:
   push:
@@ -23,13 +25,41 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm test
+      # The tests that drive the real app through its window need a screen, so on Linux they run under a virtual one.
+      - name: Drive the real app (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:e2e
+        env:
+          RTAD_E2E: '1'
+
+  # Nothing of the project or its dependencies runs here (no install scripts), and only the registry's own records are read.
+  audit:
+    name: Dependencies (known problems and signatures)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # What ships inside the app: any known problem in it fails this job. The build tools have a few that matter only if someone hands them a hostile
+      # pattern, which nobody can, and Dependabot reports those.
+      - run: npm audit --omit=dev --audit-level=low
+      # Every package is what the registry says its publisher published, and is signed.
+      - run: npm audit signatures
 
   install:
     name: Install and self-test (${{ matrix.os }})
@@ -42,13 +72,21 @@ jobs:
         include:
           - os: windows-latest
             dist: dist:win
+            app: release/win-unpacked/RT Author Desk.exe
+            window: node --test test/packaged.test.cjs
           - os: ubuntu-latest
             dist: dist:linux
+            app: release/linux-unpacked/rt-author-desk
+            window: xvfb-run -a node --test test/packaged.test.cjs
           - os: macos-latest
             dist: dist:mac
+            app: release/mac-arm64/RT Author Desk.app/Contents/MacOS/RT Author Desk
+            window: node --test test/packaged.test.cjs
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -56,16 +94,22 @@ jobs:
       - run: npm run ${{ matrix.dist }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      # The self-test below has no window, so this opens the built app's window and checks that it draws: the toolbar, the sidebar, the
+      # icons, the fonts and the first screen, with nothing wrong in the console. A build that left out a file the window needs fails here.
+      - name: Open the built app's window
+        run: ${{ matrix.window }}
+        env:
+          RTAD_PACKAGED_APP: ${{ github.workspace }}/${{ matrix.app }}
       - run: npm run check:install
       - name: Keep the test results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: self-test-${{ matrix.os }}
           path: self-test-reports/
           retention-days: 30
       - name: Keep the installers
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: installers-${{ matrix.os }}
           path: |

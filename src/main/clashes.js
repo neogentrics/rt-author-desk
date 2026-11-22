@@ -3,11 +3,12 @@
 // `computeClashes` is a pure function of the catalog's rows, so every rule is tested on made-up data. A clash can be
 // dismissed with a reason, and it stays dismissed until its facts change (its key names the records it's about).
 //
-// Not here yet, because the data they need isn't built: contributors credited differently, price lines and bands (rate
-// cards come with the calculator), a price change in a locked period, a pre-order deadline, and release spacing.
+// Not here yet, because the data they need isn't built: price lines and bands (rate cards come with the calculator), a price
+// change in a locked period, a pre-order deadline, and release spacing.
 // "An ISBN is on two editions" can't happen: the register holds each number once, and says where it is when you try.
 const { daysBetween } = require('../shared/dates');
 const { parseIsbn } = require('../shared/isbn');
+const { roleLabel } = require('../shared/credits');
 
 const norm = (text) => String(text ?? '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 const activeOn = (from, until, today) => (!from || from <= today) && (!until || until >= today);
@@ -181,6 +182,35 @@ function computeClashes(data, today) {
     }
   }
 
+  // A person credited on the edition is left off a store that shows credits. Only a store whose credits have been written down
+  // is checked: one that was never looked at isn't taken to show nothing.
+  const people = by(data.people ?? []);
+  const allCredits = data.credits ?? [];
+  const shownOn = new Map();
+  for (const row of data.listing_credits ?? []) shownOn.set(row.listing_id, new Set([...(shownOn.get(row.listing_id) ?? []), row.credit_id]));
+  const creditLabel = (credit) => `${people.get(credit.person_id)?.name ?? 'Someone'} (${roleLabel(credit.role).toLowerCase()})`;
+  const list = (items) => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`);
+  for (const edition of data.editions) {
+    const owed = allCredits.filter((c) => c.edition_id === edition.id);
+    if (!owed.length) continue;
+    const checked = data.listings.filter((l) => l.edition_id === edition.id && l.credits_recorded && onSale(l));
+    for (const listing of checked) {
+      const missing = owed.filter((c) => !shownOn.get(listing.id)?.has(c.id));
+      if (!missing.length) continue;
+      const elsewhere = [...new Set(checked.filter((other) => other.id !== listing.id && missing.some((c) => shownOn.get(other.id)?.has(c.id))).map((o) => storeName(o.store_id)))];
+      add({
+        kind: 'credits-differ',
+        severity: 'check',
+        key: ['credits-differ', listing.id, ...missing.map((c) => c.id).sort()].join(':'),
+        title: `${editionName(edition.id)} leaves ${list(missing.map(creditLabel))} off ${storeName(listing.store_id)}`,
+        detail: `${missing.length === 1 ? 'This credit is' : 'These credits are'} on the edition${elsewhere.length ? ` and shown on ${list(elsewhere)}` : ''}, but not on ${storeName(listing.store_id)}.`,
+        action: `Add ${missing.length === 1 ? 'the credit' : 'the credits'} on ${storeName(listing.store_id)}'s page and write down what it shows, or take ${missing.length === 1 ? 'it' : 'them'} off the edition if ${missing.length === 1 ? 'it was' : 'they were'} never meant to be there.`,
+        subjects: [['listings', listing.id], ...missing.map((c) => ['credits', c.id])],
+        edition_id: edition.id,
+      });
+    }
+  }
+
   // Two series records that differ only in spacing, capitals or punctuation: the stores won't group them.
   const groups = new Map();
   for (const series of data.series) {
@@ -227,7 +257,7 @@ function computeClashes(data, today) {
   return found.sort((a, b) => rank[a.severity] - rank[b.severity] || a.title.localeCompare(b.title) || a.key.localeCompare(b.key));
 }
 
-const TABLES = ['books', 'editions', 'stores', 'isbns', 'listings', 'recordings', 'publisher_names', 'series'];
+const TABLES = ['books', 'editions', 'stores', 'isbns', 'listings', 'recordings', 'publisher_names', 'series', 'people', 'credits', 'listing_credits'];
 
 // Reads the catalog and returns the clashes, each marked with its dismissal if it has one. Dismissed ones are left out
 // unless asked for.
