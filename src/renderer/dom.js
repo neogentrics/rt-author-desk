@@ -36,10 +36,14 @@
     AD.toast.timer = setTimeout(() => { el.hidden = true; }, 4000);
   };
 
-  // A dialog that closes itself and is removed once it's done.
+  // A dialog that closes itself and is removed once it's done. Each has its own title id, because one can open over another (a price
+  // over a store's square), and a shared id would give the top one the name of the one beneath it.
+  let dialogs = 0;
   AD.dialog = (title, body, { wide = false } = {}) => {
-    const dialog = h('dialog', { class: wide ? 'wide' : '', 'aria-labelledby': 'dialog-title' },
-      h('h2', { id: 'dialog-title' }, title), body);
+    dialogs += 1;
+    const titleId = `dialog-title-${dialogs}`;
+    const dialog = h('dialog', { class: wide ? 'wide' : '', 'aria-labelledby': titleId },
+      h('h2', { id: titleId }, title), body);
     dialog.addEventListener('close', () => dialog.remove());
     document.body.append(dialog);
     dialog.showModal();

@@ -21,6 +21,9 @@
   --focus: var(--t-accent); --problem: var(--t-danger); --problem-bg: var(--t-danger-bg);
   /* The panel's own line, and the washes for a hovered link and a count on it. A theme leaves these as they are here, and Customize Theme
      replaces them with ones worked out from the panel colour you chose, so the words on them can still be read. */
+  /* The border of a field, a swatch and the like has to be seen to know where the control is (WCAG asks 3 to 1 for that), which the
+     faint line used between cards is not. It is the ink mixed into the page, and a test measures it in every theme. */
+  --field-line: color-mix(in srgb, var(--ink) 66%, var(--page));
   --t-panel-edge: var(--t-edge);
   --t-hover: color-mix(in srgb, var(--t-on-panel) 14%, transparent);
   --t-chip: color-mix(in srgb, var(--t-on-panel) 22%, transparent);
@@ -119,7 +122,8 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
 .field.check label { font-weight: 400; }
 .field .help { margin: 0; width: 100%; }
 .req { color: var(--problem); }
-input, select, textarea { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; width: 100%; }
+input, select, textarea { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--field-line); border-radius: 8px; padding: 6px 10px; width: 100%; }
+input::placeholder, textarea::placeholder { color: var(--ink-soft); opacity: 1; }
 input[type="checkbox"] { width: auto; }
 .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
 .error { color: var(--problem); background: var(--problem-bg); border-radius: 8px; padding: 8px 12px; margin: 0 0 8px; }
@@ -165,6 +169,7 @@ tr.total th, tr.total td { border-top: 2px solid var(--line); font-weight: 700; 
 .top { position: sticky; top: 0; z-index: 6; }
 .bar { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 8px 16px; background: var(--t-accent); color: var(--t-on-accent); }
 .bar button { background: var(--t-on-accent); color: var(--t-accent); border-color: var(--t-on-accent); font-weight: 600; }
+.bar :focus-visible { outline-color: var(--t-on-accent); }
 
 /* The tour card floats over the page, so the page stays visible while it is explained. */
 .tour { position: fixed; right: 20px; bottom: 20px; width: min(22rem, calc(100vw - 40px)); z-index: 8; background: var(--surface); color: var(--ink); border: 2px solid var(--accent); border-radius: 12px; padding: 14px 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); }
@@ -265,7 +270,7 @@ dialog.about { width: min(32rem, 94vw); }
 .customize-row { border: 0; margin: 0 0 14px; padding: 0; }
 .customize-row legend { font-weight: 600; font-size: 0.933rem; padding: 0; margin-bottom: 6px; }
 .swatches { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.swatch { width: 2rem; height: 2rem; padding: 0; border-radius: 999px; background: var(--c); border: 2px solid var(--line); }
+.swatch { width: 2rem; height: 2rem; padding: 0; border-radius: 999px; background: var(--c); border: 2px solid var(--field-line); }
 .swatch:hover { border-color: var(--ink); }
 .swatch[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--page), 0 0 0 4px var(--ink); }
 .swatch.none { background: linear-gradient(135deg, var(--page) 45%, var(--problem) 45% 55%, var(--page) 55%); }
@@ -274,3 +279,22 @@ dialog.about { width: min(32rem, 94vw); }
 .customize-sample { display: grid; grid-template-columns: 8rem minmax(0, 1fr); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
 .customize-sample .panel { background: linear-gradient(var(--t-panel), var(--t-panel-end)); color: var(--t-on-panel); padding: 12px; font-weight: 600; border-right: 1px solid var(--t-panel-edge); }
 .customize-sample .page { background: var(--page); padding: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* A request for more contrast: the faint lines between cards become as strong as the quiet text. */
+@media (prefers-contrast: more) {
+  :root { --line: var(--ink-soft); --t-panel-edge: var(--t-on-panel-soft); }
+}
+
+/* Windows high contrast (forced colours): the system picks every colour, so what colour alone showed is shown another way. The current
+   screen, a chosen choice and the selected row use the system's highlight, counts and bars get an edge, and the swatches keep their own
+   colours because the colour is the thing being chosen. A test turns this mode on and checks it. */
+@media (forced-colors: active) {
+  :focus-visible { outline: 3px solid Highlight; }
+  .side a[aria-current="page"], .help-nav button.on, .palette-item[aria-selected="true"], .seg-btn[aria-pressed="true"] { background: Highlight; color: HighlightText; border-color: Highlight; }
+  .count, .tally { border: 1px solid ButtonText; }
+  .bar { border-bottom: 1px solid CanvasText; }
+  .toast { border: 1px solid CanvasText; }
+  .swatch, .swatch.none { forced-color-adjust: none; border-color: ButtonText; }
+  .swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px Canvas, 0 0 0 4px ButtonText; }
+  td.cell.has-problem { outline: 2px solid CanvasText; outline-offset: -3px; }
+}

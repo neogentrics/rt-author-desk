@@ -28,6 +28,7 @@ npm run test:e2e  # drives the real app through its window; needs a screen (on a
 ```
 
 - Money is always a whole number of the currency's smallest unit, with its currency code beside it. Never a floating-point number.
+- A new button, link or field has to have a name a screen reader can say, and the real-app tests fail if it doesn't. They check every screen and window for names, labels, headings, repeated ids and controls too small to press, walk the keyboard order, measure the focus ring in every theme, and turn Windows high contrast on. Use `AD.icon` for an icon, and give its button an `aria-label`.
 - The window never touches the database. Everything it can ask for is a named call in `src/main/api.js`, and a new one has a test.
 - Tests use made-up data only. Real reports go in `test/private/`, which is never committed.
 - Check a visual change in the real app, in the light and dark themes.

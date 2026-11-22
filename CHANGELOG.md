@@ -29,6 +29,12 @@ build (`1.0.0-alpha.0`), that the app leaves alpha when the catalog is solid and
 - **An icon toolbar** across the top: Go to, New Book, Bring in books, the **theme button**, Preferences and Help Center. Each button has a name
   that shows when you hover and is read out by a screen reader, and a shortcut where there is one. The theme button is the moon, on every
   screen: it changes the theme (Follow System or any of the fifteen), Glass and colour-safe colours at once, and Escape closes it.
+- **Accessibility, checked by tests**: every screen and window is checked by a program for names a screen reader can say, labels, headings,
+  repeated ids and controls big enough to press; the keyboard order is walked (the skip link, the toolbar, the sidebar, then the page) and a
+  window keeps the focus inside it; the ring around what has the focus and the border of a field are measured in every theme; Windows high
+  contrast is turned on and checked; and the colour-safe colours are simulated with colour blindness. Fixed along the way: the skip link no
+  longer jumps to the Desk, the first screen no longer takes the focus, a window over another window has its own name, and a field's border
+  is stronger so you can see where to type.
 - **Customize Theme**: your own accent, panel and background colours, from swatches or any colour, on every theme but High Contrast. The
   words on a colour change only as much as it takes to stay readable, so no choice can leave something unreadable, and a test checks that
   over hundreds of colours in every theme. Glass stays solid while your own panel or background colour is in use.

@@ -6,6 +6,7 @@
   const nav = document.getElementById('nav');
   let drawing = 0;
   let lastHash = null;
+  let opened = false; // the first screen is drawn without taking the focus, so the first Tab reaches the skip link and the toolbar
 
   // The sidebar, the View menu and Go to all read the same list of screens.
   const { SCREENS } = window.ADScreens;
@@ -39,8 +40,9 @@
       view.replaceChildren(...[].concat(content).filter(Boolean)); // a screen may leave a section out as null
       if (moved) {
         view.scrollTo(0, 0);
-        view.focus();
+        if (opened) view.focus(); // a new screen takes the focus, so a screen reader says where you are
       }
+      opened = true;
       document.title = `${view.querySelector('h1')?.textContent || 'RT Author Desk'} · RT Author Desk`;
     } catch (problem) {
       if (mine !== drawing) return;
@@ -51,6 +53,12 @@
   };
 
   window.addEventListener('hashchange', AD.refresh);
+
+  // Skip to the page moves the focus there. It must not change the address, which would draw another screen.
+  document.querySelector('.skip').addEventListener('click', (event) => {
+    event.preventDefault();
+    view.focus();
+  });
 
   // The menu bar names what to do, and this does it.
   window.desk.onMenu((name, where) => {

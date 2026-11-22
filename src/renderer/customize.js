@@ -63,7 +63,7 @@
     const reset = h('button', { type: 'button', id: 'customize-reset', onclick: () => AD.setLook({ brand: NONE }) }, 'Back to the theme\'s own');
     const body = h('div', null,
       h('p', { class: 'hint' }, 'Your colours go on every theme except High Contrast. The words on them change only as much as it takes to stay readable.'),
-      h('div', { class: 'customize-sample', 'aria-label': 'A sample of your colours' },
+      h('div', { class: 'customize-sample', inert: true }, // a picture of the colours: nothing in it can be pressed, focused or read out
         h('div', { class: 'panel' }, 'Sidebar'),
         h('div', { class: 'page' }, h('button', { type: 'button', class: 'primary' }, 'A button'), h('a', { href: '#/' }, 'A link'), h('span', { class: 'chip live' }, 'live'))),
       parts.map((part) => part.fieldset), note,

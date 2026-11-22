@@ -26,7 +26,7 @@ losing anything, and pass its automated tests on Windows, Mac and Linux.
 | Release | Theme | Status |
 |---|---|---|
 | [Step zero](#step-zero--settle-the-foundations) | Settle the foundations | Built. The installers for Windows, Mac and Linux are built and checked by CI |
-| [v1.0](#v10--the-catalog) | The catalog | **Built, apart from the suite's look-and-feel items below.** 1.0.0 follows once they're in. Contributors and credits are built |
+| [v1.0](#v10--the-catalog) | The catalog | **Built, ready to publish as 1.0.0.** Contributors and credits and the suite's look and feel are built |
 | [v1.1](#v11--the-money) | The money | **Started early, as test code.** KDP import and royalties exist, and the calculator isn't started |
 | [v1.2](#v12--every-store) | Every store | Planned |
 | [v1.3](#v13--accounts-and-the-vault) | Accounts and the vault | Planned |
@@ -73,12 +73,14 @@ fifteen clash checks are built. The two price checks and the locked-period check
 spacing checks with launch plans in v1.5. The Money and Royalties screens are in the menu marked "early": they are v1.1's work, started
 early.
 
-**Still to build before 1.0.0.** The owner asked that every app follow the suite's
+**The suite's look and feel (22 November 2026).** The owner asked that every app follow the suite's
 [look-and-feel standard](https://github.com/neogentrics/rt-markdown-reader/blob/main/docs/app-suite.md), with RT Markdown Reader as the
-reference. Built so far: the themes, Glass, colour-safe colours, fonts, Preferences, the Help Center and tour, the full About window,
-updates with "Restart to update", short menus with Help in the suite's order, Go to with the Ctrl+K command palette, and an icon toolbar
-with a visible theme button, Follow System, and Customize Theme for your own colours. Not built yet, and listed in the table below: the
-accessibility checks for Windows high contrast and the keyboard.
+reference, and it is built: the themes, Follow System, Glass, colour-safe colours, Customize Theme and fonts; Preferences; short menus with
+Help in the suite's order; Go to and the Ctrl+K command palette; an icon toolbar with a visible theme button; the Help Center and tour; the
+full About window; updates with "Restart to update"; and accessibility that is checked by tests, not by eye. Not built: the Apps status
+icon at the right end of the toolbar, which the suite asks this app to build early. Whether it comes before 1.0.0 or with the suite
+release (v1.6) is the owner's call. The Metallic finish, changeable shortcuts and an adjustable toolbar wait for RT Markdown Reader's 3.13
+to ship, and are listed under Ongoing.
 
 | Feature | Size | Details |
 |---|:-:|---|
@@ -109,7 +111,7 @@ accessibility checks for Windows high contrast and the keyboard.
 | 🙋 The About window, in full | S | The icon, name and version, links to the website, what's new, reporting a problem and the source code, a line of Electron, Chromium, Node and system versions with a Copy details button, and links to the license and the open-source notices. **Built.** The website link goes to the Recon Towers projects page until the app has a page of its own. |
 | 🙋 Themes, the rest of the standard | M | Follow System, Customize Theme (your own colours), and a theme button on the main screen, beside the themes, Glass and colour-safe colours already built. **Built.** Whatever colour is chosen, the words on it are changed only as much as it takes to stay readable, and a test checks that over hundreds of colours in every theme. |
 | 🙋 An icon toolbar | S | Icon buttons for the common commands, each with a name on hover that screen readers read out. **Built:** Go to, New Book, Bring in books, the theme button, Preferences and Help Center. |
-| Accessibility checks | S | Every button has a name and every theme meets WCAG AA contrast, checked in the tests, and Windows high contrast and full keyboard use too. **Partly built:** button names and theme contrast are tested today. |
+| Accessibility checks | S | Every button has a name and every theme meets WCAG AA contrast, checked in the tests, and Windows high contrast and full keyboard use too. **Built.** A program checks every screen and window for names, labels, headings and controls big enough to press, walks the keyboard order, measures the focus ring and the borders of fields in every theme, turns Windows high contrast on, and simulates colour blindness. |
 | 🙋 An icon of its own | S | A ledger on a desk, in a different shape and colour family from the other apps, made from one source file by a script. |
 | A simple first run | S | A short welcome the first time: start your catalog, bring in a file, or look around a made-up one. |
 | Installed list | S | Leaves the small file that tells the other apps it's installed, and which version is installed. It is written each time the app starts, so an update changes it, and the Windows installer writes it too. |

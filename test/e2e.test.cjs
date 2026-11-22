@@ -819,3 +819,284 @@ e2e('Back to the usual in Preferences takes your colours off too', async (app) =
   await app.until("document.documentElement.dataset.theme !== 'sepia' && getComputedStyle(document.documentElement).getPropertyValue('--t-panel').trim() !== '#14432f'", 'the usual look to come back');
   assert.deepEqual((await app.run('window.desk.settings()')).brand, { accent: '', panel: '', background: '' });
 });
+
+// ---- Accessibility: what a program can check, on the real page ----
+
+const { audit } = require('./e2e/audit.cjs');
+const settle = (ms = 300) => new Promise((resolve) => setTimeout(resolve, ms));
+
+e2e('the audit itself finds what it should: no name, no label, no alt, a repeated id, a tab order of its own, a hidden thing that can be reached, and controls too small and too close', async (app) => {
+  assert.deepEqual(await audit(app), [], 'a plain screen is clean');
+  await app.run(`(() => {
+    const box = document.createElement('div');
+    box.id = 'broken';
+    box.innerHTML = '<button id="b1"><svg viewBox="0 0 1 1"></svg></button><input id="i1" type="text"><a href="#/" id="a1"></a><img id="m1" src="icon.svg">'
+      + '<button id="dupe">one</button><button id="dupe">two</button><button tabindex="3" id="t3">x</button><div aria-hidden="true"><button id="hid">hidden</button></div>'
+      + '<button id="tiny1">a</button><button id="tiny2">b</button><nav id="n1"></nav><div role="group" id="g1"><button>ok</button></div>';
+    document.getElementById('view').append(box);
+    for (const id of ['tiny1', 'tiny2']) { const el = document.getElementById(id); el.style.width = '10px'; el.style.height = '10px'; el.style.padding = '0'; }
+  })()`);
+  const found = (await audit(app)).join('\n');
+  for (const expected of [
+    /has no name for a screen reader: <button#b1>/, /has no name for a screen reader: <input#i1>/, /has no name for a screen reader: <a#a1>/,
+    /is a picture with no alt: <img#m1>/, /the id "dupe" is used 2 times/, /has a tab order of its own \(tabindex above 0\): <button#t3>/,
+    /is hidden from a screen reader but can be reached: <button#hid>/, /is too small to press and has another control too close \(10 by 10.*<button#tiny1>/,
+    /is a group with no name: <div#g1>/,
+  ]) assert.match(found, expected);
+  assert.ok(!/<button#dupe>.*no name/.test(found), 'a button with words has a name');
+  await app.run("document.getElementById('broken').remove()");
+  assert.deepEqual(await audit(app), [], 'and it is clean again once the broken part is gone');
+});
+
+e2e('every screen and every window passes the checks: names, labels, headings, ids, and controls big enough to press', async (app) => {
+  const failures = {};
+  const check = async (what) => { const problems = await audit(app); if (problems.length) failures[what] = [...new Set(problems)]; };
+  const closeAll = () => app.run("document.querySelectorAll('dialog[open]').forEach((d) => d.close()); document.querySelectorAll('[popover]:popover-open').forEach((p) => p.hidePopover())");
+  const clickIn = (scope, startsWith) => app.run(`[...document.querySelectorAll(${JSON.stringify(`${scope} button`)})].find((b) => b.textContent.trim().startsWith(${JSON.stringify(startsWith)})).click()`);
+
+  await app.run('window.desk.startSample().then(() => { AD.state.sample = true; AD.drawBars(); AD.refresh(); })');
+  await settle(900);
+  for (const hash of ['#/', '#/books', '#/audiobooks', '#/money', '#/royalties', '#/calendar', '#/clashes', '#/isbns', '#/names', '#/trash']) {
+    await app.goTo(hash);
+    await settle();
+    await check(`the screen ${hash}`);
+  }
+  const book = (await app.call('books')).find((b) => b.title === 'Tidewater');
+  await app.goTo(`#/book/${book.id}`);
+  await settle(400);
+  await check('a book\'s page');
+
+  await app.click('#theme-button'); await settle(); await check('the theme pop-up'); await closeAll();
+  await app.run('void AD.openPreferences()'); await settle(400); await check('Preferences'); await closeAll();
+  await app.run('void AD.openHelp()'); await settle(400); await check('the Help Center'); await app.run("document.querySelector('.help-nav button:nth-child(3)').click()"); await settle(200); await check('a Help guide'); await closeAll();
+  await app.run('window.desk.runCommand("about")'); await settle(400); await check('About'); await closeAll();
+  await app.run('window.desk.runCommand("customize-theme")'); await settle(400); await check('Customize Theme'); await closeAll();
+  await app.key('k', { ctrl: true }); await settle(400); await check('Go to'); await app.fill('#palette-input', '>theme'); await settle(200); await check('Go to, with commands'); await closeAll();
+  await app.run('void AD.addBook()'); await settle(400); await check('the New Book form'); await closeAll();
+  await app.goTo(`#/book/${book.id}`); await settle(400);
+  await clickIn('main', 'Add an edition'); await settle(400); await check('the edition form'); await closeAll();
+  await clickIn('main', 'Credit someone'); await settle(400); await check('the credit form'); await closeAll();
+  await clickIn('main', 'Add an ISBN'); await settle(400); await check('the ISBN form'); await closeAll();
+  await clickIn('main', 'Edit'); await settle(400); await check('the Edit book form'); await closeAll();
+  const kobo = "[...document.querySelectorAll('.cellbtn')].find((b) => /ebook on Kobo/i.test(b.getAttribute('aria-label')))?.click()";
+  await app.run(kobo); await settle(400); await check('a store\'s square');
+  await clickIn('dialog', 'Set a price'); await settle(300); await check('the price window, over the square'); await closeAll();
+  await app.run(kobo); await settle(400); await clickIn('dialog', 'Change what it shows'); await settle(300); await check('the credits a store shows, over the square'); await closeAll();
+  await app.goTo('#/clashes'); await settle(300); await clickIn('main', 'Dismiss'); await settle(300); await check('dismissing a clash'); await closeAll();
+  await app.goTo('#/names'); await settle(300);
+  await clickIn('main', 'Add a store'); await settle(300); await check('adding a store'); await closeAll();
+  await clickIn('main', 'Add a person'); await settle(300); await check('adding a person'); await closeAll();
+  await app.goTo('#/'); await settle(300);
+  await app.run('AD.startTour()'); await settle(600); await check('the tour');
+  assert.deepEqual(failures, {}, 'every screen and window is clean');
+});
+
+e2e('the welcome is clean too', async (app) => {
+  await app.until("document.querySelector('dialog[open]')", 'the welcome');
+  assert.deepEqual(await audit(app), []);
+}, { welcome: true });
+
+e2e('a window over the page has its own name when another is under it', async (app) => {
+  const book = await app.call('saveBook', { title: 'Tidewater' });
+  const edition = await app.call('saveEdition', { book_id: book.id, format: 'ebook' });
+  await app.call('saveListing', { edition_id: edition.id, store_id: 'store-kobo', status: 'live' });
+  await app.goTo(`#/book/${book.id}`);
+  await app.until("document.querySelector('.cellbtn')");
+  await app.run("[...document.querySelectorAll('.cellbtn')].find((b) => /Kobo/.test(b.getAttribute('aria-label'))).click()");
+  await app.until("document.querySelector('dialog[open]')");
+  await app.run("[...document.querySelectorAll('dialog button')].find((b) => b.textContent.trim() === 'Set a price').click()");
+  await app.until("document.querySelectorAll('dialog[open]').length === 2");
+  const names = await app.run("[...document.querySelectorAll('dialog[open]')].map((d) => document.getElementById(d.getAttribute('aria-labelledby'))?.textContent)");
+  assert.equal(names.length, 2);
+  assert.ok(names[0] && names[1] && names[0] !== names[1], `each window is named by its own title: ${names}`);
+});
+
+// ---- The keyboard ----
+
+// What describes the element that has the focus, and whether the ring around it can be seen.
+const whereIsFocus = (app) => app.run(`(() => {
+  const el = document.activeElement;
+  const style = getComputedStyle(el);
+  return {
+    id: el.id, tag: el.tagName.toLowerCase(), skip: el.classList.contains('skip'), text: (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim().slice(0, 40),
+    region: el.closest('.top') ? (el.closest('#toolbar') ? 'toolbar' : 'bars') : el.closest('.side') ? 'sidebar' : el.closest('main') ? 'main' : el.closest('dialog') ? 'dialog' : 'other',
+    ring: style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2, focusVisible: el.matches(':focus-visible'),
+  };
+})()`);
+
+e2e('the first Tab reaches the skip link, which moves the focus to the page without changing the screen', async (app) => {
+  await app.goTo('#/books');
+  await app.until("document.querySelector('main h1')?.textContent === 'Books'");
+  await app.run('document.activeElement.blur()');
+  await app.run("location.hash = '#/books'");
+  const before = await app.run('location.hash');
+  await app.run("document.querySelector('.skip').focus()");
+  assert.equal((await whereIsFocus(app)).skip, true);
+  await app.key('Enter');
+  await settle();
+  assert.equal(await app.run("document.activeElement.id"), 'view', 'the focus is on the page');
+  assert.equal(await app.run('location.hash'), before, 'the address has not changed');
+  assert.equal(await app.run("document.querySelector('main h1').textContent"), 'Books', 'and neither has the screen');
+});
+
+e2e('the first screen does not take the focus, so Tab begins at the top: the skip link, the bars, the toolbar, the sidebar, then the page', async (app) => {
+  await app.run('window.desk.startSample().then(() => { AD.state.sample = true; AD.drawBars(); })');
+  await app.until("document.querySelector('.bar')");
+  await app.goTo('#/books');
+  await app.until("document.querySelector('main h1')?.textContent === 'Books'");
+  // Start again from the top of the page, as it is when it opens.
+  await app.run("document.activeElement.blur(); document.body.setAttribute('tabindex', '-1'); document.body.focus(); document.body.removeAttribute('tabindex'); getSelection().removeAllRanges()");
+  const stops = [];
+  const tabbable = await app.run(`[...document.querySelectorAll('a[href], button:not([disabled]), input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')].filter((el) => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' && !el.closest('[popover]:not(:popover-open)')).length`);
+  for (let i = 0; i < tabbable + 3; i += 1) {
+    await app.key('Tab');
+    const here = await whereIsFocus(app);
+    if (i > 0 && here.skip) break; // round again
+    stops.push(here);
+  }
+  assert.equal(stops[0].skip, true, 'the first stop is the skip link');
+  const regions = stops.map((stop) => stop.region);
+  const first = (region) => regions.indexOf(region);
+  assert.ok(first('bars') > 0 && first('bars') < first('toolbar') && first('toolbar') < first('sidebar') && first('sidebar') < first('main'), `in the order they are drawn: ${[...new Set(regions)]}`);
+  assert.deepEqual(stops.filter((s) => s.region === 'toolbar').map((s) => s.id), ['tb-goto', 'tb-new', 'tb-import', 'theme-button', 'tb-prefs', 'tb-help']);
+  assert.equal(stops.filter((s) => s.region === 'sidebar').length, 10, 'every screen is a stop in the sidebar');
+  assert.equal(new Set(stops.map((s) => `${s.id}|${s.text}|${s.region}`)).size, stops.length, 'no stop comes twice, so nothing traps the focus');
+  assert.equal(stops.length, tabbable, `every one of the ${tabbable} things that can be pressed or typed in is a stop`);
+  assert.deepEqual(stops.filter((s) => !s.ring || !s.focusVisible).map((s) => s.text), [], 'and each shows where the focus is');
+});
+
+e2e('a window keeps the focus inside it, Escape closes it, and the focus goes back to what opened it', async (app) => {
+  const openers = [
+    ['#tb-prefs', "dialog#preferences[open]"],
+    ['#tb-help', "dialog#help[open]"],
+    ['#tb-goto', "dialog#palette[open]"],
+  ];
+  for (const [button, dialog] of openers) {
+    await app.run(`document.querySelector(${JSON.stringify(button)}).focus()`);
+    await app.key('Enter');
+    await app.until(`document.querySelector(${JSON.stringify(dialog)})`, `${dialog} to open`);
+    for (let i = 0; i < 40; i += 1) {
+      await app.key('Tab', { shift: i % 5 === 4 });
+      if (!(await app.run('Boolean(document.activeElement.closest("dialog[open]"))'))) assert.fail(`${dialog}: the focus left the window on Tab ${i + 1}`);
+    }
+    await app.key('Escape');
+    await app.until(`!document.querySelector(${JSON.stringify(dialog)})`, `${dialog} to close`);
+    assert.equal(await app.run('document.activeElement.id'), button.slice(1), `the focus is back on ${button}`);
+  }
+});
+
+e2e('everything on the toolbar and the sidebar can be done with the keys: Enter or Space presses a button, Enter follows a link', async (app) => {
+  await app.run("document.querySelector('#tb-prefs').focus()");
+  await app.key(' ');
+  await app.until("document.querySelector('dialog#preferences[open]')", 'Space to press the button');
+  await app.key('Escape');
+  await app.until("!document.querySelector('dialog#preferences')");
+  await app.run("document.querySelector('#nav a[href=\"#/calendar\"]').focus()");
+  await app.key('Enter');
+  await app.until("location.hash === '#/calendar'", 'Enter to follow the link');
+  assert.equal(await app.run('document.activeElement.id'), 'view', 'and the new screen has the focus');
+  await app.run("document.querySelector('#theme-button').focus()");
+  await app.key(' ');
+  await app.until("document.querySelector('#theme-pop:popover-open')", 'Space to open the theme pop-up');
+});
+
+// ---- Windows high contrast, and a request for more contrast ----
+
+e2e('Windows high contrast: the current screen, a chosen choice and the swatches can still be told apart, and everything keeps an edge', async (app) => {
+  await app.run('window.desk.startSample().then(() => { AD.state.sample = true; AD.drawBars(); AD.refresh(); })');
+  await settle(800);
+  await app.media([{ name: 'forced-colors', value: 'active' }]);
+  assert.equal(await app.run("matchMedia('(forced-colors: active)').matches"), true, 'the mode is on');
+  const style = (selector, property) => app.run(`getComputedStyle(document.querySelector(${JSON.stringify(selector)})).${property}`);
+
+  // The screen you are on is not told from the others by a colour that high contrast would take away.
+  const here = await app.run("(() => { const a = document.querySelector('#nav a[aria-current=\"page\"]'); const b = document.querySelector('#nav a:not([aria-current])'); const s = getComputedStyle(a); const t = getComputedStyle(b); return { bg: s.backgroundColor, color: s.color, otherBg: t.backgroundColor, otherColor: t.color }; })()");
+  assert.notEqual(here.bg, here.otherBg, 'the current screen has a different background');
+  assert.notEqual(here.bg, here.color, 'and its words can be read on it');
+
+  // Every button has an edge, even the toolbar's, whose edge is clear until this mode makes it show.
+  const bare = await app.run(`[...document.querySelectorAll('button')].filter((b) => b.getClientRects().length && !b.classList.contains('link')).filter((b) => { const s = getComputedStyle(b); return s.borderTopStyle === 'none' || parseFloat(s.borderTopWidth) < 1; }).map((b) => b.id || b.className || b.textContent.trim().slice(0, 20))`);
+  assert.deepEqual(bare, [], 'every button has an edge');
+  assert.notEqual(await style('#tb-prefs', 'borderTopColor'), 'rgba(0, 0, 0, 0)', 'a toolbar button\'s edge shows');
+  assert.ok(parseFloat(await style('#nav a[href="#/clashes"] .count', 'borderTopWidth')) >= 1, 'the count has an edge');
+
+  // The focus ring is thick, and is the system's.
+  await app.run("document.querySelector('#tb-help').focus()"); await app.key('Tab'); await app.key('Tab', { shift: true });
+  const ring = await app.run("(() => { const s = getComputedStyle(document.activeElement); return { style: s.outlineStyle, width: parseFloat(s.outlineWidth) }; })()");
+  assert.deepEqual(ring, { style: 'solid', width: 3 });
+
+  // A choice that is on: Solid is pressed in the theme pop-up, and Glass is not.
+  await app.click('#theme-button');
+  await app.until("document.querySelector('#theme-pop:popover-open')");
+  assert.notEqual(await style('#tb-solid', 'backgroundColor'), await style('#tb-glass', 'backgroundColor'), 'the pressed choice looks different');
+  await app.key('Escape');
+
+  // The swatches keep their own colours, because the colour is what is being chosen.
+  await app.run('window.desk.runCommand("customize-theme")');
+  await app.until("document.querySelector('dialog#customize[open]')");
+  const rows = await app.run("[...document.querySelectorAll('#customize .customize-row')].map((row) => [...row.querySelectorAll('.swatch[data-color]')].filter((s) => s.dataset.color).map((s) => getComputedStyle(s).backgroundColor))");
+  assert.equal(rows.length, 3);
+  for (const swatches of rows) assert.equal(new Set(swatches).size, swatches.length, `in a row, each swatch is its own colour: ${swatches}`);
+  assert.equal(await app.run("getComputedStyle(document.querySelector('#customize [data-color=\"#e8590c\"]')).backgroundColor"), 'rgb(232, 89, 12)');
+  await app.key('Escape');
+
+  // The selected row in Go to.
+  await app.key('k', { ctrl: true });
+  await app.until("document.querySelector('dialog#palette[open]')");
+  await app.until("document.querySelectorAll('#palette-list li').length > 5");
+  assert.notEqual(await style('#palette-opt-0', 'backgroundColor'), await style('#palette-opt-1', 'backgroundColor'), 'the chosen row is marked');
+  await app.key('Escape');
+
+  assert.deepEqual(await audit(app), [], 'and the page is just as clean');
+  await app.media([]);
+  assert.equal(await app.run("matchMedia('(forced-colors: active)').matches"), false);
+});
+
+e2e('a request for more contrast makes the faint lines as strong as the quiet text, in a light theme and a dark one', async (app) => {
+  const lines = () => app.run("(() => { const s = getComputedStyle(document.documentElement); return { line: s.getPropertyValue('--line').trim(), soft: s.getPropertyValue('--ink-soft').trim() }; })()");
+  const usual = await lines();
+  assert.notEqual(usual.line, usual.soft);
+  await app.media([{ name: 'prefers-contrast', value: 'more' }]);
+  let more = await lines();
+  assert.equal(more.line, more.soft, 'in the light theme');
+  await app.run("window.desk.saveSettings({ theme: 'dusk' }).then((s) => AD.applyLook(s))");
+  await app.until("document.documentElement.dataset.theme === 'dusk'");
+  more = await lines();
+  assert.equal(more.line, more.soft, 'and in a dark one');
+});
+
+// ---- The ring around what has the focus, as the real page draws it, in every theme ----
+
+const rgbToHex = (text) => `#${text.match(/\d+/g).slice(0, 3).map((n) => Number(n).toString(16).padStart(2, '0')).join('')}`;
+
+e2e('in every theme, the ring around what has the focus can be seen where it is: on the toolbar, the sidebar, a bar and the page', async (app) => {
+  const { blend, contrast } = require('../src/shared/brand');
+  const { THEMES } = require('../src/shared/themes');
+  await app.run('window.desk.startSample().then(() => { AD.state.sample = true; AD.drawBars(); AD.refresh(); })');
+  await app.until("document.querySelector('.bar button')");
+  await app.goTo('#/books');
+  await app.until("document.querySelector('main h1')?.textContent === 'Books'");
+  const flat = (color, behind) => (color.length < 9 ? color : blend(behind, color.slice(0, 7), parseInt(color.slice(7, 9), 16) / 255));
+  const regions = [['toolbar', '#tb-prefs'], ['sidebar', '#nav a'], ['bar', '.bar button'], ['page', 'main button.primary']];
+  const problems = [];
+  for (const [name, theme] of Object.entries(THEMES)) {
+    await app.run(`AD.applyLook({ ...AD.currentLook(), theme: ${JSON.stringify(name)}, glass: false })`);
+    const desk = flat(theme.desk, '#ffffff');
+    const sheet = flat(theme.sheet, desk);
+    const ink = flat(theme.ink, desk);
+    const grounds = {
+      toolbar: [flat(theme.panel, desk), flat(theme.panelEnd, desk)], sidebar: [flat(theme.panel, desk), flat(theme.panelEnd, desk)],
+      bar: [flat(theme.accent, desk)], page: [sheet, blend(sheet, ink, 0.03), blend(sheet, ink, 0.07)],
+    };
+    for (const [region, selector] of regions) {
+      await app.key('Tab'); // the keys were last used, so what is focused next shows its ring
+      const ring = await app.run(`(() => { const el = document.querySelector(${JSON.stringify(selector)}); el.focus(); const s = getComputedStyle(el); return { visible: el.matches(':focus-visible'), style: s.outlineStyle, width: parseFloat(s.outlineWidth), color: s.outlineColor }; })()`);
+      if (!ring.visible || ring.style !== 'solid' || ring.width < 2) { problems.push(`${name}, ${region}: no ring (${JSON.stringify(ring)})`); continue; }
+      for (const ground of grounds[region]) {
+        const ratio = contrast(rgbToHex(ring.color), ground);
+        if (ratio < 3) problems.push(`${name}, ${region}: the ring ${rgbToHex(ring.color)} on ${ground} is ${ratio.toFixed(2)} to 1`);
+      }
+    }
+  }
+  assert.deepEqual(problems, []);
+});

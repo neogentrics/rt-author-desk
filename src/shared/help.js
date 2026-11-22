@@ -280,6 +280,8 @@ const GUIDES = [
       { type: 'p', text: 'No. The only time the app goes online is to look for a newer version of itself.' },
       { type: 'h', text: 'Do I have to fill in everything?' },
       { type: 'p', text: 'No. A title is enough to start. Fill in what you know, and the app will point out what\'s missing when it matters.' },
+      { type: 'h', text: 'Can I use it with the keyboard, a screen reader or Windows high contrast?' },
+      { type: 'p', text: 'Yes. Everything can be done from the keyboard: **Tab** moves along the toolbar, the sidebar and the page (the first stop is a **Skip to the page** link), **Ctrl+K** goes to anything, and **Esc** closes a window and puts you back where you were. Every button, link and field has a name a screen reader can say, and windows are named. Windows high contrast is supported. The themes all meet the WCAG AA contrast standard, **Colour-safe colours** keep good news, checks and problems apart with colour blindness, and [Preferences](help:look) has a larger text size. These are checked by tests, not by eye.' },
       { type: 'h', text: 'How do I undo a mistake?' },
       { type: 'p', text: 'Removing a book, an edition or a listing moves it to the [Trash](help:trash-and-backups) for 30 days, and you can bring it back. Clashes you dismiss can be brought back. For everything else, make [backups](help:trash-and-backups).' },
       { type: 'h', text: 'Where do I report a problem or ask for something?' },

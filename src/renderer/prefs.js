@@ -114,7 +114,7 @@
     };
 
     const dialog = AD.dialog('Preferences', h('div', null,
-      h('div', { class: 'prefs-sample', 'aria-label': 'A sample of the colours' },
+      h('div', { class: 'prefs-sample', inert: true }, // a picture of the colours: nothing in it can be pressed, focused or read out
         h('span', { class: 'chip live' }, 'live'), h('span', { class: 'chip check' }, 'check'), h('span', { class: 'chip problem' }, 'fix'),
         h('button', { class: 'primary', type: 'button' }, 'A button'), h('a', { href: '#/' }, 'A link')),
       h('section', null,

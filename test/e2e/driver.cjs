@@ -81,6 +81,12 @@ async function launch({ seed, env: extraEnv = {}, userData: given = null, welcom
       await send('Input.dispatchKeyEvent', { type: 'keyUp', ...base });
       await sleep(120);
     },
+    // Turns on a way the computer can ask for the page to look: [{ name: 'forced-colors', value: 'active' }] is Windows high contrast,
+    // and [{ name: 'prefers-contrast', value: 'more' }] is a request for more contrast. An empty list turns them off.
+    async media(features) {
+      await send('Emulation.setEmulatedMedia', { features });
+      await sleep(200);
+    },
     // Saves a picture of the window, for looking at a screen rather than testing it.
     async screenshot(file) {
       const { result } = await send('Page.captureScreenshot', { format: 'png' });
