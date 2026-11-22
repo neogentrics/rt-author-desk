@@ -9,6 +9,21 @@
 
   AD.themeName = (settings) => (settings.theme === 'system' ? (dark.matches ? 'dark' : 'light') : settings.theme);
 
+  // The themes as a list to choose from: Follow System first, then each theme by its name.
+  AD.themeChoices = () => [['system', 'Follow System'], ...Object.entries(THEMES).map(([key, theme]) => [key, theme.label])];
+
+  // The look as it is now, for anything that shows it.
+  AD.currentLook = () => current;
+
+  // Changes the look from anywhere (Preferences, the theme button, the menu) and keeps everything that shows it in step: the page, the
+  // View menu in the main process, and any window that is open. Resolves to the settings as saved.
+  AD.setLook = async (changes) => {
+    const settings = await window.desk.saveSettings(changes);
+    AD.applyLook(settings);
+    document.dispatchEvent(new CustomEvent('ad:look', { detail: settings }));
+    return settings;
+  };
+
   AD.applyLook = (settings) => {
     current = settings;
     const name = AD.themeName(settings);
@@ -39,7 +54,7 @@
     root.dataset.surface = theme.glass || (settings.glass && !theme.flat) ? 'glass' : 'solid';
   };
 
-  // "Same as this computer" follows the computer when it switches between light and dark.
+  // Follow System follows the computer when it switches between light and dark.
   dark.addEventListener('change', () => {
     if (current?.theme === 'system') AD.applyLook(current);
   });

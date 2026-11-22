@@ -610,3 +610,114 @@ e2e('About says portable when this is the portable build, and the Help menu\'s A
   assert.match(await app.run("document.querySelector('.about-version').textContent"), /^Version \d+\.\d+\.\d+ \(portable\)$/);
   assert.match((await app.run('window.desk.copyDetails()')).value, /^RT Author Desk \d+\.\d+\.\d+ \(portable\)\n/);
 }, { env: { PORTABLE_EXECUTABLE_DIR: '/tmp/somewhere' } });
+
+// ---- The toolbar ----
+
+e2e('the toolbar has icon buttons, each with a name for a screen reader and for hover, and each does what its name says', async (app) => {
+  const buttons = await app.run("[...document.querySelectorAll('#toolbar > .tb-group button')].map((b) => ({ id: b.id, name: b.getAttribute('aria-label') || b.textContent.trim(), title: b.title, icon: Boolean(b.querySelector('svg[aria-hidden=\"true\"]')) }))");
+  assert.deepEqual(buttons, [
+    { id: 'tb-goto', name: 'Go to a screen, a book or a command', title: 'Go to a screen, a book or a command (Ctrl+K)', icon: true },
+    { id: 'tb-new', name: 'New Book', title: 'New Book (Ctrl+N)', icon: true },
+    { id: 'tb-import', name: 'Bring in books from a file', title: 'Bring in books from a file (Ctrl+Shift+I)', icon: true },
+    { id: 'theme-button', name: 'Theme and look', title: 'Theme and look', icon: true },
+    { id: 'tb-prefs', name: 'Preferences', title: 'Preferences (Ctrl+,)', icon: true },
+    { id: 'tb-help', name: 'Help Center', title: 'Help Center (F1)', icon: true },
+  ]);
+  assert.equal(await app.run("document.getElementById('toolbar').getAttribute('aria-label')"), 'Common commands');
+
+  await app.click('#tb-goto');
+  await app.until("document.querySelector('dialog#palette[open]')", 'Go to');
+  await app.key('Escape');
+  await app.click('#tb-new');
+  await app.until("document.querySelector('dialog #f-title')", 'the New Book form');
+  await app.run("document.querySelector('dialog').close()");
+  await app.click('#tb-prefs');
+  await app.until("document.querySelector('dialog#preferences')", 'Preferences');
+  await app.run("document.querySelector('dialog#preferences').close()");
+  await app.click('#tb-help');
+  await app.until("document.querySelector('dialog#help')", 'the Help Center');
+  await app.run("document.querySelector('dialog#help').close()");
+  await app.run("window.__asked = 0; AD.importBooks = () => { window.__asked += 1; }");
+  await app.click('#tb-import');
+  assert.equal(await app.run('window.__asked'), 1, 'Bring in books asks to bring books in');
+  await app.click('#theme-button');
+  await app.until("document.querySelector('#theme-pop:popover-open')", 'the theme pop-up');
+});
+
+e2e('the shortcuts the toolbar shows are the ones that work: Ctrl+N adds a book and Ctrl+, opens Preferences', async (app) => {
+  await app.key('n', { ctrl: true });
+  await app.until("document.querySelector('dialog #f-title')", 'the New Book form');
+  await app.run("document.querySelector('dialog').close()");
+  await app.key(',', { ctrl: true });
+  await app.until("document.querySelector('dialog#preferences')", 'Preferences');
+});
+
+e2e('the theme button opens a pop-up with the theme, Glass and colour-safe colours, which change at once, and Escape closes it and puts the focus back', async (app) => {
+  // From the keyboard: the button is reached, and Enter opens the pop-up.
+  await app.run("document.getElementById('theme-button').focus()");
+  await app.key('Enter');
+  await app.until("document.querySelector('#theme-pop:popover-open')", 'the pop-up');
+  assert.equal(await app.run("document.activeElement.id"), 'tb-theme', 'the focus is on the first thing to change');
+  assert.equal(await app.run("document.querySelector('#tb-theme').value"), 'system');
+  assert.equal(await app.run("document.querySelector('#tb-theme option').textContent"), 'Follow System');
+  assert.equal(await app.run("document.querySelectorAll('#tb-theme option').length"), 16, 'Follow System and the fifteen themes');
+  assert.equal(await app.run("document.querySelector('#tb-solid').getAttribute('aria-pressed')"), 'true');
+
+  await app.fill('#tb-theme', 'sepia');
+  await app.until("document.documentElement.dataset.theme === 'sepia'", 'the page to change');
+  assert.equal((await app.run('window.desk.settings()')).theme, 'sepia', 'and it is kept');
+  await app.click('#tb-glass');
+  await app.until("document.documentElement.dataset.surface === 'glass'", 'Glass');
+  assert.equal(await app.run("document.querySelector('#tb-glass').getAttribute('aria-pressed')"), 'true');
+  assert.equal(await app.run("document.querySelector('#tb-solid').getAttribute('aria-pressed')"), 'false');
+  await app.click('#tb-safe');
+  await app.until("document.documentElement.dataset.colors === 'safe'", 'colour-safe colours');
+
+  // High Contrast stays solid, and says why.
+  await app.fill('#tb-theme', 'contrast');
+  await app.until("document.documentElement.dataset.theme === 'contrast'");
+  assert.equal(await app.run("document.querySelector('#tb-glass').disabled"), true);
+  assert.match(await app.run("document.querySelector('#tb-glass-note').textContent"), /High Contrast stays solid/);
+
+  await app.key('Escape');
+  await app.until("!document.querySelector('#theme-pop:popover-open')", 'Escape to close the pop-up');
+  assert.equal(await app.run("document.activeElement.id"), 'theme-button', 'the focus is back on the button');
+
+  // Preferences shows the same, and a change there reaches the pop-up the next time it opens.
+  await app.run('void AD.openPreferences()');
+  await app.until("document.querySelector('#pref-theme')");
+  assert.equal(await app.run("document.querySelector('#pref-theme').value"), 'contrast');
+  assert.equal(await app.run("document.querySelector('#pref-theme option').textContent"), 'Follow System');
+  await app.fill('#pref-theme', 'plum');
+  await app.until("document.documentElement.dataset.theme === 'plum'");
+  await app.run("document.querySelector('dialog#preferences').close()");
+  await app.click('#theme-button');
+  await app.until("document.querySelector('#theme-pop:popover-open')");
+  assert.equal(await app.run("document.querySelector('#tb-theme').value"), 'plum');
+});
+
+e2e('the pop-up closes when you click away, and its link goes to Preferences', async (app) => {
+  await app.click('#theme-button');
+  await app.until("document.querySelector('#theme-pop:popover-open')");
+  await app.click('#tb-more');
+  await app.until("document.querySelector('dialog#preferences')", 'Preferences to open');
+  assert.equal(await app.run("document.querySelector('#theme-pop:popover-open') === null"), true, 'the pop-up is gone');
+  await app.run("document.querySelector('dialog#preferences').close()");
+  await app.click('#theme-button');
+  await app.until("document.querySelector('#theme-pop:popover-open')");
+  await app.run("document.getElementById('view').click(); document.body.click()");
+  await app.run("document.querySelector('#theme-pop').hidePopover()"); // a click outside does the same, and the browser does it for real
+  assert.equal(await app.run("document.querySelector('#theme-pop:popover-open') === null"), true);
+});
+
+e2e('the sidebar starts below the bars and the toolbar, and keeps below them when a bar appears', async (app) => {
+  const measure = () => app.run("({ top: document.getElementById('top').offsetHeight, variable: getComputedStyle(document.documentElement).getPropertyValue('--bars-h').trim(), side: document.querySelector('.side').getBoundingClientRect().top })");
+  let now = await measure();
+  assert.equal(now.variable, `${now.top}px`, 'the sidebar knows how tall the top is');
+  assert.ok(now.top >= 40, 'the toolbar is there');
+  assert.ok(now.side >= now.top - 1, 'and the sidebar starts below it');
+  await app.run('AD.state.sample = true; AD.drawBars()');
+  await app.until("getComputedStyle(document.documentElement).getPropertyValue('--bars-h').trim() === document.getElementById('top').offsetHeight + 'px' && document.getElementById('top').offsetHeight > 60", 'the made-up catalog bar to add its height');
+  now = await measure();
+  assert.ok(now.side >= now.top - 1, 'the sidebar is still below it');
+});

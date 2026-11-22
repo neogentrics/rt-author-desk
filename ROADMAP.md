@@ -76,9 +76,9 @@ early.
 **Still to build before 1.0.0.** The owner asked that every app follow the suite's
 [look-and-feel standard](https://github.com/neogentrics/rt-markdown-reader/blob/main/docs/app-suite.md), with RT Markdown Reader as the
 reference. Built so far: the themes, Glass, colour-safe colours, fonts, Preferences, the Help Center and tour, the full About window,
-updates with "Restart to update", short menus with Help in the suite's order, and Go to with the Ctrl+K command palette. Not built yet,
-and listed in the table below: Follow System and Customize Theme with a visible theme button, the icon toolbar, and the accessibility
-checks for Windows high contrast and the keyboard.
+updates with "Restart to update", short menus with Help in the suite's order, Go to with the Ctrl+K command palette, and an icon toolbar
+with a visible theme button and Follow System. Not built yet, and listed in the table below: Customize Theme (your own colours), and the
+accessibility checks for Windows high contrast and the keyboard.
 
 | Feature | Size | Details |
 |---|:-:|---|
@@ -107,8 +107,8 @@ checks for Windows high contrast and the keyboard.
 | 🙋 Help Center | M | A Help menu (F1): short searchable guides, a first-run tour of a made-up catalog, About, and Check for Updates. |
 | 🙋 Short menus and a command palette | S | File, Edit, View and Help, with rarely used commands in submenus, and every command can be run by name with Ctrl+K, then `>`. Help is in the suite's order: Help Center (F1), Tutorial, Check for Updates…, About. **Built.** |
 | 🙋 The About window, in full | S | The icon, name and version, links to the website, what's new, reporting a problem and the source code, a line of Electron, Chromium, Node and system versions with a Copy details button, and links to the license and the open-source notices. **Built.** The website link goes to the Recon Towers projects page until the app has a page of its own. |
-| 🙋 Themes, the rest of the standard | M | Follow System, Customize Theme (your own colours), and a theme button on the main screen, beside the themes, Glass and colour-safe colours already built. **Not built yet.** |
-| 🙋 An icon toolbar | S | Icon buttons for the common commands, each with a name on hover that screen readers read out. **Not built yet.** |
+| 🙋 Themes, the rest of the standard | M | Follow System, Customize Theme (your own colours), and a theme button on the main screen, beside the themes, Glass and colour-safe colours already built. **Partly built:** Follow System and the theme button are in, and Customize Theme is not yet. |
+| 🙋 An icon toolbar | S | Icon buttons for the common commands, each with a name on hover that screen readers read out. **Built:** Go to, New Book, Bring in books, the theme button, Preferences and Help Center. |
 | Accessibility checks | S | Every button has a name and every theme meets WCAG AA contrast, checked in the tests, and Windows high contrast and full keyboard use too. **Partly built:** button names and theme contrast are tested today. |
 | 🙋 An icon of its own | S | A ledger on a desk, in a different shape and colour family from the other apps, made from one source file by a script. |
 | A simple first run | S | A short welcome the first time: start your catalog, bring in a file, or look around a made-up one. |

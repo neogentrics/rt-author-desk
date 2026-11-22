@@ -155,7 +155,8 @@ tr.total th, tr.total td { border-top: 2px solid var(--line); font-weight: 700; 
 .prefs-range output { min-width: 4.5em; text-align: right; }
 
 /* The bars above the page: a made-up catalog, or an update. */
-.bars { position: sticky; top: 0; z-index: 6; }
+/* The bars and the toolbar stay at the top, and the sidebar starts below them (--bars-h is their height, kept by toolbar.js). */
+.top { position: sticky; top: 0; z-index: 6; }
 .bar { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 8px 16px; background: var(--t-accent); color: var(--t-on-accent); }
 .bar button { background: var(--t-on-accent); color: var(--t-accent); border-color: var(--t-on-accent); font-weight: 600; }
 
@@ -227,3 +228,29 @@ dialog.about { width: min(32rem, 94vw); }
 .about-tech, .about-legal { margin: 6px 0 0; color: var(--ink-soft); font-size: 0.867rem; }
 .about .actions { align-items: center; }
 .spacer { flex: 1; }
+
+/* The toolbar: icon buttons on the panel colour. Their names are on hover and for screen readers. */
+.toolbar { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 6px 12px; min-height: 3rem; background: linear-gradient(90deg, var(--t-panel), var(--t-panel-end)); color: var(--t-on-panel); border-bottom: 1px solid var(--t-edge); }
+.tb-group { display: flex; align-items: center; gap: 4px; }
+.tb-spacer { flex: 1; }
+.toolbar .tb-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 2.25rem; min-width: 2.25rem; padding: 0 8px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--t-on-panel); }
+.toolbar .tb-btn:hover { background: color-mix(in srgb, var(--t-on-panel) 14%, transparent); border-color: transparent; }
+.toolbar .tb-btn.primary { background: var(--t-accent); color: var(--t-on-accent); font-weight: 600; padding: 0 12px 0 10px; }
+.toolbar .tb-btn.primary:hover { background: var(--t-accent); border-color: var(--t-on-accent); }
+.toolbar :focus-visible { outline-color: var(--t-on-panel); }
+.tb-btn svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+:root[data-surface="glass"] .toolbar { background: linear-gradient(90deg, color-mix(in srgb, var(--t-panel) 72%, transparent), color-mix(in srgb, var(--t-panel-end) 72%, transparent)); backdrop-filter: blur(16px) saturate(1.3); }
+
+/* The theme button's pop-up sits under the button, at its right edge. It is the browser's own popover, so Escape and a click outside close it. */
+#theme-button { anchor-name: --theme-button; }
+.popover { position: fixed; inset: auto; top: 3.5rem; right: 12px; margin: 0; width: min(19rem, 92vw); padding: 14px 16px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 18px 50px -12px rgba(0, 0, 0, 0.35); }
+@supports (top: anchor(bottom)) {
+  .popover { position-anchor: --theme-button; top: calc(anchor(bottom) + 6px); right: anchor(right); }
+}
+.popover .label { font-weight: 600; font-size: 0.933rem; }
+.popover select { width: 100%; }
+.seg { display: inline-flex; gap: 0; }
+.seg-btn { border-radius: 0; }
+.seg-btn:first-child { border-radius: 8px 0 0 8px; }
+.seg-btn:last-child { border-radius: 0 8px 8px 0; margin-left: -1px; }
+.seg-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }

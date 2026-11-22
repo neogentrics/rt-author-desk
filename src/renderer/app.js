@@ -85,6 +85,7 @@
       const info = await window.desk.info();
       const { library } = info;
       AD.platform = info.platform;
+      AD.drawToolbar(); // again, now that the shortcuts can be written the way this computer writes them
       AD.state.update = info.update ?? AD.state.update;
       AD.state.sample = Boolean(info.sample);
       AD.drawBars();

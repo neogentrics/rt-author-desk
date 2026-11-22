@@ -26,6 +26,9 @@ build (`1.0.0-alpha.0`), that the app leaves alpha when the catalog is solid and
   name, each with where it is and its shortcut. The menus are File, Edit, View and Help, with the screens and the themes in submenus, and
   Help is in the suite's order: Help Center (F1), Tutorial, Check for Updates…, About. The View menu has every theme, Follow System, Glass
   and colour-safe colours, and changing one there changes Preferences if it is open.
+- **An icon toolbar** across the top: Go to, New Book, Bring in books, the **theme button**, Preferences and Help Center. Each button has a name
+  that shows when you hover and is read out by a screen reader, and a shortcut where there is one. The theme button is the moon, on every
+  screen: it changes the theme (Follow System or any of the fifteen), Glass and colour-safe colours at once, and Escape closes it.
 - **The About window, in full**: the icon, the name and version (marked portable if it is), four links with a line saying where each goes
   (Website, What's new in this version, Report a problem or suggest a feature, Source code), a line of Electron, Chromium, Node and
   computer versions with a **Copy details** button for bug reports, where your library is kept, and links to the License and the

@@ -20,8 +20,7 @@
     if (u.state === 'downloading') out.push(h('div', { class: 'bar', role: 'status' }, h('span', null, `Version ${u.version} is downloading. You'll be asked to restart when it's ready.`)));
     if (u.state === 'ready') out.push(h('div', { class: 'bar', role: 'status' }, h('span', null, `Version ${u.version} is ready.`), h('button', { type: 'button', onclick: () => window.desk.installUpdate() }, 'Restart to update')));
     if (u.state === 'available') out.push(h('div', { class: 'bar', role: 'status' }, h('span', null, `Version ${u.version} is available.`), h('button', { type: 'button', onclick: () => window.desk.openReleases() }, 'Open the download page')));
-    bars.replaceChildren(...out);
-    document.documentElement.style.setProperty('--bars-h', `${bars.offsetHeight}px`);
+    bars.replaceChildren(...out); // the sidebar is kept below them by the toolbar's observer
   };
 
   const STEPS = [

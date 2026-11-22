@@ -205,9 +205,9 @@ const GUIDES = [
     summary: 'Change how the app looks in Preferences.',
     keywords: 'theme dark light glass colour color safe blind font text size preferences appearance contrast',
     blocks: [
-      { type: 'p', text: 'Open **Preferences** from the File menu, or press **Ctrl+,** (**Cmd+,** on a Mac). Everything changes the moment you pick it, so there is nothing to apply.' },
+      { type: 'p', text: 'The **theme button** (the moon, at the right of the toolbar) is on every screen. It changes the theme, Glass and colour-safe colours without opening anything else. For everything else, open **Preferences** from the File menu or the toolbar, or press **Ctrl+,** (**Cmd+,** on a Mac). Everything changes the moment you pick it, so there is nothing to apply. The View menu has the same choices.' },
       { type: 'ul', items: [
-        '**Theme.** The same fifteen themes as the other Recon Towers apps, or "Same as this computer" to follow its light and dark setting.',
+        '**Theme.** The same fifteen themes as the other Recon Towers apps, or **Follow System** to follow this computer\'s light and dark setting.',
         '**Glass.** Frosted panels over colour, with any theme but High Contrast.',
         '**Colour-safe colours.** Blue, orange and purple instead of green, amber and red, so good news, checks and problems stay apart with colour blindness. Each one also says what it means in words.',
         '**Font and text size.** Atkinson Hyperlegible is made to be easier to read.',

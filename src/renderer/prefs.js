@@ -40,15 +40,12 @@
   AD.openPreferences = async () => {
     document.getElementById('preferences')?.remove();
     let settings = await window.desk.settings();
-    const change = async (changes) => {
-      settings = await window.desk.saveSettings(changes);
-      AD.applyLook(settings);
-      refresh();
-    };
+    // Every change goes through setLook, which tells the page, the menu and anything else showing the look. This window follows it below.
+    const change = async (changes) => { await AD.setLook(changes); };
 
     const field = (label, control, help) => h('div', { class: 'field' }, h('label', { for: control.id }, label), control, help ? h('p', { class: 'help' }, help) : null);
     const options = (table, extra = {}) => [...Object.entries(extra), ...Object.entries(table)].map(([key, item]) => h('option', { value: key }, item.label));
-    const themeSelect = h('select', { id: 'pref-theme', onchange: (e) => change({ theme: e.target.value }) }, options(THEMES, { system: { label: 'Same as this computer' } }));
+    const themeSelect = h('select', { id: 'pref-theme', onchange: (e) => change({ theme: e.target.value }) }, AD.themeChoices().map(([key, label]) => h('option', { value: key }, label)));
     const fontSelect = h('select', { id: 'pref-font', onchange: (e) => change({ uiFont: e.target.value }) }, options(UI_FONTS));
     const glass = h('input', { id: 'pref-glass', type: 'checkbox', onchange: (e) => change({ glass: e.target.checked }) });
     const safe = h('input', { id: 'pref-safe', type: 'checkbox', onchange: (e) => change({ colorSafe: e.target.checked }) });
