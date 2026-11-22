@@ -260,7 +260,7 @@ test('no file in the project hides text with invisible or direction-changing cha
   assert.ok(listed.length > 50, 'the list of files should not be empty');
   // The characters that change which way text runs or take up no room, so that what a person reads is not what a program reads (the
   // "Trojan Source" trick), the byte order mark away from where it belongs, and the tag and selector characters that carry hidden text.
-  const hidden = /[؜​-‏‪-‮⁠-⁤⁦-⁩﻿]|[\u{E0000}-\u{E007F}]|[\u{E0100}-\u{E01EF}]/u;
+  const hidden = /[\u061C\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF]|[\u{E0000}-\u{E007F}]|[\u{E0100}-\u{E01EF}]/u;
   const binary = /\.(?:png|ico|icns|jpe?g|gif|webp|woff2?|ttf|otf|zip|pdf|xlsx|db|rtadbackup|exe|dmg|deb|appimage)$/i;
   const found = [];
   for (const name of listed) {
