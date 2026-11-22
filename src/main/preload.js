@@ -7,7 +7,10 @@ contextBridge.exposeInMainWorld('desk', {
   settings: () => ipcRenderer.invoke('desk:settings'),
   saveSettings: (changes) => ipcRenderer.invoke('desk:save-settings', changes),
   // The menu bar tells the window what to do by name. The listener never sees the event itself.
-  onMenu: (listener) => ipcRenderer.on('desk:menu', (_event, name, arg) => listener(name, arg)),
+  // It hands back nothing, so the page never holds the channel it listens on.
+  onMenu: (listener) => {
+    if (typeof listener === 'function') ipcRenderer.on('desk:menu', (_event, name, arg) => listener(name, arg));
+  },
   // Every command in the menus, so Go to can list them and run one by name.
   commands: () => ipcRenderer.invoke('desk:commands'),
   runCommand: (key) => ipcRenderer.invoke('desk:run-command', key),

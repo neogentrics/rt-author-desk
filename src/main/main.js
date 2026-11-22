@@ -18,6 +18,7 @@ const { RELEASES_URL, Updater } = require('./updater');
 const { detailsText, osName } = require('../shared/about');
 const { today: todayOf } = require('../shared/dates');
 const { selfTest } = require('./self-test');
+const { WEB_PREFERENCES, denyPermissions, fromApp: requestIsFromApp, lockDown } = require('./window-security');
 
 const REPO_URL = 'https://github.com/neogentrics/rt-author-desk';
 const selfTestArg = process.argv.find((arg) => arg.startsWith('--self-test='));
@@ -37,7 +38,8 @@ if (selfTestArg) {
   let sample = null; // { library, api, dir }: the made-up catalog, while the tour or a look around is open
   let window = null;
   const active = () => sample ?? real;
-  const fromApp = (event) => Boolean(event.senderFrame?.url.startsWith('file://'));
+  // A request is answered only when it comes from the app's own page (see window-security.js), and every handler below asks first.
+  const fromApp = (event) => requestIsFromApp(event, window);
   const NOT_FROM_APP = { ok: false, message: 'That request did not come from the app.' };
 
   const updater = new Updater((status) => window?.webContents.send('desk:menu', 'update-status', status));
@@ -101,12 +103,15 @@ if (selfTestArg) {
     dialog.showMessageBox(window, { type: 'info', message: messages[result.state] ?? messages.current });
   }
 
+  // Every page the app ever makes is locked in the same way, before it is made: it can't open another window, go anywhere else or hold a web view.
+  app.on('web-contents-created', (_event, contents) => lockDown(contents, (url) => shell.openExternal(url)));
+
   app.whenReady().then(() => {
     // Nothing in the window may reach the network. Reports come in as files you choose.
     session.defaultSession.webRequest.onBeforeRequest((details, callback) => {
       callback({ cancel: !details.url.startsWith('file://') && !details.url.startsWith('devtools://') });
     });
-    session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+    denyPermissions(session.defaultSession);
 
     // Says this app is installed, and which version, for the other Recon Towers apps. It is written each time the app starts, so an
     // update changes the version in it. Only an installed copy says so: running from the source doesn't (the tests name a path instead).
@@ -130,7 +135,7 @@ if (selfTestArg) {
     } catch (error) {
       opened = { ok: false, message: error.message };
     }
-    ipcMain.handle('desk:info', () => ({ version: app.getVersion(), platform: process.platform, library: opened, sample: Boolean(sample), update: updater.status }));
+    ipcMain.handle('desk:info', (event) => (fromApp(event) ? { version: app.getVersion(), platform: process.platform, library: opened, sample: Boolean(sample), update: updater.status } : null));
     // The window's only way to the library: one allowlisted call, and only from this app's own page.
     ipcMain.handle('desk:call', (event, name, args) => {
       if (!fromApp(event)) return NOT_FROM_APP;
@@ -336,18 +341,8 @@ if (selfTestArg) {
       minHeight: 480,
       title: 'RT Author Desk',
       backgroundColor: '#eef1f6',
-      webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
-        contextIsolation: true,
-        sandbox: true,
-        nodeIntegration: false,
-      },
+      webPreferences: { preload: path.join(__dirname, 'preload.js'), ...WEB_PREFERENCES },
     });
-    window.webContents.setWindowOpenHandler(({ url }) => {
-      if (url.startsWith('https://')) shell.openExternal(url);
-      return { action: 'deny' };
-    });
-    window.webContents.on('will-navigate', (event) => event.preventDefault());
     window.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
     window.on('closed', () => {
       window = null;
