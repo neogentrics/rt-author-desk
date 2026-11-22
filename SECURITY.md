@@ -27,6 +27,9 @@ What's built today. The vault for logins and the personal-money section are **no
   `nodeIntegration: false`, behind a Content-Security-Policy that allows only the app's own scripts and styles.
 - **One small, listed way in.** The page can ask the app to do only the named calls in `src/main/api.js`. Anything else
   is refused, and a request that doesn't come from the app's own window is refused too.
+- **The built app can't be turned into something else.** Electron's switches that let an environment variable or a flag make an app run as a plain
+  Node program or open a debugger are turned off when the app is built, it loads its code only from its own archive, and the pipeline checks the
+  built app to confirm it.
 - **Plain-words errors only.** An unexpected problem is logged and answered in general terms, so the window never shows a
   database error or a file path.
 - **The window can't be navigated away or open new windows.** Web links open in your browser, and every web permission request (camera,

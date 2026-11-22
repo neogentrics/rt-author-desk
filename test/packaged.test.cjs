@@ -48,3 +48,13 @@ test('the window of the built app opens and draws, with nothing wrong in the con
     await app.close();
   }
 });
+
+test('the built app has its Electron safety switches set, so it cannot be made to run other code or open a debugger from outside', { skip }, async () => {
+  const { FuseV1Options, getCurrentFuseWire } = require('@electron/fuses');
+  const wire = await getCurrentFuseWire(program);
+  const state = (option) => String.fromCharCode(wire[option]); // '0' is off, '1' is on, 'r' is removed from this Electron
+  assert.equal(state(FuseV1Options.RunAsNode), '0', 'the app cannot be started as a plain Node program (ELECTRON_RUN_AS_NODE)');
+  assert.equal(state(FuseV1Options.EnableNodeOptionsEnvironmentVariable), '0', 'NODE_OPTIONS is ignored');
+  assert.equal(state(FuseV1Options.EnableNodeCliInspectArguments), '0', 'the --inspect flags are ignored');
+  assert.equal(state(FuseV1Options.OnlyLoadAppFromAsar), '1', 'it loads its code only from its own archive');
+});

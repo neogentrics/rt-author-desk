@@ -37,6 +37,12 @@
     "appId": "com.recontowers.authordesk",
     "productName": "RT Author Desk",
     "npmRebuild": false,
+    "electronFuses": {
+      "runAsNode": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "onlyLoadAppFromAsar": true
+    },
     "directories": {
       "output": "release",
       "buildResources": "build"

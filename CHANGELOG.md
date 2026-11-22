@@ -30,6 +30,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
   opened, when anyone can make one that opens. A backup is now read only if it is the way this app writes one (not compressed, sizes that add up),
   is a library of this app at a step it knows, and holds exactly the tables and indexes that step makes. One with a trigger, a view or a table of its
   own is refused before anything is replaced. Tests make each of these files and watch them be refused.
+- **The built app can't be turned into something else.** The switches that let `ELECTRON_RUN_AS_NODE`, `NODE_OPTIONS` or the `--inspect` flags make
+  an app run other code are turned off when it is built, and it loads its code only from its own archive. The pipeline reads the switches of each built
+  app, installing the project is tested to run no program of its own, and every dependency is tested to be the exact file its lock names, from the
+  public registry. A new pipeline job checks the dependencies for known problems and signatures on every change.
 - **The window's locks are tested.** Only the top page of the app's own window may ask the main process for anything, every permission a page could ask
   for is refused, every page the app makes is stopped from navigating or opening a window, the page policy forbids a changed base address and any form
   sending, and a test fails if one of these is loosened, if a call is added that does not check where it came from, or if anything builds the page

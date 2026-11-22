@@ -41,6 +41,26 @@ jobs:
         env:
           RTAD_E2E: '1'
 
+  # Nothing of the project or its dependencies runs here (no install scripts), and only the registry's own records are read.
+  audit:
+    name: Dependencies (known problems and signatures)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # What ships inside the app: any known problem in it fails this job. The build tools have a few that matter only if someone hands them a hostile
+      # pattern, which nobody can, and Dependabot reports those.
+      - run: npm audit --omit=dev --audit-level=low
+      # Every package is what the registry says its publisher published, and is signed.
+      - run: npm audit signatures
+
   install:
     name: Install and self-test (${{ matrix.os }})
     needs: test
