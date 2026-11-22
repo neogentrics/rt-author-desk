@@ -39,3 +39,19 @@ test('the app asks for test builds, and for the same update file a release workf
   assert.match(release, /release\/latest-linux\.yml/);
   assert.match(release, /prerelease: \$\{\{ contains\(steps\.tag\.outputs\.name, '-'\) \}\}/);
 });
+
+test('nothing in the environment or the command line can change where an installed app looks for updates', () => {
+  assert.ok(!/RTAD_UPDATE_FEED|testFeed|setFeedURL/.test(source), 'no way to name another server');
+  assert.ok(!/process\.argv|commandLine/.test(source), 'and none on the command line');
+  assert.match(source, /https:\/\/api\.github\.com\/repos\/\$\{OWNER\}\/\$\{REPO\}\/releases/, 'the one place the fallback asks');
+  assert.match(source, /const OWNER = 'neogentrics';\nconst REPO = 'rt-author-desk';/);
+  const [publish, ...others] = require('../package.json').build.publish;
+  assert.deepEqual([publish.provider, publish.owner, publish.repo, publish.channel, others.length], ['github', 'neogentrics', 'rt-author-desk', 'latest', 0], 'and the updater\'s own settings name this project alone');
+});
+
+test('the test hooks that are read from the environment are ignored by an installed copy', () => {
+  const main = fs.readFileSync(path.join(__dirname, '..', 'src', 'main', 'main.js'), 'utf8');
+  assert.match(main, /!app\.isPackaged && process\.env\.RTAD_INSTALLED_LAUNCH/, 'the launch path the tests name');
+  assert.match(main, /!app\.isPackaged && process\.env\.RTAD_TEST_FILES/, 'the files the tests name');
+  assert.match(main, /sharedFolder\(\{ home: app\.getPath\('home'\), packaged: app\.isPackaged \}\)/, 'the folder the tests name');
+});

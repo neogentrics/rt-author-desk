@@ -22,8 +22,9 @@ const isMacBundle = (file) => /\.app$/i.test(file);
 // Where the suite's apps leave their small files, the same place on every system and in every app. A path is written the way the system
 // it is for writes it (backslashes for Windows, slashes for the rest), whichever system this is running on, so the answer for one system
 // is the same wherever it is asked.
-function sharedFolder({ env = process.env, platform = process.platform, home }) {
-  if (env.NMR_LINK_DIR) return env.NMR_LINK_DIR;
+function sharedFolder({ env = process.env, platform = process.platform, home, packaged = false }) {
+  // The tests name a folder of their own. An installed copy ignores that, so nothing in its environment can move the file it leaves.
+  if (env.NMR_LINK_DIR && !packaged) return env.NMR_LINK_DIR;
   const join = (platform === 'win32' ? path.win32 : path.posix).join;
   const base = platform === 'win32' ? env.APPDATA || join(home, 'AppData', 'Roaming')
     : platform === 'darwin' ? join(home, 'Library', 'Application Support')

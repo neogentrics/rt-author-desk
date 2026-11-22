@@ -18,12 +18,6 @@ function canSelfUpdate() {
   return process.platform === 'linux' && Boolean(process.env.APPIMAGE);
 }
 
-// The CI update test serves a newer build from this machine. Nothing but this machine is accepted.
-function testFeed() {
-  const feed = process.env.RTAD_UPDATE_FEED;
-  return feed && /^http:\/\/127\.0\.0\.1:\d+\/$/.test(feed) ? feed : null;
-}
-
 // Semantic Versioning, including pre-releases: 1.0.0-alpha.2 is newer than 1.0.0-alpha.1, and 1.0.0 is newer than any
 // 1.0.0-alpha. Returns a negative number, zero or a positive number.
 function compareVersions(a, b) {
@@ -69,7 +63,9 @@ class Updater {
       this.autoUpdater.allowPrerelease = true;
       this.autoUpdater.channel = 'latest';
       this.autoUpdater.allowDowngrade = false;
-      if (testFeed()) this.autoUpdater.setFeedURL({ provider: 'generic', url: testFeed() });
+      // The place updates come from is fixed: this project's GitHub Releases, as the publish settings in package.json say. Nothing in the
+      // environment or the command line can change it (an earlier copy of this file let a variable name another server, which an
+      // installed app has no use for and which could have been used to hand it a different "update").
       this.autoUpdater.on('update-available', (info) => this.emit({ state: 'downloading', version: info.version }));
       this.autoUpdater.on('update-downloaded', (info) => this.emit({ state: 'ready', version: info.version }));
       this.autoUpdater.on('error', () => {});

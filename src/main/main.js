@@ -111,8 +111,10 @@ if (selfTestArg) {
     // Says this app is installed, and which version, for the other Recon Towers apps. It is written each time the app starts, so an
     // update changes the version in it. Only an installed copy says so: running from the source doesn't (the tests name a path instead).
     try {
-      const launch = process.env.RTAD_INSTALLED_LAUNCH || (app.isPackaged ? launchPathFor({ execPath: process.execPath, appImage: process.env.APPIMAGE }) : null);
-      if (launch) writeInstalled(sharedFolder({ home: app.getPath('home') }), { version: app.getVersion(), launch });
+      // Only an installed copy says it is installed. The tests, which run from the source, name a path of their own, and an installed copy
+      // ignores that, so nothing in its environment can choose what another Recon Towers app is told to start.
+      const launch = (!app.isPackaged && process.env.RTAD_INSTALLED_LAUNCH) || (app.isPackaged ? launchPathFor({ execPath: process.execPath, appImage: process.env.APPIMAGE }) : null);
+      if (launch) writeInstalled(sharedFolder({ home: app.getPath('home'), packaged: app.isPackaged }), { version: app.getVersion(), launch });
     } catch (error) {
       console.error('[installed list]', error.message); // the app works the same without it
     }

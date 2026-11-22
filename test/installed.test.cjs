@@ -87,6 +87,7 @@ test('the shared folder is the same place for every Recon Towers app', () => {
   assert.equal(sharedFolder({ env: {}, platform: 'linux', home: '/home/me' }), '/home/me/.config/Recon Towers/app-link');
   assert.equal(sharedFolder({ env: { XDG_CONFIG_HOME: '/cfg' }, platform: 'linux', home: '/home/me' }), '/cfg/Recon Towers/app-link');
   assert.equal(sharedFolder({ env: { NMR_LINK_DIR: '/here' }, platform: 'linux', home: '/home/me' }), '/here', 'the tests can name their own folder');
+  assert.equal(sharedFolder({ env: { NMR_LINK_DIR: '/here' }, platform: 'linux', home: '/home/me', packaged: true }), '/home/me/.config/Recon Towers/app-link', 'an installed copy ignores it');
 });
 
 test('the Windows installer writes the same file, with the version in it, and takes it away again', () => {
