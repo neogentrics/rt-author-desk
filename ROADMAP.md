@@ -26,7 +26,7 @@ losing anything, and pass its automated tests on Windows, Mac and Linux.
 | Release | Theme | Status |
 |---|---|---|
 | [Step zero](#step-zero--settle-the-foundations) | Settle the foundations | Built. The installers for Windows, Mac and Linux are built and checked by CI |
-| [v1.0](#v10--the-catalog) | The catalog | **Built, ready to publish as 1.0.0.** Contributors and credits and the suite's look and feel are built |
+| [v1.0](#v10--the-catalog) | The catalog | **Released as 1.0.0 on 22 November 2026.** Contributors and credits and the suite's look and feel are built |
 | [v1.1](#v11--the-money) | The money | **Started early, as test code.** KDP import and royalties exist, and the calculator isn't started |
 | [v1.2](#v12--every-store) | Every store | Planned |
 | [v1.3](#v13--accounts-and-the-vault) | Accounts and the vault | Planned |
@@ -59,7 +59,7 @@ Not a release: the choices that are expensive to change later.
 for the money. v1.0 is the catalog, with everything needed to run it on a computer every day. The money is
 [v1.1](#v11--the-money).
 
-**Where it stands (18 November 2026).** Built, and ready to publish as **1.0.0**. The first test build (alpha.0) was installed and used on
+**Where it stands (22 November 2026).** Released as **1.0.0**. The first test build (alpha.0) was installed and used on
 a real computer, and what it showed was missing is now done: Preferences with the suite's themes, Glass, colour-safe colours, fonts and text
 size; a Help menu and Help Center with a tour of a made-up catalog, About, and updates that include test builds; an icon of its own;
 series, pen names and publisher names made right where a book asks for one; screens that say what to do when they're empty; and bringing

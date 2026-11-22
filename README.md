@@ -60,12 +60,12 @@ own books.
 |---|---|---|
 | `.exe` installer, or a portable `.exe` | `.dmg` for Apple silicon or Intel | `AppImage` or `.deb` |
 
-Nothing is published yet. The first test build will appear under
-[Releases](https://github.com/neogentrics/rt-author-desk/releases). Every change is already built and checked on all three
-systems by [CI](https://github.com/neogentrics/rt-author-desk/actions/workflows/ci.yml).
+Version 1.0.0 is on the [Releases](https://github.com/neogentrics/rt-author-desk/releases/latest) page. Every change is built and
+checked on all three systems by [CI](https://github.com/neogentrics/rt-author-desk/actions/workflows/ci.yml), which also installs
+each build and runs a self-test.
 
-The builds won't be code-signed at first, so Windows may show a SmartScreen warning the first time, and macOS will ask you
-to open the app from *System Settings → Privacy & Security*.
+The builds aren't code-signed yet, so Windows may show a SmartScreen warning the first time (choose *More info*, then *Run
+anyway*), and macOS will ask you to open the app from *System Settings → Privacy & Security*.
 
 ## What it does
 
