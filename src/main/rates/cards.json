@@ -1,0 +1,172 @@
+{
+  "about": "Rate cards shipped with the app. They are data, never code: a change at a store is an edit here, and anything you change yourself is kept apart in your library. A card with verified false was not read on the store's own page, and says where it came from instead.",
+  "cards": [
+    {
+      "id": "kdp-ebook-usd-2026-07-07",
+      "version": 1,
+      "store_id": "store-kdp",
+      "format": "ebook",
+      "channel": "Amazon.com",
+      "currency": "USD",
+      "applies_from": "2026-07-07",
+      "applies_until": null,
+      "options": [
+        { "name": "70% option", "rate": "0.70", "price_min": "2.99", "price_max": "12.99", "deduct": ["delivery"] },
+        { "name": "35% option", "rate": "0.35", "price_min_by_file_mb": [[0, "0.99"], [3, "1.99"], [10, "2.99"]], "price_max": "200.00", "deduct": [] }
+      ],
+      "delivery": { "per_mb": "0.15", "minimum": "0.01" },
+      "source": {
+        "title": "KDP: eBook list price requirements, and the Digital Book Pricing Page",
+        "url": "https://kdp.amazon.com/en_US/help/topic/G200634560",
+        "checked_on": "2026-11-18",
+        "verified": true,
+        "note": "Read on KDP's own pages. The list price page says: Effective July 7, 2026, the 70% royalty option price band is $2.99-$12.99 on Amazon.com. The pricing page (last updated April 21, 2026) gives delivery cost as US $0.15/MB with a minimum of US $0.01. The 70% rate applies only to sales in the 70% territories; sales elsewhere earn 35%."
+      }
+    },
+    {
+      "id": "kdp-ebook-usd-before-2026-07-07",
+      "version": 1,
+      "store_id": "store-kdp",
+      "format": "ebook",
+      "channel": "Amazon.com",
+      "currency": "USD",
+      "applies_from": null,
+      "applies_until": "2026-07-06",
+      "options": [
+        { "name": "70% option", "rate": "0.70", "price_min": "2.99", "price_max": "9.99", "deduct": ["delivery"] },
+        { "name": "35% option", "rate": "0.35", "price_min_by_file_mb": [[0, "0.99"], [3, "1.99"], [10, "2.99"]], "price_max": "200.00", "deduct": [] }
+      ],
+      "delivery": { "per_mb": "0.15", "minimum": "0.01" },
+      "source": {
+        "title": "KDP: eBook list price requirements (the previous band)",
+        "url": "https://kdp.amazon.com/en_US/help/topic/G200634560",
+        "checked_on": "2026-11-18",
+        "verified": false,
+        "note": "KDP's page says the previous 70% range was $2.99-$9.99. It doesn't say what the 35% minimums or the delivery cost were before July 7, 2026, so those are assumed to be the same."
+      }
+    },
+    {
+      "id": "kdp-paperback-usd-amazon",
+      "version": 1,
+      "store_id": "store-kdp",
+      "format": "paperback",
+      "channel": "Amazon.com",
+      "currency": "USD",
+      "applies_from": null,
+      "applies_until": null,
+      "options": [
+        { "name": "50% (list price $9.98 or less)", "rate": "0.50", "price_min": "0.01", "price_max": "9.98", "deduct": ["printing"] },
+        { "name": "60% (list price $9.99 or more)", "rate": "0.60", "price_min": "9.99", "deduct": ["printing"] }
+      ],
+      "source": {
+        "title": "KDP: Paperback royalty",
+        "url": "https://kdp.amazon.com/en_US/help/topic/G201834330",
+        "checked_on": "2026-11-18",
+        "verified": true,
+        "note": "Read on KDP's own page: the royalty is (rate x list price) - printing costs, with 50% at $9.98 or less and 60% at $9.99 or more on Amazon.com. The page shows no date, so when this took effect is not known. Printing cost depends on page count, ink and marketplace: enter the figure from KDP's own printing cost calculator. KDP won't accept a list price below printing cost divided by the rate."
+      }
+    },
+    {
+      "id": "kdp-paperback-usd-expanded",
+      "version": 1,
+      "store_id": "store-kdp",
+      "format": "paperback",
+      "channel": "Expanded distribution",
+      "currency": "USD",
+      "applies_from": null,
+      "applies_until": null,
+      "options": [
+        { "name": "40% of list price", "rate": "0.40", "price_min": "0.01", "deduct": ["printing"] }
+      ],
+      "source": {
+        "title": "KDP: Paperback royalty",
+        "url": "https://kdp.amazon.com/en_US/help/topic/G201834330",
+        "checked_on": "2026-11-18",
+        "verified": true,
+        "note": "Read on KDP's own page: Expanded Distribution pays 40% of the book's list price, less printing costs. KDP's hardcover royalty is on a separate page that has not been read, so there is no hardcover card yet."
+      }
+    },
+    {
+      "id": "bn-press-ebook-usd",
+      "version": 1,
+      "store_id": "store-bn-press",
+      "format": "ebook",
+      "channel": "Barnes & Noble Press",
+      "currency": "USD",
+      "applies_from": "2021-01-01",
+      "applies_until": null,
+      "options": [
+        { "name": "70% of the retail price", "rate": "0.70", "price_min": "0.99", "deduct": [] }
+      ],
+      "source": {
+        "title": "Barnes & Noble Press help center: Royalty and Payment Terms; eBook Costs and Pricing",
+        "url": "https://help-press.barnesandnoble.com/hc/en-us/articles/5359736229531-Royalty-and-Payment-Terms",
+        "checked_on": null,
+        "verified": false,
+        "note": "Not read on the store's page: the help center refused an automated request. Taken from a search summary of it, which says ebooks earn 70% of the retail price at $0.99 and higher after January 1, 2021. Older reviews describe a 35% rate outside $2.99-$9.99, which the help center no longer says. Check the page by hand."
+      }
+    },
+    {
+      "id": "bn-press-print-usd",
+      "version": 1,
+      "store_id": "store-bn-press",
+      "format": "paperback",
+      "channel": "Barnes & Noble Press",
+      "currency": "USD",
+      "applies_from": null,
+      "applies_until": null,
+      "options": [
+        { "name": "55% of the retail price, less printing cost", "rate": "0.55", "price_min": "0.01", "deduct": ["printing"] }
+      ],
+      "source": {
+        "title": "Barnes & Noble Press help center: Royalty and Payment Terms",
+        "url": "https://help-press.barnesandnoble.com/hc/en-us/articles/5359736229531-Royalty-and-Payment-Terms",
+        "checked_on": null,
+        "verified": false,
+        "note": "Not read on the store's page, as above. The summary says print earns 55% of the retail price you set, minus the per-book printing cost. Two third-party guides mention a $14.99 minimum print price that the help center summary doesn't confirm, so no minimum is applied."
+      }
+    },
+    {
+      "id": "acx-audiobook-usd-new-model",
+      "version": 1,
+      "store_id": "store-acx",
+      "format": "audiobook",
+      "channel": "New royalty model",
+      "currency": "USD",
+      "applies_from": "2026-05-26",
+      "applies_until": null,
+      "options": [
+        { "name": "Exclusive to Audible", "rate": "0.50", "deduct": [] },
+        { "name": "Non-exclusive", "rate": "0.30", "deduct": [] }
+      ],
+      "source": {
+        "title": "ACX blog: A new royalty model and more opportunities to earn",
+        "url": "https://www.acx.com/mp/blog/coming-soon-to-acx-a-new-royalty-model-and-more-opportunities-to-earn",
+        "checked_on": "2026-11-18",
+        "verified": true,
+        "note": "Read on ACX's own blog: 50% for exclusive distribution and 30% for non-exclusive, with enrollment open to all creators from May 26, 2026. Membership listening is paid differently from cash purchases under the new model, so treat this as the rate on a cash sale. The rate is yours only before any Royalty Share split with a narrator: your contract decides that, so make your own card for it."
+      }
+    },
+    {
+      "id": "acx-audiobook-usd-legacy",
+      "version": 1,
+      "store_id": "store-acx",
+      "format": "audiobook",
+      "channel": "Legacy model",
+      "currency": "USD",
+      "applies_from": null,
+      "applies_until": null,
+      "options": [
+        { "name": "Exclusive to Audible", "rate": "0.40", "deduct": [] },
+        { "name": "Non-exclusive", "rate": "0.25", "deduct": [] }
+      ],
+      "source": {
+        "title": "Third-party summaries of ACX's royalty change (ACX's blog doesn't state the old rates)",
+        "url": "https://www.acx.com/mp/blog/coming-soon-to-acx-a-new-royalty-model-and-more-opportunities-to-earn",
+        "checked_on": "2026-11-18",
+        "verified": false,
+        "note": "ACX's blog says the new model is optional to enroll in but doesn't state the old rates. The 40% and 25% figures, and the legacy model ending at the end of 2026, come from third-party sources. Check your own contract: it decides what a title earns."
+      }
+    }
+  ]
+}
