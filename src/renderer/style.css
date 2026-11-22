@@ -213,3 +213,17 @@ dialog.palette input:focus-visible { outline-offset: -3px; }
 .palette-item[aria-selected="true"] .pi-detail { color: inherit; }
 .palette-empty { color: var(--ink-soft); padding: 12px; }
 .palette-hint { border-top: 1px solid var(--line); margin: 0; padding: 8px 14px; font-size: 0.8rem; color: var(--ink-soft); }
+
+/* About */
+dialog.about { width: min(32rem, 94vw); }
+.about-top { display: flex; align-items: center; gap: 16px; }
+.about-logo { width: 64px; height: 64px; flex: none; }
+.about-top h2 { margin: 0; }
+.about-version { margin: 2px 0 0; color: var(--ink-soft); }
+.about-blurb { margin: 14px 0 6px; }
+.about-links { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 8px; }
+.about-links li { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; }
+.about-links span { color: var(--ink-soft); font-size: 0.867rem; }
+.about-tech, .about-legal { margin: 6px 0 0; color: var(--ink-soft); font-size: 0.867rem; }
+.about .actions { align-items: center; }
+.spacer { flex: 1; }

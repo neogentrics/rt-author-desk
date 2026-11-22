@@ -63,6 +63,7 @@
     else if (name === 'export-all') AD.exportAll();
     else if (name === 'backup-now') AD.backUpNow();
     else if (name === 'palette') AD.openPalette(where ?? '');
+    else if (name === 'about') AD.openAbout();
     else if (name === 'look') {
       // The look was changed from the menu, so the page follows it, and so does Preferences if it is open.
       AD.applyLook(where);

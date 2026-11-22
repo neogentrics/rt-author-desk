@@ -564,3 +564,49 @@ e2e('a change made from the View menu reaches Preferences while it is open, and 
   await app.key('F1');
   await app.until("document.querySelector('dialog#help[open]')", 'the Help Center to open on F1');
 });
+
+// ---- About ----
+
+e2e('About shows the icon, the name and version, the four links and the legal ones, the versions and the copyright, and copies the details', async (app) => {
+  assert.equal(await app.run('window.desk.runCommand("about")'), true, 'About is a command in the Help menu');
+  await app.until("document.querySelector('dialog#about[open]')", 'About to open');
+  assert.equal(await app.run("document.activeElement.id"), 'about-done', 'the focus is on the way out');
+  assert.equal(await app.run("document.querySelector('dialog#about').getAttribute('aria-labelledby')"), 'about-title');
+  assert.equal(await app.run("document.querySelector('#about-title').textContent"), 'RT Author Desk');
+  assert.match(await app.run("document.querySelector('.about-version').textContent"), /^Version \d+\.\d+\.\d+/);
+  assert.equal(await app.run("document.querySelector('.about-logo').complete && document.querySelector('.about-logo').naturalWidth > 0"), true, 'the icon is drawn');
+
+  const links = await app.run("[...document.querySelectorAll('#about a')].map((a) => ({ label: a.firstChild.textContent, url: a.href, target: a.target, rel: a.rel, said: a.textContent }))");
+  assert.deepEqual(links.map((l) => l.label), ['Website', 'What’s new in this version', 'Report a problem or suggest a feature', 'Source code', 'License', 'Open-source notices']);
+  for (const link of links) {
+    assert.match(link.url, /^https:\/\/(github\.com\/neogentrics\/rt-author-desk|recontowers\.com\/projects\/)/);
+    assert.equal(link.target, '_blank');
+    assert.match(link.rel, /noopener/);
+    assert.match(link.said, /opens in your browser/, 'a screen reader is told');
+  }
+  const [, notes] = links;
+  const { version } = await app.run('window.desk.info()');
+  assert.ok(notes.url.endsWith(`/releases/tag/v${version}`), 'the notes are for this version');
+  assert.equal((await app.run("[...document.querySelectorAll('.about-links li span:not(.visually-hidden)')].map((s) => s.textContent)")).length, 4, 'each of the four says where it goes');
+
+  const tech = await app.run("document.querySelector('.about-tech').textContent");
+  assert.match(tech, /Electron \d+\.\d+/);
+  assert.match(tech, /Chromium \d+/);
+  assert.match(tech, /Node \d+/);
+  assert.match(await app.run("document.querySelector('.about-legal').textContent"), new RegExp(`© ${new Date().getFullYear()} Recon Towers\\. All rights reserved\\.`));
+
+  await app.click('#about-copy');
+  await app.until("document.getElementById('toast') && !document.getElementById('toast').hidden && /copied/.test(document.getElementById('toast').textContent)", 'the copied message');
+  const copied = (await app.run('window.desk.copyDetails()')).value;
+  assert.match(copied, /^RT Author Desk \d+\.\d+\.\d+.*\nElectron \d+.* · Chromium \d+.* · Node \d+.*\n(Windows|macOS|Linux) \S+ \(\w+\)$/);
+
+  await app.key('Escape');
+  await app.until("!document.querySelector('dialog#about')", 'Escape to close it');
+});
+
+e2e('About says portable when this is the portable build, and the Help menu\'s About opens it', async (app) => {
+  await app.run('window.desk.runCommand("about")');
+  await app.until("document.querySelector('dialog#about[open]')");
+  assert.match(await app.run("document.querySelector('.about-version').textContent"), /^Version \d+\.\d+\.\d+ \(portable\)$/);
+  assert.match((await app.run('window.desk.copyDetails()')).value, /^RT Author Desk \d+\.\d+\.\d+ \(portable\)\n/);
+}, { env: { PORTABLE_EXECUTABLE_DIR: '/tmp/somewhere' } });

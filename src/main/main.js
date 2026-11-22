@@ -1,8 +1,9 @@
 'use strict';
 // Opens the encrypted library and the window. The catalog is in v1.0's first test build; the money follows (ROADMAP.md).
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
-const { app, BrowserWindow, dialog, ipcMain, session, shell } = require('electron');
+const { app, BrowserWindow, clipboard, dialog, ipcMain, session, shell } = require('electron');
 const { createApi } = require('./api');
 const { buildMenu, commandList, runCommand } = require('./menu');
 const { Settings } = require('./settings');
@@ -14,6 +15,7 @@ const { ImportError } = require('./importer');
 const { Library } = require('./storage/library');
 const { fillSample } = require('./sample');
 const { RELEASES_URL, Updater } = require('./updater');
+const { detailsText, osName } = require('../shared/about');
 const { today: todayOf } = require('../shared/dates');
 const { selfTest } = require('./self-test');
 
@@ -74,14 +76,17 @@ if (selfTestArg) {
     sample = { library, api: createApi(library, { locale: app.getLocale() }), dir: sampleDir() };
   };
 
-  function showAbout() {
-    dialog.showMessageBox(window, {
-      type: 'none',
-      title: 'About RT Author Desk',
-      message: 'RT Author Desk',
-      detail: `Version ${app.getVersion()}\nThe business side of being an author, on your own computer.\nBuilt by the Recon Towers Dev Department.\n\nYour library is kept in:\n${path.join(app.getPath('userData'), 'library')}`,
-    });
-  }
+  // What the About window shows, and what goes into a bug report. Nothing in it is about the person or what is in the library.
+  const aboutDetails = () => ({
+    version: app.getVersion(),
+    portable: Boolean(process.env.PORTABLE_EXECUTABLE_DIR),
+    year: new Date().getFullYear(),
+    electron: process.versions.electron,
+    chrome: process.versions.chrome,
+    node: process.versions.node,
+    os: osName(process.platform, os.release(), process.arch),
+    libraryFolder: path.join(app.getPath('userData'), 'library'),
+  });
 
   async function checkForUpdatesFromMenu() {
     const result = await updater.check();
@@ -303,7 +308,7 @@ if (selfTestArg) {
         settings: settings.values,
         version: app.getVersion(),
         actions: {
-          about: showAbout,
+          about: () => send('about'),
           changeSettings,
           checkForUpdates: checkForUpdatesFromMenu,
           reportProblem: () => shell.openExternal(`${REPO_URL}/issues/new?template=bug_report.yml`),
@@ -311,6 +316,14 @@ if (selfTestArg) {
       });
     }
     rebuildMenu();
+    ipcMain.handle('desk:about', (event) => (fromApp(event) ? { ok: true, value: aboutDetails() } : NOT_FROM_APP));
+    // The details are put together here, so the window can't ask for anything else to be copied.
+    ipcMain.handle('desk:copy-details', (event) => {
+      if (!fromApp(event)) return NOT_FROM_APP;
+      const text = detailsText(aboutDetails());
+      clipboard.writeText(text);
+      return { ok: true, value: text };
+    });
     ipcMain.handle('desk:commands', (event) => (fromApp(event) ? commandList(commands) : []));
     ipcMain.handle('desk:run-command', (event, key) => (fromApp(event) ? runCommand(commands, key) : false));
 

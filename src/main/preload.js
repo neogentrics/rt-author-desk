@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld('desk', {
   // Every command in the menus, so Go to can list them and run one by name.
   commands: () => ipcRenderer.invoke('desk:commands'),
   runCommand: (key) => ipcRenderer.invoke('desk:run-command', key),
+  about: () => ipcRenderer.invoke('desk:about'),
+  copyDetails: () => ipcRenderer.invoke('desk:copy-details'),
   startSample: () => ipcRenderer.invoke('desk:start-sample'),
   leaveSample: () => ipcRenderer.invoke('desk:leave-sample'),
   installUpdate: () => ipcRenderer.invoke('desk:install-update'),

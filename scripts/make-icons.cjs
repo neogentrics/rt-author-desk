@@ -25,6 +25,8 @@ app.whenReady().then(async () => {
   };
 
   fs.writeFileSync(path.join(build, 'icon.png'), await render(512));
+  // The About window shows the same drawing, so the app's own folder gets a copy of the svg. A test checks the two are the same.
+  fs.copyFileSync(path.join(build, 'icon.svg'), path.join(__dirname, '..', 'src', 'renderer', 'icon.svg'));
 
   const images = [];
   for (const size of SIZES) images.push(await render(size));
