@@ -62,6 +62,11 @@ function runChecks(dir, version) {
     const page = made('book', { id: selfBook.id });
     check('the catalog holds a priced listing', page.editions[0].listings[0].prices[0].amount === '12.99' && page.grid.rows[0].cells['store-kdp'][0].prices.length === 1);
     check('the clash checks run', made('clashes').some((item) => item.kind === 'release-without-final'));
+    const person = made('savePerson', { name: 'Self-test Editor' });
+    const credit = made('saveCredit', { edition_id: edition.id, person_id: person.id, role: 'editor' });
+    made('setListingCredits', { listingId: listing.id, creditIds: [] });
+    check('credits are kept, and a store that leaves one off is found',
+      made('book', { id: selfBook.id }).editions[0].credits[0].id === credit.id && made('clashes').some((item) => item.kind === 'credits-differ'));
     check('the nine built-in stores are there', made('names').stores.length === 9);
     check('the money screens have their data', made('earnings').currencies.length === 0 && made('readers').filter((r) => r.ready).length === 1 && made('imports').length === 0);
     // The spreadsheet reader's two libraries are in the build: a file that isn't a workbook is refused in words, not by a crash.

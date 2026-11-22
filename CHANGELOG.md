@@ -11,8 +11,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 The catalog. Version 1.0 is the catalog and everything needed to run it on a computer every day. The owner decided, after trying the first test
 build (`1.0.0-alpha.0`), that the app leaves alpha when the catalog is solid and doesn't wait for the money, which is 1.1.
 
-Not in 1.0.0: contributors and credits, and the clash check that depends on them, come in the first update after it.
-
 ### Added
 - **Books and series**, under any number of pen names and publisher names.
 - **Editions**: ebook, paperback, hardcover, large print and audiobook, each with its own details and release date.
@@ -24,8 +22,11 @@ Not in 1.0.0: contributors and credits, and the clash check that depends on them
 - **The store grid**: one page per book, editions down the side and stores across the top, so a gap shows at a glance.
 - **The audiobook tracker**: every audiobook on every store, with the live recording, its voice, its rights and what is
   waiting to be replaced.
-- **Clash checks**: nine kinds of real problem, such as an ebook in an exclusive program that is also on sale elsewhere, or
-  a free store ISBN used at another store. Each can be dismissed with a reason, and brought back.
+- **People and credits**: editors, proofreaders, cover artists, illustrators, narrators, translators and formatters, credited on each
+  edition. A person is kept once and can be credited on many editions, and in two roles on one. For each store you can write down which
+  credits it shows. Nothing is checked until you have.
+- **Clash checks**: ten kinds of real problem, such as an ebook in an exclusive program that is also on sale elsewhere, a free store ISBN
+  used at another store, or an editor credited on one store and left off another. Each can be dismissed with a reason, and brought back.
 - **The release calendar**, and **the Desk**, a home screen that shows the next release and what is in its way.
 - **An encrypted library** in the app's own folder, with a numbered, forward-only set of upgrades and a backup copy made
   before each one.

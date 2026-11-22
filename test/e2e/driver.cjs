@@ -67,6 +67,11 @@ async function launch({ seed, env: extraEnv = {}, userData: given = null, welcom
       if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text);
       return result.result.value;
     },
+    // Saves a picture of the window, for looking at a screen rather than testing it.
+    async screenshot(file) {
+      const { result } = await send('Page.captureScreenshot', { format: 'png' });
+      fs.writeFileSync(file, Buffer.from(result.data, 'base64'));
+    },
     async until(expression, what = expression, ms = 8000) {
       const end = Date.now() + ms;
       while (Date.now() < end) {

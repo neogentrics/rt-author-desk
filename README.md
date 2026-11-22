@@ -74,7 +74,8 @@ to open the app from *System Settings → Privacy & Security*.
 | **The store grid** | One page per book: editions down the side, stores across the top |
 | **Audiobooks** | Each recording's voice (human, synthesized or cloned), who read it, an exclusive deal and when it ends, and which recordings are waiting to be replaced |
 | **The audiobook tracker** | Every audiobook on every store, with the live recording, its voice and its rights |
-| **Clash checks** | Nine kinds of real problem, such as an ebook in an exclusive program that is also on sale elsewhere, or a free store ISBN used at another store. Each can be dismissed with a reason |
+| **People and credits** | Editors, cover artists, narrators and others, credited on each edition. Write down which credits each store shows, and a store that leaves someone off is pointed out |
+| **Clash checks** | Ten kinds of real problem, such as an ebook in an exclusive program that is also on sale elsewhere, a free store ISBN used at another store, or an editor credited on one store and left off another. Each can be dismissed with a reason |
 | **The release calendar** | Every dated release, soonest first |
 | **The Desk** | The home screen: the next release and what is in its way, and everything that needs you |
 | **Sales reports** (early, part of 1.1) | Choose an Amazon KDP orders or payments report and see what it holds before accepting it. Every row is accounted for, rows you already have are skipped, rows that match no book are asked about once, and a whole import can be undone. The original file is kept encrypted |
@@ -88,7 +89,7 @@ to open the app from *System Settings → Privacy & Security*.
 | **Private by default** | Your library is an encrypted database on your own computer |
 | **Works offline** | No account, no server, and nothing leaves your computer |
 
-Coming next: contributors and credits in the first update, then 1.1, the money: a royalty and pricing calculator, and readers for Barnes & Noble Press, ACX, Google Play
+Coming next: 1.1, the money: a royalty and pricing calculator, and readers for Barnes & Noble Press, ACX, Google Play
 Books and IngramSpark, which are waiting for a real report to build from. After that: the other stores, costs and profit per book,
 launches, accounts and a locked vault for logins, links to the other Recon Towers apps, and moving off Notion. See the
 [roadmap](ROADMAP.md).

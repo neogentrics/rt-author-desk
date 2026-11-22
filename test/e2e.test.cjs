@@ -404,3 +404,51 @@ manual('the welcome can start the tour of a made-up catalog, and leaving the tou
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+e2e('someone is credited on an edition, a store\'s credits are written down, and the one it leaves out is pointed out', async (app) => {
+  const book = await app.call('saveBook', { title: 'Tidewater' });
+  const edition = await app.call('saveEdition', { book_id: book.id, format: 'ebook' });
+  const kdp = await app.call('saveListing', { edition_id: edition.id, store_id: 'store-kdp', status: 'live' });
+  await app.call('saveListing', { edition_id: edition.id, store_id: 'store-kobo', status: 'live' });
+  await app.goTo(`#/book/${book.id}`);
+  await app.until("[...document.querySelectorAll('main button')].some((b) => b.textContent.trim() === 'Credit someone')", 'the credits section');
+
+  // A person is made right in the credit form, as a series is in the book form.
+  await app.clickText('Credit someone', 'main');
+  await app.until("document.querySelector('dialog #f-person_id')");
+  await app.fill('#f-person_id', '__new__');
+  await app.fill('#f-person_id-new', 'Made-up Editor');
+  await app.fill('#f-role', 'editor');
+  await app.clickText('Save', 'dialog');
+  await app.until("!document.querySelector('dialog')", 'the form to close');
+  await app.until("document.querySelector('main .editions')?.textContent.includes('Made-up Editor')", 'the credit to show');
+  const [credit] = (await app.call('book', { id: book.id })).editions[0].credits;
+  assert.deepEqual([credit.person_name, credit.role], ['Made-up Editor', 'editor']);
+  assert.equal((await app.call('clashes')).length, 0, 'nothing is written down yet, so nothing is wrong');
+
+  // One store shows the editor. Then Kobo is opened from the grid, and written down as showing no one.
+  await app.call('setListingCredits', { listingId: kdp.id, creditIds: [credit.id] });
+  await app.goTo(`#/book/${book.id}`);
+  await app.until("document.querySelectorAll('.cellbtn').length >= 2");
+  await app.run("[...document.querySelectorAll('.cellbtn')].find((b) => /Kobo/.test(b.getAttribute('aria-label')))?.click()");
+  await app.until("document.querySelector('dialog')?.textContent.includes('Credits shown here')", 'the store\'s square');
+  assert.match(await app.run("document.querySelector('dialog').textContent"), /Not written down yet/);
+  await app.clickText('Write down what it shows', 'dialog');
+  await app.until("document.querySelectorAll('dialog').length === 2 && document.querySelector('dialog:last-of-type input[type=checkbox]')", 'the tick list');
+  assert.equal(await app.run("document.querySelector('dialog:last-of-type input[type=checkbox]').checked"), false, 'nothing ticked for you');
+  await app.run("document.querySelector('dialog:last-of-type form').requestSubmit()");
+  await app.until("document.querySelectorAll('dialog').length === 0", 'the dialogs to close');
+  const [clash] = await app.call('clashes');
+  assert.equal(clash.kind, 'credits-differ');
+  assert.match(clash.title, /leaves Made-up Editor \(editor\) off Kobo/);
+  await app.goTo(`#/book/${book.id}`);
+  await app.until("document.querySelector('main')?.textContent.includes('1 clash on this book')", 'the clash on the book');
+
+  // The person is in the list on the Names page, and can't be removed while credited.
+  await app.goTo('#/names');
+  await app.until("document.querySelector('#people')", 'the People section');
+  assert.match(await app.run("document.querySelector('#people').closest('section').textContent"), /Made-up Editor · Editor, Tidewater: ebook/);
+  await app.run("[...document.querySelectorAll('#people ~ ul button, section[aria-labelledby=people] button')].find((b) => b.textContent.trim() === 'Remove').click()");
+  await app.until("document.getElementById('toast') && !document.getElementById('toast').hidden", 'a message');
+  assert.match(await app.run("document.getElementById('toast').textContent"), /credited on 1 edition/);
+});

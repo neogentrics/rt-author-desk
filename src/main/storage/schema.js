@@ -23,7 +23,7 @@ const TABLES = {
   ],
   listings: [
     'edition_id', 'store_id', 'store_item_id', 'url', 'status', 'publisher_shown', 'route', 'via_store_id', 'program',
-    'program_exclusive', 'program_from', 'program_until', 'isbn_id', 'recording_id', 'release_date', 'notes',
+    'program_exclusive', 'program_from', 'program_until', 'isbn_id', 'recording_id', 'release_date', 'credits_recorded', 'notes',
   ],
   prices: ['listing_id', 'marketplace', 'currency', 'amount', 'from_date', 'notes'],
   dismissed_clashes: ['clash_key', 'reason'],
@@ -41,6 +41,9 @@ const TABLES = {
   item_matches: ['store_id', 'store_item', 'edition_id'],
   catalog_imports: ['kind', 'file_name', 'status', 'counts', 'created'],
   trash_items: ['kind', 'label', 'payload'],
+  people: ['name', 'notes'],
+  credits: ['edition_id', 'person_id', 'role', 'notes'],
+  listing_credits: ['listing_id', 'credit_id'],
 };
 
 // The stores every library starts with. Their IDs are fixed, so two computers that each made a new library agree on
@@ -309,6 +312,34 @@ const STEPS = [
           id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('book', 'edition', 'listing')), label TEXT NOT NULL DEFAULT '',
           payload TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
         );
+      `);
+    },
+  },
+  {
+    version: 8,
+    up(db) {
+      // The people who work on a book (an editor, an artist, a narrator), credited on an edition in a role. A listing can also say
+      // which of those credits its store shows, and whether that has been written down at all, so a store that was never looked at
+      // isn't taken to show nothing.
+      db.exec(`
+        CREATE TABLE people (
+          id TEXT PRIMARY KEY, name TEXT NOT NULL DEFAULT '', notes TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
+        );
+        CREATE TABLE credits (
+          id TEXT PRIMARY KEY, edition_id TEXT NOT NULL, person_id TEXT NOT NULL, role TEXT NOT NULL CHECK (length(role) > 0),
+          notes TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX credits_one_each ON credits (edition_id, person_id, role);
+        CREATE INDEX credits_by_person ON credits (person_id);
+        CREATE TABLE listing_credits (
+          id TEXT PRIMARY KEY, listing_id TEXT NOT NULL, credit_id TEXT NOT NULL,
+          created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX listing_credits_one_each ON listing_credits (listing_id, credit_id);
+        CREATE INDEX listing_credits_by_credit ON listing_credits (credit_id);
+        ALTER TABLE listings ADD COLUMN credits_recorded INTEGER NOT NULL DEFAULT 0 CHECK (credits_recorded IN (0, 1));
       `);
     },
   },

@@ -29,7 +29,15 @@ function fillSample(library, today) {
   c.setPrice({ listingId: kdp.id, marketplace: 'US', currency: 'USD', amount: '4.99', fromDate: addDays(today, -300) });
   c.setPrice({ listingId: kdp.id, marketplace: 'UK', currency: 'GBP', amount: '3.99', fromDate: addDays(today, -300) });
   // The same ebook, on sale at Kobo while in an exclusive program, with a different publisher name: two clashes to find.
-  c.saveListing({ edition_id: ebook.id, store_id: 'store-kobo', status: 'live', publisher_shown: 'Harbour Lane Publishing' });
+  const kobo = c.saveListing({ edition_id: ebook.id, store_id: 'store-kobo', status: 'live', publisher_shown: 'Harbour Lane Publishing' });
+
+  // Two people credited on the ebook. One store shows both, and Kobo leaves the editor off: another thing to find.
+  const editor = c.savePerson({ name: 'Rowan Hale' });
+  const artist = c.savePerson({ name: 'Mina Okoro' });
+  const edited = c.saveCredit({ edition_id: ebook.id, person_id: editor.id, role: 'editor' });
+  const covered = c.saveCredit({ edition_id: ebook.id, person_id: artist.id, role: 'cover-artist' });
+  c.setListingCredits(kdp.id, [edited.id, covered.id]);
+  c.setListingCredits(kobo.id, [covered.id]);
 
   const free = c.addIsbn({ number: '9780306406157', issuer: 'store', storeId: 'store-kdp', editionId: paperback.id });
   const print = c.saveListing({ edition_id: paperback.id, store_id: 'store-kdp', status: 'live', isbn_id: free.id });

@@ -2,6 +2,7 @@
 // Everything the window may ask the app to do. The window never sees the database: it names one of these calls, and gets
 // back plain data or a plain-words problem. Kept apart from Electron so it's tested like any other module.
 const { Catalog, CatalogError } = require('./catalog');
+const { ROLES, roleLabel } = require('../shared/credits');
 const { ClashError, dismissClash, findClashes, restoreClash } = require('./clashes');
 const { BookImportError, BookImporter } = require('./books-import');
 const { ImportError, Importer } = require('./importer');
@@ -69,8 +70,10 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
         ...edition,
         isbns: catalog.isbnsOf(edition.id).map((isbn) => ({ ...isbn, shown: displayIsbn(isbn.isbn), store_name: storeName(isbn.store_id) })),
         recordings: catalog.recordingsOf(edition.id).map((r) => ({ ...r, exclusive_store_name: storeName(r.exclusive_store_id) })),
+        credits: catalog.creditsOf(edition.id).map((credit) => ({ ...credit, person_name: named('people')(credit.person_id) ?? 'Someone', role_label: roleLabel(credit.role) })),
         listings: catalog.listingsOf(edition.id).map((listing) => ({
           ...listing,
+          credit_ids: catalog.creditsShownOn(listing.id),
           store_name: storeName(listing.store_id),
           via_name: storeName(listing.via_store_id),
           prices: priceRows(listing.id),
@@ -104,6 +107,11 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
       return { id: row.id };
     },
 
+    // ---- Credits: the people on an edition, and which credits each store shows ----
+    saveCredit: (fields) => catalog.saveCredit(fields),
+    removeCredit: ({ id }) => (catalog.removeCredit(id), true),
+    setListingCredits: ({ listingId, creditIds }) => (catalog.setListingCredits(listingId, creditIds), true),
+
     // ---- The Trash: what was removed waits 30 days ----
     trash: () => trash.list(),
     restoreTrash: ({ id }) => trash.restore(id),
@@ -131,11 +139,19 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
       series: library.list('series'),
       penNames: library.list('pen_names'),
       publishers: library.list('publisher_names'),
+      people: library.list('people').map((person) => ({
+        ...person,
+        credits: library.db.prepare('SELECT edition_id, role FROM credits WHERE person_id = ? ORDER BY created_at, rowid').all(person.id)
+          .map((c) => ({ edition: catalog.describeEdition(c.edition_id), role: roleLabel(c.role) })),
+      })).sort((a, b) => a.name.localeCompare(b.name)),
+      roles: ROLES.map(([value, label]) => ({ value, label })),
       stores: catalog.stores().map((store) => ({ ...store, built_in: BUILT_IN_STORES.some(([id]) => id === store.id) })),
     }),
     saveSeries: (fields) => catalog.saveSeries(fields),
     savePenName: (fields) => catalog.savePenName(fields),
     savePublisherName: (fields) => catalog.savePublisherName(fields),
+    savePerson: (fields) => catalog.savePerson(fields),
+    removePerson: ({ id }) => (catalog.removePerson(id), true),
     saveStore: (fields) => catalog.saveStore(fields),
     removeStore: ({ id }) => catalog.removeStore(id) ?? true,
   };

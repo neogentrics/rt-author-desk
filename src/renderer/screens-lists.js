@@ -130,7 +130,7 @@
 
     return [
       h('h1', null, 'Stores and names'),
-      h('p', { class: 'lead' }, 'The places you sell, and the names you publish and write under.'),
+      h('p', { class: 'lead' }, 'The places you sell, the names you publish and write under, and the people you credit.'),
       h('section', { class: 'card', 'aria-labelledby': 'stores' },
         h('div', { class: 'row' }, h('h2', { id: 'stores' }, 'Stores'),
           h('button', { onclick: () => AD.form({ title: 'Add a store', values: { kind: 'store' }, fields: [
@@ -145,6 +145,15 @@
             s.built_in ? null : h('button', { class: 'small', onclick: () => AD.act(() => AD.call('removeStore', { id: s.id }), 'Removed.') }, 'Remove')))))),
       block('series', 'Series', names.series, 'saveSeries', 'a series'),
       block('pens', 'Pen names', names.penNames, 'savePenName', 'a pen name'),
+      h('section', { class: 'card', 'aria-labelledby': 'people' },
+        h('div', { class: 'row' }, h('h2', { id: 'people' }, 'People'), h('button', { onclick: () => editName('Add a person', (f) => AD.call('savePerson', f), null) }, 'Add a person')),
+        h('p', { class: 'note' }, 'Editors, cover artists, narrators and others you credit. Credit them on an edition, from the book\'s page.'),
+        names.people.length ? h('ul', { class: 'list' }, names.people.map((p) => h('li', { class: 'row' },
+          h('span', null, p.name, p.credits.length ? h('span', { class: 'note' }, ` · ${p.credits.map((c) => `${c.role}, ${c.edition}`).join('; ')}`) : null),
+          h('span', { class: 'row start' },
+            h('button', { class: 'small', onclick: () => editName('Edit the person', (f) => AD.call('savePerson', f), p) }, 'Edit'),
+            h('button', { class: 'small', onclick: () => AD.act(() => AD.call('removePerson', { id: p.id }), 'Removed.') }, 'Remove')))))
+          : h('p', { class: 'note' }, 'No one yet.')),
       block('pubs', 'Publisher names', names.publishers, 'savePublisherName', 'a publisher name', dates,
         (p) => [p.from_date && `from ${p.from_date}`, p.to_date && `until ${p.to_date}`].filter(Boolean).join(' ') || null),
     ];

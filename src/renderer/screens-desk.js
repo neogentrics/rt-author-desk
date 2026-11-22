@@ -18,6 +18,7 @@
       make: async (name, all) => (await AD.call('saveSeries', { name, ...(realId(all.pen_name_id) ? { pen_name_id: all.pen_name_id } : {}) })).id,
     },
     penName: { label: 'New pen name…', noun: 'pen name', placeholder: 'The name you write under', make: async (name) => (await AD.call('savePenName', { name })).id },
+    person: { label: 'New person…', noun: 'person', placeholder: 'Their name', make: async (name) => (await AD.call('savePerson', { name })).id },
     publisher: { label: 'New publisher name…', noun: 'publisher name', placeholder: 'The name you publish under', make: async (name) => (await AD.call('savePublisherName', { name })).id },
   };
 

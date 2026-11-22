@@ -38,9 +38,11 @@ class Trash {
       const listings = this.catalog.listingsOf(id);
       const prices = listings.flatMap((l) => db.prepare('SELECT * FROM prices WHERE listing_id = ?').all(l.id));
       const recordings = this.catalog.recordingsOf(id);
+      const credits = this.catalog.creditsOf(id);
+      const listingCredits = listings.flatMap((l) => db.prepare('SELECT * FROM listing_credits WHERE listing_id = ?').all(l.id));
       const isbns = this.catalog.isbnsOf(id).map((i) => i.id);
       const label = this.catalog.describeEdition(id);
-      const item = this.#keep('edition', label, { rows: { editions: [edition], listings, prices, recordings }, isbns });
+      const item = this.#keep('edition', label, { rows: { editions: [edition], credits, listings, listing_credits: listingCredits, prices, recordings }, isbns });
       for (const listing of listings) this.catalog.removeListing(listing.id);
       for (const recording of recordings) this.library.remove('recordings', recording.id);
       this.catalog.removeEdition(id);
@@ -51,9 +53,10 @@ class Trash {
   removeListing(id) {
     const listing = this.#need('listings', id, "That listing isn't in your library.");
     const prices = this.library.db.prepare('SELECT * FROM prices WHERE listing_id = ?').all(id);
+    const listingCredits = this.library.db.prepare('SELECT * FROM listing_credits WHERE listing_id = ?').all(id);
     const store = this.library.get('stores', listing.store_id)?.name ?? 'a store';
     return this.library.db.transaction(() => {
-      const item = this.#keep('listing', `${this.catalog.describeEdition(listing.edition_id)} on ${store}`, { rows: { listings: [listing], prices } });
+      const item = this.#keep('listing', `${this.catalog.describeEdition(listing.edition_id)} on ${store}`, { rows: { listings: [listing], listing_credits: listingCredits, prices } });
       this.catalog.removeListing(id);
       return item;
     })();
@@ -79,7 +82,7 @@ class Trash {
     const { rows, isbns = [] } = JSON.parse(item.payload);
     const L = this.library;
     L.db.transaction(() => {
-      for (const table of ['books', 'editions', 'recordings', 'listings', 'prices']) {
+      for (const table of ['books', 'editions', 'credits', 'recordings', 'listings', 'listing_credits', 'prices']) {
         for (const row of rows[table] ?? []) {
           const fixed = { ...row };
           // A series or pen name that has gone since leaves the book without one, rather than pointing at nothing.
@@ -88,6 +91,9 @@ class Trash {
             if (fixed.pen_name_id && !L.get('pen_names', fixed.pen_name_id)) fixed.pen_name_id = null;
           }
           if (table === 'editions' && fixed.publisher_name_id && !L.get('publisher_names', fixed.publisher_name_id)) fixed.publisher_name_id = null;
+          // A person who has gone since can't be credited, and a store can't show a credit that isn't there.
+          if (table === 'credits' && !L.get('people', fixed.person_id)) continue;
+          if (table === 'listing_credits' && !L.get('credits', fixed.credit_id)) continue;
           if (table === 'listings') {
             if (fixed.isbn_id && !L.get('isbns', fixed.isbn_id)) fixed.isbn_id = null;
             if (fixed.recording_id && !L.get('recordings', fixed.recording_id)) fixed.recording_id = null;

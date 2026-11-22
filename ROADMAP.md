@@ -26,7 +26,7 @@ losing anything, and pass its automated tests on Windows, Mac and Linux.
 | Release | Theme | Status |
 |---|---|---|
 | [Step zero](#step-zero--settle-the-foundations) | Settle the foundations | Built. The installers for Windows, Mac and Linux are built and checked by CI |
-| [v1.0](#v10--the-catalog) | The catalog | **Built, apart from the suite's look-and-feel items below.** 1.0.0 follows once they're in. Contributors and credits come in the first update |
+| [v1.0](#v10--the-catalog) | The catalog | **Built, apart from the suite's look-and-feel items below.** 1.0.0 follows once they're in. Contributors and credits are built |
 | [v1.1](#v11--the-money) | The money | **Started early, as test code.** KDP import and royalties exist, and the calculator isn't started |
 | [v1.2](#v12--every-store) | Every store | Planned |
 | [v1.3](#v13--accounts-and-the-vault) | Accounts and the vault | Planned |
@@ -67,7 +67,8 @@ in books from a CSV file. The catalog also has backups, a Trash for 30 days, a w
 installed-list file with its version, and a short welcome the first time. It works on a made-up catalog and has been driven end to end by
 tests, and the Windows and Mac installers are built and checked by CI.
 
-**Not in 1.0.0:** contributors and credits, and the clash check that depends on them, come in the first update after it. Nine of the
+**Contributors and credits (22 November 2026).** The owner held 1.0.0 for them, and they are built: editors, cover artists, narrators and
+others are credited on each edition, each store's credits can be written down, and a store that leaves someone off is pointed out. Ten of the
 fifteen clash checks are built. The two price checks and the locked-period check come with the calculator in v1.1, and the pre-order and
 spacing checks with launch plans in v1.5. The Money and Royalties screens are in the menu marked "early": they are v1.1's work, started
 early.
@@ -83,7 +84,7 @@ About, and the accessibility checks for Windows high contrast and the keyboard.
 |---|:-:|---|
 | 🙋 Books and series | M | Works for one novel or a long series, under any number of pen names and publisher names. A new series, pen name or publisher name can be made right where a book asks for one. A book can be planned, in progress, live, pulled or being reworked. |
 | 🙋 Editions | M | Ebook, paperback, hardcover, large print and audiobook, each with its own details: page count, trim size, narrator. |
-| 🙋 Contributors and credits | M | Editors, narrators, artists and others, credited on each edition and on each store, with the check that finds one credited differently on two stores. Comes in the first update after 1.0.0. |
+| 🙋 Contributors and credits | M | Editors, narrators, artists and others, credited on each edition and on each store, with the check that finds one credited differently on two stores. A store is only checked once its credits have been written down. Built. |
 | 🙋 Store listings | L | An edition on a store: its store ID, price in each marketplace, link, status, the publisher name the store shows, and how it got there, directly or through a distributor. |
 | 🙋 Recordings | M | Each audiobook recording of a book: human or synthesized voice, who read it, and what rights it has, such as an exclusive deal and when it ends. [How it works](docs/design/data-model.md#recordings). |
 | 🙋 Audiobook tracker | M | Every title on every store: which recording is live, its voice, its rights, and which are waiting to be replaced and by what. |

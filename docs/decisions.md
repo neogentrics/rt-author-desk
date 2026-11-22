@@ -70,8 +70,8 @@ These follow the plan and fill gaps in it. Any can be changed.
 25. **An exclusive program or recording deal names its store,** because the clash checks can't judge "elsewhere" without it.
 26. **A store listing's route is recorded,** and the same edition can be on one store both directly and through a distributor.
 27. **Dismissing a clash needs a reason,** and it stays dismissed until the records it names change.
-28. **Nine of the fifteen clash checks are built.** The rest wait for the data they need: contributors, rate cards, spacing
-    rules and pre-order deadlines.
+28. **Ten of the fifteen clash checks are built.** The rest wait for the data they need: rate cards, spacing rules and pre-order
+    deadlines. (Nine were built at first. The tenth, a credit shown differently on two stores, came with contributors.)
 29. **Rows nobody owns yet are kept and counted.** A report row that matches no edition is saved with no edition, so the library's
     totals still agree with the report. The Money screen asks about each ASIN or ISBN once and remembers the answer.
 30. **A report that doesn't match its own total can still be imported, but only on purpose.** The mismatch is shown first, the
@@ -84,6 +84,12 @@ These follow the plan and fill gaps in it. Any can be changed.
     its sales period starts.
 34. **Corrected rows aren't replaced yet.** A row the store has changed counts as a new row, not a correction. "Replaced, with your
     agreement" in the design isn't built.
+35. **A store's credits are only checked once they've been written down.** A listing says which of its edition's credits the store
+    shows, and whether that has been written down at all. A store nobody has looked at isn't taken to show nothing, so the check never
+    fires for a store the owner hasn't described. Nothing is ticked for you when you write one down, because the point is to find
+    what is missing. This was chosen when contributors were built, ahead of 1.0.0 at the owner's request.
+36. **A person is in the list once, by name,** and a person who is still credited can't be removed. Credits are one person in one role
+    on one edition, from a fixed list of roles (and "other", with a note), so a role needs no new code.
 
 ## To check before or during the build
 

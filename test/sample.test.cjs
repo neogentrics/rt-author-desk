@@ -29,7 +29,7 @@ test('the tour has problems to find, and something coming up', () => {
   const library = new Library(temp()).open();
   fillSample(library, TODAY);
   const kinds = new Set(findClashes(library, { today: TODAY }).map((c) => c.kind));
-  for (const kind of ['exclusive-program-elsewhere', 'free-isbn-elsewhere', 'publisher-differs', 'release-without-final']) {
+  for (const kind of ['exclusive-program-elsewhere', 'free-isbn-elsewhere', 'publisher-differs', 'release-without-final', 'credits-differ']) {
     assert.ok(kinds.has(kind), `no ${kind} clash in the sample`);
   }
   const { call } = createApi(library, { now: () => new Date(2026, 10, 18), locale: 'en-US' });

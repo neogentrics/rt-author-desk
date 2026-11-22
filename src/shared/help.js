@@ -101,6 +101,25 @@ const GUIDES = [
     ],
   },
   {
+    slug: 'credits',
+    title: 'People and credits',
+    summary: 'Crediting an editor, an artist or a narrator, and what each store shows.',
+    keywords: 'credit credits contributor editor narrator cover artist illustrator proofreader translator formatter person people shown store',
+    blocks: [
+      { type: 'p', text: 'The people who worked on an edition are **credited** on it, each in a role: editor, proofreader, cover artist, illustrator, narrator, translator, formatter or other. A person is kept once, on [Stores and names](go:names), and can be credited on any number of editions.' },
+      { type: 'h', text: 'Crediting someone' },
+      { type: 'ol', items: [
+        'Open the book and find the edition.',
+        'Under **Credits**, choose **Credit someone**. Pick the person, or choose **New person…** and type their name, then pick what they did.',
+        'The same person can be credited in two roles on one edition, such as editor and proofreader, one credit at a time.',
+      ] },
+      { type: 'h', text: 'What each store shows' },
+      { type: 'p', text: 'A store may leave someone off. In the store grid, click the edition\'s square on that store and choose **Write down what it shows**. Open the store\'s page, and tick the credits it shows. Nothing is ticked for you, because the point is to find what is missing.' },
+      { type: 'note', text: 'A store that has not been written down is never checked. Once it has, [Clashes](help:clashes) says when someone credited on the edition is missing from it, and which stores do show them.' },
+      { type: 'p', text: 'A person who is still credited cannot be removed. Remove their credits first. Taking a credit off an edition also takes it off every store\'s list.' },
+    ],
+  },
+  {
     slug: 'store-grid',
     title: 'The store grid',
     summary: 'One page per book: editions down the side, stores across the top.',
@@ -140,7 +159,7 @@ const GUIDES = [
       { type: 'p', text: '[Clashes](go:clashes) looks across your whole catalog for problems that are easy to miss one book at a time. Each one says what\'s wrong and what to do.' },
       { type: 'ul', items: [
         '**Fix** is a real problem, such as an ebook in an exclusive program that is also on sale elsewhere, or a free store ISBN used at another store.',
-        '**Check** is worth a look but may be fine, such as a publisher name that differs between stores.',
+        '**Check** is worth a look but may be fine, such as a publisher name that differs between stores, or an editor credited on one store and left off another.',
         'You can **dismiss** one with a reason. It stays dismissed until the records it names change, and you can bring it back.',
       ] },
       { type: 'note', text: 'The number beside Clashes in the menu is the count of problems that need fixing.' },
