@@ -44,7 +44,11 @@ own books.
 </tr>
 <tr>
 <td><img src="docs/screenshots/help.png" alt="The Help Center, open on the guide to clashes"><br><b>Help.</b> Short, searchable guides, and a tour of a made-up catalog.</td>
-<td></td>
+<td><img src="docs/screenshots/goto.png" alt="Go to: a box listing the screens and the books, for jumping to one or running a command by name"><br><b>Go to.</b> <code>Ctrl+K</code> finds a screen or a book. Start with <code>&gt;</code> to run any command by name.</td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/credits.png" alt="A book's editions, each with the people credited on it"><br><b>Credits.</b> Editors, cover artists and narrators on each edition, and which credits each store shows.</td>
+<td><img src="docs/screenshots/customize.png" alt="Customize Theme: swatches for the accent, panel and background colours, with the app already in teal and navy"><br><b>Your own colours.</b> Pick an accent, panel and background. The words on them stay readable.</td>
 </tr>
 </table>
 

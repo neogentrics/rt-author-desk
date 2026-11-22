@@ -1100,3 +1100,34 @@ e2e('in every theme, the ring around what has the focus can be seen where it is:
   }
   assert.deepEqual(problems, []);
 });
+
+e2e('the toolbar never hides what has the focus, and a new screen starts at its top', async (app) => {
+  await app.run('window.desk.startSample().then(() => AD.refresh())');
+  await settle(800);
+  const book = (await app.call('books')).find((b) => b.title === 'Tidewater');
+
+  // A new screen starts at its top, whatever the last one was scrolled to.
+  await app.goTo('#/clashes');
+  await app.run('document.scrollingElement.scrollTo(0, 500)');
+  assert.ok(await app.run('document.scrollingElement.scrollTop') > 100, 'the page can scroll');
+  await app.run("location.hash = '#/books'");
+  await app.until("location.hash === '#/books' && document.querySelector('main h1')?.textContent === 'Books'");
+  assert.equal(await app.run('document.scrollingElement.scrollTop'), 0, 'the next screen starts at its top');
+
+  // Tab through a tall page: each stop is wholly below the toolbar and wholly on the screen (WCAG 2.2, Focus Not Obscured).
+  await app.goTo(`#/book/${book.id}`);
+  await app.until("document.querySelector('.editions')");
+  await app.run("document.activeElement.blur(); document.body.setAttribute('tabindex', '-1'); document.body.focus(); document.body.removeAttribute('tabindex'); document.scrollingElement.scrollTo(0, 0)");
+  const hidden = [];
+  let stops = 0;
+  for (let i = 0; i < 120; i += 1) {
+    await app.key('Tab');
+    // A control is wholly in view. A region taller than the screen (the store grid) only has to be partly in view, as it cannot be more.
+    const here = await app.run(`(() => { const el = document.activeElement; const box = el.getBoundingClientRect(); const top = document.getElementById('top').getBoundingClientRect().bottom; const tall = box.height > 150; return { skip: el.classList.contains('skip'), name: (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 30), under: tall ? box.bottom <= top : box.top < top - 1, off: tall ? box.top >= innerHeight : box.bottom > innerHeight + 1, inMain: Boolean(el.closest('main')) }; })()`);
+    if (i > 0 && here.skip) break;
+    stops += 1;
+    if (here.inMain && (here.under || here.off)) hidden.push(`${here.name}: ${here.under ? 'under the toolbar' : 'off the screen'}`);
+  }
+  assert.ok(stops > 40, `a tall page has many stops (${stops})`);
+  assert.deepEqual(hidden, []);
+});

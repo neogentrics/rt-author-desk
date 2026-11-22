@@ -90,6 +90,16 @@ These follow the plan and fill gaps in it. Any can be changed.
     what is missing. This was chosen when contributors were built, ahead of 1.0.0 at the owner's request.
 36. **A person is in the list once, by name,** and a person who is still credited can't be removed. Credits are one person in one role
     on one edition, from a fixed list of roles (and "other", with a note), so a role needs no new code.
+37. **The menus are the list of commands.** Go to (`Ctrl+K`, then `>`) runs any command in the menus by name, taken from the menus
+    themselves, so a command is written once and the menus can stay short, as RT Markdown Reader's are. The window can only ask for a
+    command by its id, and only a command with an action of its own can be run.
+38. **Your own colours are worked out, not trusted.** Customize Theme keeps three colours as checked `#rrggbb` values, and the words on
+    them are changed only as much as it takes to be read (the maths is Reader's, copied). The window can only set a few named variables,
+    and a test measures the result over hundreds of colours in every theme. High Contrast ignores them, and Glass stays solid while a
+    panel or background colour is in use.
+39. **Accessibility is checked by programs, not by eye.** Names for a screen reader, the keyboard order, the focus ring, the border of a
+    field, Windows high contrast and colour blindness are tested on the real page, and each check was shown to fail when what it guards
+    is taken away. A new button without a name fails a test instead of reaching someone who cannot see the problem.
 
 ## To check before or during the build
 

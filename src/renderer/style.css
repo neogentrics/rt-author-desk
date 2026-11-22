@@ -40,6 +40,8 @@
 :root[data-colors="safe"][data-tone="dark"] { --problem: #ff9a5c; --problem-bg: #3b1f10; --check: #eaa6d2; --check-bg: #3a1b2d; --good: #7cc4f5; --good-bg: #0f2b40; }
 :root[data-theme="contrast"] { --check: #ffffff; --check-bg: #000000; --good: #ffffff; --good-bg: #000000; }
 * { box-sizing: border-box; }
+/* The toolbar stays at the top, so whatever is scrolled to (a focused control, a link to a part of the page) stops below it, not under it. */
+html { scroll-padding-top: calc(var(--bars-h, 0px) + 12px); }
 body { margin: 0; background: var(--t-desk) var(--t-desk-image) fixed; color: var(--ink); font-size: 1rem; line-height: 1.55; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .skip { position: absolute; left: -999px; top: 0; background: var(--surface); padding: 8px 12px; z-index: 10; }

@@ -111,8 +111,18 @@ function runChecks(dir, version) {
   const listed = readInstalled(shared)[0];
   check('the installed-list file says which version is here', wrote && listed?.id === 'rt-author-desk' && listed.version === String(version ?? '0'));
   const looks = new Settings(dir);
-  looks.save({ theme: 'dusk', textSize: 17 });
-  check('the look is remembered', new Settings(dir).values.theme === 'dusk' && new Settings(dir).values.textSize === 17);
+  looks.save({ theme: 'dusk', textSize: 17, brand: { accent: '#e8590c' } });
+  check('the look is remembered, with your own colours', new Settings(dir).values.theme === 'dusk' && new Settings(dir).values.textSize === 17 && new Settings(dir).values.brand.accent === '#e8590c');
+  // The menus and the commands Go to can run, your own colours worked out to be readable, and what About says and shows are all in the build.
+  const { collectCommands, menuTemplate } = require('./menu');
+  const commands = collectCommands(menuTemplate({ send() {}, version: version ?? '0', platform: process.platform })).size;
+  check('the menus and their commands are in the build', commands > 30, String(commands));
+  const { brandTokens } = require('../shared/brand');
+  const { THEMES } = require('../shared/themes');
+  check('your own colours can be worked out', Object.keys(brandTokens(THEMES.light, { accent: '#e8590c', panel: '#14432f' })).length >= 8);
+  const { aboutLinks, detailsText } = require('../shared/about');
+  check('About has its links and its details', aboutLinks('1.0.0').length === 4 && detailsText({ version: '1', electron: '1', chrome: '1', node: '1', os: 'x' }).split('\n').length === 3);
+  check('the icon About shows is in the build', fs.existsSync(path.join(__dirname, '..', 'renderer', 'icon.svg')));
 
   return { checks, versions: { sqlite: info.sqlite, cipher: info.cipher, step: info.step } };
 }

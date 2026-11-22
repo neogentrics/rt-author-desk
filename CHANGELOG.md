@@ -6,7 +6,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-11-18
+## [1.0.0] - 2026-11-22
 
 The catalog. Version 1.0 is the catalog and everything needed to run it on a computer every day. The owner decided, after trying the first test
 build (`1.0.0-alpha.0`), that the app leaves alpha when the catalog is solid and doesn't wait for the money, which is 1.1.

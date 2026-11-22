@@ -39,8 +39,8 @@
       drawNav(name, clashes.filter((c) => c.severity === 'problem').length, binned.length);
       view.replaceChildren(...[].concat(content).filter(Boolean)); // a screen may leave a section out as null
       if (moved) {
-        view.scrollTo(0, 0);
-        if (opened) view.focus(); // a new screen takes the focus, so a screen reader says where you are
+        document.scrollingElement.scrollTo(0, 0); // a new screen starts at its top (the page scrolls, not the screen)
+        if (opened) view.focus({ preventScroll: true }); // a new screen takes the focus, so a screen reader says where you are
       }
       opened = true;
       document.title = `${view.querySelector('h1')?.textContent || 'RT Author Desk'} · RT Author Desk`;

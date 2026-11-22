@@ -87,6 +87,11 @@ async function launch({ seed, env: extraEnv = {}, userData: given = null, welcom
       await send('Emulation.setEmulatedMedia', { features });
       await sleep(200);
     },
+    // Makes the page this size, whatever the window is, so a picture comes out the same on every computer.
+    async viewport(width, height) {
+      await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
+      await sleep(200);
+    },
     // Saves a picture of the window, for looking at a screen rather than testing it.
     async screenshot(file) {
       const { result } = await send('Page.captureScreenshot', { format: 'png' });
