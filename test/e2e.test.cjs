@@ -721,3 +721,101 @@ e2e('the sidebar starts below the bars and the toolbar, and keeps below them whe
   now = await measure();
   assert.ok(now.side >= now.top - 1, 'the sidebar is still below it');
 });
+
+// ---- Customize Theme ----
+
+// A colour picker being dragged says "input" over and over, and "change" only when it is let go.
+const drag = (app, selector, colour) => app.run(`(() => { const el = document.querySelector(${JSON.stringify(selector)}); el.value = ${JSON.stringify(colour)}; el.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+const variable = (app, name) => app.run(`getComputedStyle(document.documentElement).getPropertyValue('${name}').trim()`);
+
+e2e('Customize Theme: a swatch or any colour changes the page, stays readable, is kept, and goes back', async (app) => {
+  assert.equal(await app.run('window.desk.runCommand("customize-theme")'), true, 'it is a command in the View menu');
+  await app.until("document.querySelector('dialog#customize[open]')", 'Customize Theme to open');
+  const plain = { accent: await variable(app, '--t-accent'), panel: await variable(app, '--t-panel'), desk: await variable(app, '--t-desk') };
+
+  // Every swatch and picker has a name, and nothing is chosen yet: "the theme's own" is the one pressed.
+  const names = await app.run("[...document.querySelectorAll('#customize .swatch, #customize input[type=color]')].map((e) => e.getAttribute('aria-label'))");
+  assert.equal(names.length, 3 * 8 + 3);
+  assert.ok(names.every((n) => n && n.length > 5));
+  assert.equal(await app.run("document.querySelectorAll('#customize .swatch[aria-pressed=\"true\"]').length"), 3, 'the theme\'s own, for each of the three');
+
+  // An accent swatch: the page takes it (changed only as much as it takes to be read), and it is kept.
+  await app.run("document.querySelector('#customize [aria-label=\"Accent colour #e8590c\"]').click()");
+  await app.until(`getComputedStyle(document.documentElement).getPropertyValue('--t-accent').trim() !== '${plain.accent}'`, 'the accent to change');
+  const accent = await variable(app, '--t-accent');
+  const expected = await app.run("ADBrand.brandTokens(ADThemes.THEMES[AD.themeName(AD.currentLook())], { accent: '#e8590c' })['--t-accent']");
+  assert.equal(accent, expected);
+  assert.equal((await app.run('window.desk.settings()')).brand.accent, '#e8590c', 'kept');
+  assert.equal(await app.run("document.querySelector('#customize [aria-label=\"Accent colour #e8590c\"]').getAttribute('aria-pressed')"), 'true');
+  assert.equal(await app.run("ADBrand.contrast(getComputedStyle(document.documentElement).getPropertyValue('--t-accent').trim(), ADThemes.THEMES.light.sheet) >= 4.5"), true, 'a link in it can be read on the page');
+
+  // A panel swatch changes the sidebar and the toolbar, and its words follow.
+  await app.run("document.querySelector('#customize [aria-label=\"Panel colour #12355b\"]').click()");
+  await app.until("getComputedStyle(document.documentElement).getPropertyValue('--t-panel').trim() === '#12355b'", 'the panel to change');
+  assert.equal(await variable(app, '--t-on-panel') === '#ffffff' || (await app.run("ADBrand.contrast(getComputedStyle(document.documentElement).getPropertyValue('--t-on-panel').trim(), '#12355b') >= 4.5")), true);
+  assert.equal(await app.run("getComputedStyle(document.querySelector('.side')).color === getComputedStyle(document.querySelector('.toolbar')).color"), true, 'the sidebar and the toolbar agree');
+
+  // Any colour, from the picker: it shows while it is dragged, and is kept when it is let go.
+  await drag(app, '#custom-background', '#2d1a47');
+  assert.equal(await variable(app, '--t-desk'), '#2d1a47', 'shown as it is dragged');
+  assert.equal((await app.run('window.desk.settings()')).brand.background, '', 'not kept yet');
+  await app.run("document.querySelector('#custom-background').dispatchEvent(new Event('change', { bubbles: true }))");
+  for (let i = 0; i < 30 && (await app.run('window.desk.settings()')).brand.background !== '#2d1a47'; i += 1) await new Promise((r) => setTimeout(r, 100));
+  assert.equal((await app.run('window.desk.settings()')).brand.background, '#2d1a47', 'kept when let go');
+
+  // A colour that would not be readable is changed so that it is: pale yellow on a white page.
+  await drag(app, '#custom-accent', '#ffff00');
+  await app.run("document.querySelector('#custom-accent').dispatchEvent(new Event('change', { bubbles: true }))");
+  for (let i = 0; i < 30 && (await app.run('window.desk.settings()')).brand.accent !== '#ffff00'; i += 1) await new Promise((r) => setTimeout(r, 100));
+  assert.notEqual(await variable(app, '--t-accent'), '#ffff00');
+  assert.equal(await app.run("ADBrand.contrast(getComputedStyle(document.documentElement).getPropertyValue('--t-accent').trim(), ADThemes.THEMES.light.sheet) >= 4.5"), true);
+
+  // Glass stays solid while a panel or background colour is in use, and the dialog says so.
+  await app.run("window.desk.saveSettings({ glass: true }).then((s) => { AD.applyLook(s); document.dispatchEvent(new CustomEvent('ad:look', { detail: s })); })");
+  await app.until("document.documentElement.dataset.surface === 'solid' && /Glass stays solid/.test(document.querySelector('#customize .note').textContent)", 'the note about Glass');
+
+  // High Contrast keeps its own colours, and says so.
+  await app.run("window.desk.saveSettings({ theme: 'contrast' }).then((s) => { AD.applyLook(s); document.dispatchEvent(new CustomEvent('ad:look', { detail: s })); })");
+  await app.until("/High Contrast, which keeps its own colours/.test(document.querySelector('#customize .note').textContent)", 'the note about High Contrast');
+  assert.equal(await variable(app, '--t-accent'), '#ffff00', 'High Contrast\'s own yellow');
+  assert.equal(await variable(app, '--t-panel'), '#000000');
+  await app.run("window.desk.saveSettings({ theme: 'system' }).then((s) => { AD.applyLook(s); document.dispatchEvent(new CustomEvent('ad:look', { detail: s })); })");
+
+  // Back to the theme's own: all three at once.
+  await app.click('#customize-reset');
+  await app.until(`getComputedStyle(document.documentElement).getPropertyValue('--t-panel').trim() === '${plain.panel}'`, 'the panel to go back');
+  assert.deepEqual({ accent: await variable(app, '--t-accent'), panel: await variable(app, '--t-panel'), desk: await variable(app, '--t-desk') }, plain);
+  assert.deepEqual((await app.run('window.desk.settings()')).brand, { accent: '', panel: '', background: '' });
+  assert.equal(await app.run("document.querySelectorAll('#customize .swatch[aria-pressed=\"true\"]').length"), 3);
+  await app.key('Escape');
+  await app.until("!document.querySelector('dialog#customize')", 'Escape to close it');
+});
+
+e2e('a colour that was only being tried does not stay when the dialog is closed, and Customize Theme opens from the pop-up and from Preferences', async (app) => {
+  await app.click('#theme-button');
+  await app.until("document.querySelector('#theme-pop:popover-open')");
+  await app.click('#tb-customize');
+  await app.until("document.querySelector('dialog#customize[open]')", 'Customize Theme from the pop-up');
+  const plain = await variable(app, '--t-desk');
+  await drag(app, '#custom-background', '#4d1518');
+  assert.equal(await variable(app, '--t-desk'), '#4d1518');
+  await app.key('Escape'); // without letting the colour go
+  await app.until("!document.querySelector('dialog#customize')");
+  await app.until(`getComputedStyle(document.documentElement).getPropertyValue('--t-desk').trim() === '${plain}'`, 'the tried colour to go');
+  assert.equal((await app.run('window.desk.settings()')).brand.background, '');
+
+  await app.run('void AD.openPreferences()');
+  await app.until("document.querySelector('#pref-customize')");
+  await app.click('#pref-customize');
+  await app.until("document.querySelector('dialog#customize[open]') && !document.querySelector('dialog#preferences')", 'Customize Theme from Preferences');
+});
+
+e2e('Back to the usual in Preferences takes your colours off too', async (app) => {
+  await app.run("window.desk.saveSettings({ brand: { accent: '#e8590c', panel: '#14432f' }, theme: 'sepia' }).then((s) => { AD.applyLook(s); })");
+  await app.until("getComputedStyle(document.documentElement).getPropertyValue('--t-panel').trim() === '#14432f'");
+  await app.run('void AD.openPreferences()');
+  await app.until("document.querySelector('#pref-theme')");
+  await app.clickText('Back to the usual', 'dialog');
+  await app.until("document.documentElement.dataset.theme !== 'sepia' && getComputedStyle(document.documentElement).getPropertyValue('--t-panel').trim() !== '#14432f'", 'the usual look to come back');
+  assert.deepEqual((await app.run('window.desk.settings()')).brand, { accent: '', panel: '', background: '' });
+});

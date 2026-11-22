@@ -75,6 +75,7 @@ function menuTemplate({ send, actions = {}, settings = {}, version = '', platfor
         },
         act('glass', 'Glass', null, () => actions.changeSettings?.({ glass: !settings.glass }), { type: 'checkbox', checked: Boolean(settings.glass) }),
         act('colour-safe', 'Colour-safe Colours', null, () => actions.changeSettings?.({ colorSafe: !settings.colorSafe }), { type: 'checkbox', checked: Boolean(settings.colorSafe) }),
+        tell('customize-theme', 'Customize Theme…'),
         separator,
         { role: 'zoomIn' },
         { role: 'zoomOut' },

@@ -4,6 +4,9 @@
 // writing a style attribute into the page's HTML is not, and nothing here does.
 (() => {
   const { THEMES, UI_FONTS } = window.ADThemes;
+  const { brandTokens, solidSurface } = window.ADBrand;
+  // The variables the stylesheet gives a value of its own, and Customize Theme may replace. They go back to it when the colour is cleared.
+  const OPTIONAL = ['--t-panel-edge', '--t-hover', '--t-chip'];
   const dark = window.matchMedia('(prefers-color-scheme: dark)');
   let current = null;
 
@@ -29,7 +32,13 @@
     const name = AD.themeName(settings);
     const theme = THEMES[name];
     const root = document.documentElement;
-    const set = (variable, value) => root.style.setProperty(variable, value);
+    // Your own colours from Customize Theme, worked out so the text on them can still be read, take the place of the theme's.
+    const custom = brandTokens(theme, settings.brand);
+    const set = (variable, value) => root.style.setProperty(variable, custom[variable] ?? value);
+    for (const variable of OPTIONAL) {
+      if (custom[variable]) root.style.setProperty(variable, custom[variable]);
+      else root.style.removeProperty(variable);
+    }
     set('--t-desk', theme.desk);
     set('--t-desk-image', theme.deskStops ? `linear-gradient(135deg, ${theme.deskStops.join(', ')})` : 'none');
     set('--t-panel', theme.panel);
@@ -51,7 +60,8 @@
     root.dataset.tone = theme.tone;
     root.dataset.colors = settings.colorSafe ? 'safe' : 'normal';
     // High Contrast stays solid: frosted colour would only make it harder to read.
-    root.dataset.surface = theme.glass || (settings.glass && !theme.flat) ? 'glass' : 'solid';
+    // Frosted panels would take on the colour behind them, so they stay solid while your own panel or background colour is in use.
+    root.dataset.surface = (theme.glass || (settings.glass && !theme.flat)) && !solidSurface(theme, settings.brand) ? 'glass' : 'solid';
   };
 
   // Follow System follows the computer when it switches between light and dark.

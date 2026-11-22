@@ -29,6 +29,7 @@
       h('div', { class: 'field', role: 'group', 'aria-labelledby': 'tb-look-label' },
         h('span', { id: 'tb-look-label', class: 'label' }, 'Look'), h('span', { class: 'seg' }, solid, glass), note),
       h('div', { class: 'field check' }, safe, h('label', { for: 'tb-safe' }, 'Colour-safe colours')),
+      h('p', { class: 'row start' }, h('button', { type: 'button', class: 'link', id: 'tb-customize', onclick: () => { popup.hidePopover(); AD.openCustomize(); } }, 'Customize Theme…')),
       h('p', { class: 'row start' }, h('button', { type: 'button', class: 'link', id: 'tb-more', onclick: () => { popup.hidePopover(); AD.openPreferences(); } }, 'All appearance settings…')));
 
     // Shows the look as it is now, whenever the pop-up opens and whenever something changes it.

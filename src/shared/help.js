@@ -208,7 +208,8 @@ const GUIDES = [
       { type: 'p', text: 'The **theme button** (the moon, at the right of the toolbar) is on every screen. It changes the theme, Glass and colour-safe colours without opening anything else. For everything else, open **Preferences** from the File menu or the toolbar, or press **Ctrl+,** (**Cmd+,** on a Mac). Everything changes the moment you pick it, so there is nothing to apply. The View menu has the same choices.' },
       { type: 'ul', items: [
         '**Theme.** The same fifteen themes as the other Recon Towers apps, or **Follow System** to follow this computer\'s light and dark setting.',
-        '**Glass.** Frosted panels over colour, with any theme but High Contrast.',
+        '**Glass.** Frosted panels over colour, with any theme but High Contrast. It stays solid while you use your own panel or background colour, because frosted colour could make the words hard to read.',
+        '**Customize Theme** (in the View menu, the theme button and Preferences). Choose your own **accent**, **panel** and **background** colours from the swatches, or any colour you like. They go on every theme except High Contrast, which keeps its own colours. The words on a colour change only as much as it takes to stay readable, so no choice can leave something you cannot read. **Back to the theme\'s own** takes them all off.',
         '**Colour-safe colours.** Blue, orange and purple instead of green, amber and red, so good news, checks and problems stay apart with colour blindness. Each one also says what it means in words.',
         '**Font and text size.** Atkinson Hyperlegible is made to be easier to read.',
       ] },

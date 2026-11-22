@@ -3,6 +3,7 @@
 // unlocked and survives a library being replaced. Copied from RT Story Tracker's way of doing it.
 const fs = require('node:fs');
 const path = require('node:path');
+const { mergeBrand } = require('../shared/brand');
 const { DEFAULT_SETTINGS, cleanSettings } = require('../shared/themes');
 const { writeFileSafely } = require('./storage/keys');
 
@@ -26,6 +27,11 @@ class Settings {
     const next = { ...this.values };
     for (const [key, raw] of Object.entries(changes && typeof changes === 'object' ? changes : {})) {
       if (!Object.hasOwn(DEFAULT_SETTINGS, key)) continue;
+      if (key === 'brand') {
+        // Your own colours change one at a time, so a change that names only one leaves the others as they were.
+        next.brand = mergeBrand(next.brand, raw);
+        continue;
+      }
       const cleaned = cleanSettings({ [key]: raw })[key];
       if (cleaned !== DEFAULT_SETTINGS[key] || String(raw) === String(DEFAULT_SETTINGS[key])) next[key] = cleaned;
     }

@@ -19,6 +19,11 @@
   font-size: var(--text-size);
   --ink: var(--t-ink); --ink-soft: var(--t-ink-soft); --line: var(--t-edge); --accent: var(--t-accent); --accent-ink: var(--t-on-accent);
   --focus: var(--t-accent); --problem: var(--t-danger); --problem-bg: var(--t-danger-bg);
+  /* The panel's own line, and the washes for a hovered link and a count on it. A theme leaves these as they are here, and Customize Theme
+     replaces them with ones worked out from the panel colour you chose, so the words on them can still be read. */
+  --t-panel-edge: var(--t-edge);
+  --t-hover: color-mix(in srgb, var(--t-on-panel) 14%, transparent);
+  --t-chip: color-mix(in srgb, var(--t-on-panel) 22%, transparent);
   /* The page is the theme's sheet. Cards sit a little off it, and fields and table headings a little further, toward the ink. */
   --page: var(--t-sheet);
   --surface: color-mix(in srgb, var(--t-sheet) 97%, var(--t-ink));
@@ -38,11 +43,12 @@ body { margin: 0; background: var(--t-desk) var(--t-desk-image) fixed; color: va
 .skip:focus { left: 8px; top: 8px; }
 
 .shell { display: grid; grid-template-columns: 14rem minmax(0, 1fr); min-height: 100vh; }
-.side { background: linear-gradient(var(--t-panel), var(--t-panel-end)); color: var(--t-on-panel); border-right: 1px solid var(--t-edge); padding: 20px 12px; position: sticky; top: var(--bars-h, 0px); height: calc(100vh - var(--bars-h, 0px)); overflow-y: auto; }
+.side { background: linear-gradient(var(--t-panel), var(--t-panel-end)); color: var(--t-on-panel); border-right: 1px solid var(--t-panel-edge); padding: 20px 12px; position: sticky; top: var(--bars-h, 0px); height: calc(100vh - var(--bars-h, 0px)); overflow-y: auto; }
 .brand { margin: 0 8px 16px; font-weight: 700; font-size: 1.067rem; color: var(--t-on-panel); }
 .side ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .side a { display: flex; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 8px; color: var(--t-on-panel); text-decoration: none; }
-.side a:hover { background: color-mix(in srgb, var(--t-on-panel) 14%, transparent); }
+.side a:hover { background: var(--t-hover); }
+.side :focus-visible { outline-color: var(--t-on-panel); }
 .side a[aria-current="page"] { background: var(--t-on-panel); color: var(--t-panel); font-weight: 600; }
 .count { background: var(--problem); color: var(--problem-bg); border-radius: 999px; padding: 0 8px; font-size: 0.867rem; font-weight: 700; }
 a[aria-current="page"] .count { background: var(--t-panel); color: var(--t-on-panel); }
@@ -192,7 +198,7 @@ tr.attention td { background: var(--check-bg); }
 tr.skipped td { color: var(--ink-soft); }
 
 .backup-folder { word-break: break-all; color: var(--ink-soft); }
-.tally { background: color-mix(in srgb, var(--t-on-panel) 22%, transparent); color: inherit; border-radius: 999px; padding: 0 8px; font-size: 0.867rem; font-weight: 700; }
+.tally { background: var(--t-chip); color: inherit; border-radius: 999px; padding: 0 8px; font-size: 0.867rem; font-weight: 700; }
 a[aria-current="page"] .tally { background: var(--t-panel); color: var(--t-on-panel); }
 
 /* The first-run welcome */
@@ -230,11 +236,11 @@ dialog.about { width: min(32rem, 94vw); }
 .spacer { flex: 1; }
 
 /* The toolbar: icon buttons on the panel colour. Their names are on hover and for screen readers. */
-.toolbar { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 6px 12px; min-height: 3rem; background: linear-gradient(90deg, var(--t-panel), var(--t-panel-end)); color: var(--t-on-panel); border-bottom: 1px solid var(--t-edge); }
+.toolbar { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 6px 12px; min-height: 3rem; background: linear-gradient(90deg, var(--t-panel), var(--t-panel-end)); color: var(--t-on-panel); border-bottom: 1px solid var(--t-panel-edge); }
 .tb-group { display: flex; align-items: center; gap: 4px; }
 .tb-spacer { flex: 1; }
 .toolbar .tb-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 2.25rem; min-width: 2.25rem; padding: 0 8px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--t-on-panel); }
-.toolbar .tb-btn:hover { background: color-mix(in srgb, var(--t-on-panel) 14%, transparent); border-color: transparent; }
+.toolbar .tb-btn:hover { background: var(--t-hover); border-color: transparent; }
 .toolbar .tb-btn.primary { background: var(--t-accent); color: var(--t-on-accent); font-weight: 600; padding: 0 12px 0 10px; }
 .toolbar .tb-btn.primary:hover { background: var(--t-accent); border-color: var(--t-on-accent); }
 .toolbar :focus-visible { outline-color: var(--t-on-panel); }
@@ -254,3 +260,17 @@ dialog.about { width: min(32rem, 94vw); }
 .seg-btn:first-child { border-radius: 8px 0 0 8px; }
 .seg-btn:last-child { border-radius: 0 8px 8px 0; margin-left: -1px; }
 .seg-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+
+/* Customize Theme */
+.customize-row { border: 0; margin: 0 0 14px; padding: 0; }
+.customize-row legend { font-weight: 600; font-size: 0.933rem; padding: 0; margin-bottom: 6px; }
+.swatches { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.swatch { width: 2rem; height: 2rem; padding: 0; border-radius: 999px; background: var(--c); border: 2px solid var(--line); }
+.swatch:hover { border-color: var(--ink); }
+.swatch[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--page), 0 0 0 4px var(--ink); }
+.swatch.none { background: linear-gradient(135deg, var(--page) 45%, var(--problem) 45% 55%, var(--page) 55%); }
+.custom-pick { display: inline-flex; gap: 6px; align-items: center; font-size: 0.933rem; }
+.custom-pick input { width: 2.5rem; height: 2rem; padding: 0; }
+.customize-sample { display: grid; grid-template-columns: 8rem minmax(0, 1fr); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+.customize-sample .panel { background: linear-gradient(var(--t-panel), var(--t-panel-end)); color: var(--t-on-panel); padding: 12px; font-weight: 600; border-right: 1px solid var(--t-panel-edge); }
+.customize-sample .page { background: var(--page); padding: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }

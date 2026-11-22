@@ -122,7 +122,9 @@
         field('Theme', themeSelect, 'The same themes as the other Recon Towers apps.'),
         h('div', { class: 'field check' }, glass, h('label', { for: 'pref-glass' }, 'Glass'), glassHelp),
         h('div', { class: 'field check' }, safe, h('label', { for: 'pref-safe' }, 'Colour-safe colours'),
-          h('p', { class: 'help' }, 'Blue, orange and purple instead of green, amber and red, so they stay apart with colour blindness.'))),
+          h('p', { class: 'help' }, 'Blue, orange and purple instead of green, amber and red, so they stay apart with colour blindness.')),
+        h('p', { class: 'row start' }, h('button', { type: 'button', id: 'pref-customize', onclick: () => { dialog.close(); AD.openCustomize(); } }, 'Customize Theme…'),
+          h('span', { class: 'help' }, 'Your own accent, panel and background colours.'))),
       h('section', null,
         h('h3', null, 'Text'),
         field('Font', fontSelect, 'Atkinson Hyperlegible is made to be easier to read.'),
@@ -140,7 +142,7 @@
         h('p', { class: 'help' }, 'Everything you have entered, as one JSON file and a spreadsheet for each kind of thing, and each report you imported as it was. It goes into a new folder inside the one you choose. Nothing secret is in it.'),
         h('div', { class: 'row start' }, h('button', { type: 'button', id: 'export-all', onclick: AD.exportAll }, 'Export everything…'))),
       h('div', { class: 'actions' },
-        h('button', { type: 'button', onclick: () => change({ theme: DEFAULT_SETTINGS.theme, glass: DEFAULT_SETTINGS.glass, colorSafe: DEFAULT_SETTINGS.colorSafe, uiFont: DEFAULT_SETTINGS.uiFont, textSize: DEFAULT_SETTINGS.textSize }) }, 'Back to the usual'),
+        h('button', { type: 'button', onclick: () => change({ theme: DEFAULT_SETTINGS.theme, glass: DEFAULT_SETTINGS.glass, colorSafe: DEFAULT_SETTINGS.colorSafe, uiFont: DEFAULT_SETTINGS.uiFont, textSize: DEFAULT_SETTINGS.textSize, brand: DEFAULT_SETTINGS.brand }) }, 'Back to the usual'),
         h('button', { type: 'button', class: 'primary', onclick: () => dialog.close() }, 'Done'))));
     dialog.id = 'preferences';
     dialog.addEventListener('close', () => document.removeEventListener('ad:look', followMenu));

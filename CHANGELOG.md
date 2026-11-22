@@ -29,6 +29,9 @@ build (`1.0.0-alpha.0`), that the app leaves alpha when the catalog is solid and
 - **An icon toolbar** across the top: Go to, New Book, Bring in books, the **theme button**, Preferences and Help Center. Each button has a name
   that shows when you hover and is read out by a screen reader, and a shortcut where there is one. The theme button is the moon, on every
   screen: it changes the theme (Follow System or any of the fifteen), Glass and colour-safe colours at once, and Escape closes it.
+- **Customize Theme**: your own accent, panel and background colours, from swatches or any colour, on every theme but High Contrast. The
+  words on a colour change only as much as it takes to stay readable, so no choice can leave something unreadable, and a test checks that
+  over hundreds of colours in every theme. Glass stays solid while your own panel or background colour is in use.
 - **The About window, in full**: the icon, the name and version (marked portable if it is), four links with a line saying where each goes
   (Website, What's new in this version, Report a problem or suggest a feature, Source code), a line of Electron, Chromium, Node and
   computer versions with a **Copy details** button for bug reports, where your library is kept, and links to the License and the

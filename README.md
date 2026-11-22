@@ -86,7 +86,7 @@ to open the app from *System Settings → Privacy & Security*.
 | **Go to** | `Ctrl+K` finds a screen or a book from a few letters, and starting with `>` runs any command from the menus by name, so the menus can stay short |
 | **Help and a tour** | A Help Center (`F1`) with short, searchable guides, and a tour of a made-up catalog that never touches your own books |
 | **Updates itself** | Looks for a newer version, test builds included, on Windows and the Linux AppImage. A Mac and the `.deb` are told and sent to the download page |
-| **Make it yours** | Fifteen themes, Glass, colour-safe colours, a choice of fonts and text size, in Preferences (`Ctrl+,`) |
+| **Make it yours** | Fifteen themes and Follow System, Glass, colour-safe colours, your own accent, panel and background colours, a choice of fonts and text size, from the theme button on every screen and in Preferences (`Ctrl+,`) |
 | **Private by default** | Your library is an encrypted database on your own computer |
 | **Works offline** | No account, no server, and nothing leaves your computer |
 

@@ -3,6 +3,9 @@
 // (src/shared/themes.js), which has RT Markdown Reader's and the old app's, plus Slate. Every theme but High Contrast has panels that run from one colour to another, with a bar that
 // contrasts with them. A theme with dark panels and a light page sets onPanel for the text on its panels.
 
+// Customize Theme's colours are checked by brand.js. The main process loads it as a module, and the window has already loaded it as a script.
+const themesBrand = typeof require === 'function' ? require('./brand') : window.ADBrand;
+
 const LIGHT_ALERT = { danger: '#b3261e', dangerBg: '#fbe9e7' };
 const DARK_ALERT = { danger: '#ffb4ab', dangerBg: '#4a1c18' };
 
@@ -120,6 +123,7 @@ const DEFAULT_SETTINGS = {
   colorSafe: false,
   uiFont: 'inter',
   textSize: 15,
+  brand: { accent: '', panel: '', background: '' }, // your own colours, from Customize Theme: each #rrggbb, or empty for the theme's own
   backupFolder: '',
   backupEvery: 'off',
   backupKeep: 10,
@@ -141,6 +145,7 @@ function cleanSettings(input) {
     theme: source.theme === 'system' ? 'system' : known(source.theme, THEMES, 'theme'),
     glass: source.glass === true,
     colorSafe: source.colorSafe === true,
+    brand: themesBrand.cleanBrand(source.brand),
     uiFont: known(source.uiFont, UI_FONTS, 'uiFont'),
     textSize: within('textSize'),
     backupFolder: typeof source.backupFolder === 'string' && source.backupFolder.length <= 1024 ? source.backupFolder : '',

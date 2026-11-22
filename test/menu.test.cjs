@@ -152,7 +152,7 @@ test('the commands the window is given are the ones with an action, where each i
   const registry = collectCommands(template);
   const list = commandList(registry);
   assert.ok(list.every((command) => command.click === undefined), 'the actions stay in the app');
-  for (const key of ['new-book', 'import-books', 'export-all', 'backup-now', 'preferences', 'help-center', 'tutorial', 'shortcuts', 'report-problem', 'check-updates', 'about', 'glass', 'theme-mist']) {
+  for (const key of ['new-book', 'import-books', 'export-all', 'backup-now', 'preferences', 'help-center', 'tutorial', 'shortcuts', 'report-problem', 'check-updates', 'about', 'glass', 'customize-theme', 'theme-mist']) {
     assert.ok(list.some((command) => command.key === key), key);
   }
   assert.ok(!list.some((command) => /quit|copy|paste|undo|zoom/i.test(command.key)), 'standard items are the menu\'s own');
