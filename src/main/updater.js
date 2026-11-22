@@ -44,8 +44,11 @@ function compareVersions(a, b) {
 const isNewer = (version, current) => compareVersions(version, current) > 0;
 
 class Updater {
-  constructor(onStatus) {
+  // `autoCheck()` is asked before each check that happens by itself (never before one the person asks for), so turning the setting off
+  // takes effect at once and the app then contacts no one.
+  constructor(onStatus, { autoCheck = () => true } = {}) {
     this.onStatus = onStatus;
+    this.autoCheck = autoCheck;
     this.status = { state: 'idle' };
     this.autoUpdater = null;
     this.running = false;
@@ -70,8 +73,12 @@ class Updater {
       this.autoUpdater.on('update-downloaded', (info) => this.emit({ state: 'ready', version: info.version }));
       this.autoUpdater.on('error', () => {});
     }
-    setTimeout(() => this.check(), FIRST_CHECK_MS);
-    setInterval(() => this.check(), CHECK_EVERY_MS).unref();
+    setTimeout(() => this.checkByItself(), FIRST_CHECK_MS);
+    setInterval(() => this.checkByItself(), CHECK_EVERY_MS).unref();
+  }
+
+  checkByItself() {
+    return this.autoCheck() ? this.check() : Promise.resolve({ state: 'off' });
   }
 
   emit(status) {

@@ -49,6 +49,7 @@
     const fontSelect = h('select', { id: 'pref-font', onchange: (e) => change({ uiFont: e.target.value }) }, options(UI_FONTS));
     const glass = h('input', { id: 'pref-glass', type: 'checkbox', onchange: (e) => change({ glass: e.target.checked }) });
     const safe = h('input', { id: 'pref-safe', type: 'checkbox', onchange: (e) => change({ colorSafe: e.target.checked }) });
+    const updates = h('input', { id: 'pref-updates', type: 'checkbox', onchange: (e) => change({ autoUpdate: e.target.checked }) });
     const [low, high] = LIMITS.textSize;
     const size = h('input', { id: 'pref-size', type: 'range', min: String(low), max: String(high), step: '1' });
     size.addEventListener('input', () => change({ textSize: Number(size.value) }));
@@ -105,6 +106,7 @@
       fontSelect.value = settings.uiFont;
       glass.checked = settings.glass;
       safe.checked = settings.colorSafe;
+      updates.checked = settings.autoUpdate;
       size.value = String(settings.textSize);
       sizeText.textContent = `${settings.textSize} px${settings.textSize === DEFAULT_SETTINGS.textSize ? ' (usual)' : ''}`;
       const flat = THEMES[AD.themeName(settings)].flat;
@@ -131,12 +133,16 @@
         h('div', { class: 'field' }, h('label', { for: 'pref-size' }, 'Text size'), h('div', { class: 'prefs-range' }, size, sizeText))),
       h('section', null,
         h('h3', null, 'Backups'),
-        h('p', { class: 'help' }, 'A backup is one closed file with your whole library in it, still encrypted, so it is safe in OneDrive or Dropbox. Nothing is backed up until you choose a folder.'),
+        h('p', { class: 'help' }, 'A backup is one file with your whole library and the key that opens it. It is not secret: anyone who has the file can open it with this app, so keep it where only you can reach. Nothing is backed up until you choose a folder.'),
         h('div', { class: 'row start' }, folder, h('button', { type: 'button', id: 'backup-choose', onclick: chooseFolder }, 'Choose folder…')),
         field('How often', every, 'A backup is only made when something has changed.'),
         field('Keep the newest', keep, 'Older backups in that folder are removed. Only files this app made are ever touched.'),
         h('div', { class: 'row start' }, h('button', { type: 'button', id: 'backup-now', onclick: backupNow }, 'Back up now'), h('button', { type: 'button', id: 'backup-restore', onclick: restore }, 'Restore from a backup…')),
         note),
+      h('section', null,
+        h('h3', null, 'Updates'),
+        h('div', { class: 'field check' }, updates, h('label', { for: 'pref-updates' }, 'Look for new versions by itself'),
+          h('p', { class: 'help' }, 'About every six hours, while the app is open, it asks GitHub whether a newer version has been released. Nothing from your library goes with the question. Turn this off and the app contacts no one. Help, then Check for Updates, still works whenever you choose.'))),
       h('section', null,
         h('h3', null, 'Get it all out'),
         h('p', { class: 'help' }, 'Everything you have entered, as one JSON file and a spreadsheet for each kind of thing, and each report you imported as it was. It goes into a new folder inside the one you choose. Nothing secret is in it.'),

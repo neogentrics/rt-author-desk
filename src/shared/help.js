@@ -21,7 +21,7 @@ const GUIDES = [
         'Look at [Clashes](go:clashes). It finds real problems and says what to do about each.',
       ] },
       { type: 'note', text: 'Want to look around first? [Take the tour](tour:start) of a made-up catalog. Nothing in it is yours, and leaving it puts everything back.' },
-      { type: 'p', text: 'Your library is stored encrypted on this computer, and nothing is sent anywhere. See [where your library is kept](help:library).' },
+      { type: 'p', text: 'Your library stays on this computer, and nothing you enter is ever sent anywhere. See [where your library is kept](help:library).' },
     ],
   },
   {
@@ -180,13 +180,13 @@ const GUIDES = [
       { type: 'h', text: 'Backups' },
       { type: 'ol', items: [
         'Open **Preferences** (Ctrl+,) and find **Backups**.',
-        'Choose a folder. A folder in OneDrive or Dropbox is a good choice, because a backup is one closed file that is safe there.',
+        'Choose a folder that only you can reach. One that OneDrive or Dropbox keeps is a good choice, because the copy then lives on another computer too. A backup is not secret: anyone who has the file can open it with this app.',
         'Choose how often. A backup is only made when something has changed, and the oldest ones are removed past the number you keep.',
         '**Back up now** makes one whenever you like.',
       ] },
       { type: 'h', text: 'Getting it all out' },
       { type: 'p', text: 'Choose **Export Everything…** in the File menu (Ctrl+E), or in Preferences. It makes a new folder inside the one you pick, with your whole library as one **JSON** file, a **spreadsheet (CSV)** for each kind of thing with names filled in beside the ids, and each sales report you imported as it was. Nothing secret is in it, but it holds your catalog in the open, so keep it somewhere private.' },
-      { type: 'p', text: 'A backup holds your whole library, still encrypted. To go back to one, choose **Restore from a backup…**. It tells you what is in it, and when you confirm, your library is replaced and the app starts again. The library you had is not deleted: it is kept in a folder beside it, so a restore can be undone by hand.' },
+      { type: 'p', text: 'A backup holds your whole library and the key that opens it. To go back to one, choose **Restore from a backup…**. It tells you what is in it, and when you confirm, your library is replaced and the app starts again. The library you had is not deleted: it is kept in a folder beside it, so a restore can be undone by hand.' },
     ],
   },
   {
@@ -233,12 +233,14 @@ const GUIDES = [
   {
     slug: 'library',
     title: 'Where your library is kept',
-    summary: 'It stays on this computer, encrypted.',
-    keywords: 'library privacy encrypted encryption data stored where folder offline private backup password',
+    summary: 'It stays on this computer. What the lock keeps out, and what it does not.',
+    keywords: 'library privacy encrypted encryption data stored where folder offline private backup password update updates github network internet',
     blocks: [
-      { type: 'p', text: 'Everything you enter is kept in one **encrypted database** in the app\'s own folder on this computer. There is no account, no server and no sign-in, and nothing is sent anywhere. It works with no internet.' },
+      { type: 'p', text: 'Everything you enter is kept in one **encrypted database** in the app\'s own folder on this computer. There is no account, no server and no sign-in, and nothing you enter is ever sent anywhere. It works with no internet.' },
       { type: 'ul', items: [
-        'Without a password set, any copy of this app can open it, so that is privacy from a casual look, not secrecy. A password comes in a later version.',
+        'Without a password set, the key that opens it is kept beside it, and it is the same in every copy of the app. That keeps the file from being read in another program. It does not keep out anyone who can use your computer account, or who gets a copy of the library with its key. It is privacy from a casual look, not secrecy. A password comes in a later version.',
+        'A **backup** is the library and its key in one file, so it is only as private as the place it is kept. Keep it in a folder that only you can reach.',
+        'The one thing the app contacts is GitHub. About every six hours it asks whether a newer version has been released, and nothing from your library goes with the question. Turn it off under **Updates** in Preferences. **Help, then Check for Updates** still works whenever you choose.',
         '**Help, then About** shows where the library is.',
         'Removing something leaves a marker for 90 days, and every change is logged. This is so the app can one day keep two computers in step.',
       ] },

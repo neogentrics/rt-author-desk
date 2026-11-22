@@ -82,18 +82,18 @@ anyway*), and macOS will ask you to open the app from *System Settings → Priva
 | **Clash checks** | Ten kinds of real problem, such as an ebook in an exclusive program that is also on sale elsewhere, a free store ISBN used at another store, or an editor credited on one store and left off another. Each can be dismissed with a reason |
 | **The release calendar** | Every dated release, soonest first |
 | **The Desk** | The home screen: the next release and what is in its way, and everything that needs you |
-| **Sales reports** (early, part of 1.1) | Choose an Amazon KDP orders or payments report and see what it holds before accepting it. Every row is accounted for, rows you already have are skipped, rows that match no book are asked about once, and a whole import can be undone. The original file is kept encrypted |
+| **Sales reports** (early, part of 1.1) | Choose an Amazon KDP orders or payments report and see what it holds before accepting it. Every row is accounted for, rows you already have are skipped, rows that match no book are asked about once, and a whole import can be undone. The original file is kept inside your library |
 | **Earned and paid** (early, part of 1.1) | What the reports say you earned, beside what the payment reports say you were paid, by currency and month. A report whose own total doesn't match its rows is flagged and never hidden |
 | **Royalties** (early, part of 1.1) | Added up by month, book, edition, store and marketplace, in any mix, always by currency. Estimates from the sales reports are kept apart from what the payment reports say was paid, and last month's earnings show on the Desk |
-| **Backups, Trash and export** | Backups to a folder you choose, as one closed encrypted file. Anything you remove waits 30 days in the Trash and comes back exactly. Everything can be exported as JSON and CSV, with your original reports |
+| **Backups, Trash and export** | Backups to a folder you choose, each one file holding the library and its key, so keep it where only you can reach. Anything you remove waits 30 days in the Trash and comes back exactly. Everything can be exported as JSON and CSV, with your original reports |
 | **Bring in your books** | From a CSV file, such as a Notion export: match the columns, check what it found, and bring them in. Every row is accounted for, a title you already have is skipped, and the whole import can be undone |
 | **Go to** | `Ctrl+K` finds a screen or a book from a few letters, and starting with `>` runs any command from the menus by name, so the menus can stay short |
 | **Help and a tour** | A Help Center (`F1`) with short, searchable guides, and a tour of a made-up catalog that never touches your own books |
-| **Updates itself** | Looks for a newer version, test builds included, on Windows and the Linux AppImage. A Mac and the `.deb` are told and sent to the download page |
+| **Updates itself** | Looks for a newer version every few hours, test builds included, on Windows and the Linux AppImage. A Mac and the `.deb` are told and sent to the download page. Turn it off in Preferences and the app contacts no one |
 | **Make it yours** | Fifteen themes and Follow System, Glass, colour-safe colours, your own accent, panel and background colours, a choice of fonts and text size, from the theme button on every screen and in Preferences (`Ctrl+,`) |
 | **For everyone** | Everything can be done from the keyboard, every control has a name for a screen reader, Windows high contrast works, every theme meets WCAG AA contrast, and colour-safe colours keep good news, checks and problems apart with colour blindness. Tests check all of it |
-| **Private by default** | Your library is an encrypted database on your own computer |
-| **Works offline** | No account, no server, and nothing leaves your computer |
+| **Private by default** | Your library is an encrypted database on your own computer. Until a password is set it keeps out a casual look, not someone who can use your account |
+| **Works offline** | No account, no server, and nothing you enter is ever sent anywhere. The one thing the app contacts is GitHub, to look for a newer version, and you can turn that off |
 
 Coming next: 1.1, the money: a royalty and pricing calculator, and readers for Barnes & Noble Press, ACX, Google Play
 Books and IngramSpark, which are waiting for a real report to build from. After that: the other stores, costs and profit per book,
@@ -111,7 +111,8 @@ launches, accounts and a locked vault for logins, links to the other Recon Tower
 ## How your library is kept
 
 Your whole library is one encrypted database in the app's own folder, with its own random key. With no password set, any copy
-of this app can open it, so that's privacy from a casual look, not secrecy. Every record has a permanent random ID, changes
+of this app can open it, so that's privacy from a casual look, not secrecy. A backup is the library with its key in one file, so it is
+only as private as the folder it sits in. Every record has a permanent random ID, changes
 are logged, and removals leave a marker for 90 days. The database is upgraded only forward, in numbered steps, and a backup
 copy is made before each one. Money is always a whole number of the currency's smallest unit, with its currency code beside
 it, never a decimal that can drift. The [data model](docs/design/data-model.md) and

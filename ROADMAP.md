@@ -101,7 +101,7 @@ to ship, and are listed under Ongoing.
 
 | Feature | Size | Details |
 |---|:-:|---|
-| Encrypted from the start | M | The library is an encrypted database that nothing else can read. |
+| Encrypted from the start | M | The library is an encrypted database, so another program can't read it just by opening the file. A password, in a later version, is what makes it a real lock. |
 | 🙋 Get it all out | M | Everything as CSV and JSON, at any time. |
 | Backups and Trash | M | On a schedule, to a folder you choose, plus Trash for 30 days. |
 | Installers & updates | M | Windows, Mac and Linux, as in RT Story Tracker. The app checks for updates itself, test builds included, so an installed test build updates to the next one. |

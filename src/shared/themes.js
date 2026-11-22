@@ -127,6 +127,7 @@ const DEFAULT_SETTINGS = {
   backupFolder: '',
   backupEvery: 'off',
   backupKeep: 10,
+  autoUpdate: true, // look for a newer version by itself, every few hours, from GitHub (nothing from the library is sent)
   welcomed: false,
 };
 
@@ -151,6 +152,7 @@ function cleanSettings(input) {
     backupFolder: typeof source.backupFolder === 'string' && source.backupFolder.length <= 1024 ? source.backupFolder : '',
     backupEvery: known(source.backupEvery, BACKUP_EVERY, 'backupEvery'),
     backupKeep: within('backupKeep'),
+    autoUpdate: source.autoUpdate !== false, // on unless it was turned off
     welcomed: source.welcomed === true,
   };
 }

@@ -13,7 +13,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
   published build, which is made from a clean copy of the repository, but a build made on a computer that has private files in the folder
   would have taken them along, and now cannot.
 
+### Added
+- **Look for new versions by itself** in Preferences, under Updates. It is on, as before, and when it is off the app contacts no one: it never asks
+  GitHub about a new version unless you choose Help, then Check for Updates. The design notes already said this could be turned off, and now it can.
+
+### Fixed
+- **The wording about privacy says what is true.** The app said "nothing is sent anywhere" and "a backup is safe in OneDrive or Dropbox". The
+  first left out that it asks GitHub about new versions (nothing from your library goes with the question), and the second was too much: a backup holds the
+  library and the key that opens it, and with no password set that key is the same wrapper in every copy of the app, so a backup is only as
+  private as the folder it is kept in. The welcome page, the Help Center, Preferences, the README, SECURITY.md and the design notes now say so.
+
 ### Security
+- **Files from outside are treated as hostile.** A review of how the app reads a sales report, a spreadsheet of books and a backup found and fixed:
+  a number cell that started with a minus could still be run as a formula when exported to a spreadsheet; a cell of tens of thousands of spaces made
+  the book import take half a minute; a sales report that declared an entity was read before it was refused; and a backup was trusted because it
+  opened, when anyone can make one that opens. A backup is now read only if it is the way this app writes one (not compressed, sizes that add up),
+  is a library of this app at a step it knows, and holds exactly the tables and indexes that step makes. One with a trigger, a view or a table of its
+  own is refused before anything is replaced. Tests make each of these files and watch them be refused.
+- **The window's locks are tested.** Only the top page of the app's own window may ask the main process for anything, every permission a page could ask
+  for is refused, every page the app makes is stopped from navigating or opening a window, the page policy forbids a changed base address and any form
+  sending, and a test fails if one of these is loosened, if a call is added that does not check where it came from, or if anything builds the page
+  from text. Invisible and direction-changing characters in the project's files are also refused by a test.
 - **The build pipeline can only do what it needs.** Every outside action is pinned to the exact commit it was checked at, the jobs that build
   can only read, a checkout no longer leaves the job's token where an installed dependency could read it, and only the last job, which
   publishes the release, may write.
@@ -100,8 +120,8 @@ build (`1.0.0-alpha.0`), that the app leaves alpha when the catalog is solid and
   id, name, **version** and the path to start it. It is written each time the app starts, so an update changes the version, and the Windows installer writes
   it too and takes it away on uninstall.
 
-- **Backups.** In Preferences, choose a folder and how often. A backup is one closed file with your whole library in it, still encrypted, so it is
-  safe in OneDrive or Dropbox. One is only made when something has changed, the oldest go past the number you keep, and **Back up now** makes one
+- **Backups.** In Preferences, choose a folder and how often. A backup is one file with your whole library and its key in it (so it is only as private as the
+  folder it is kept in). One is only made when something has changed, the oldest go past the number you keep, and **Back up now** makes one
   whenever you like. **Restore from a backup…** checks the file first, says what is in it, and keeps your current library to one side instead of deleting it.
 - **The Trash.** Removing a book, an edition or a listing moves it to the Trash for 30 days, and bringing it back returns it exactly as it was (the same
   records, ids and dates), with its prices, recordings and ISBNs. This also fixes recordings being left behind when an edition was removed.

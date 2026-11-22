@@ -37,12 +37,13 @@ if (selfTestArg) {
   let real = null; // { library, api, opened }: the person's own library
   let sample = null; // { library, api, dir }: the made-up catalog, while the tour or a look around is open
   let window = null;
+  let settings = null; // how the person likes things (the look, backups, whether to look for updates), made once the app is ready
   const active = () => sample ?? real;
   // A request is answered only when it comes from the app's own page (see window-security.js), and every handler below asks first.
   const fromApp = (event) => requestIsFromApp(event, window);
   const NOT_FROM_APP = { ok: false, message: 'That request did not come from the app.' };
 
-  const updater = new Updater((status) => window?.webContents.send('desk:menu', 'update-status', status));
+  const updater = new Updater((status) => window?.webContents.send('desk:menu', 'update-status', status), { autoCheck: () => settings?.values.autoUpdate !== false });
 
   const show = () => {
     if (window) {
@@ -204,7 +205,7 @@ if (selfTestArg) {
     });
 
     // How it looks lives beside the library, so it's right before anything is opened.
-    const settings = new Settings(app.getPath('userData'));
+    settings = new Settings(app.getPath('userData'));
     ipcMain.handle('desk:settings', (event) => (fromApp(event) ? settings.values : null));
     ipcMain.handle('desk:save-settings', (event, changes) => {
       if (!fromApp(event)) return null;

@@ -11,9 +11,15 @@ tags: [design, security]
 This app holds what an author keeps most private: earnings, logins and, if you turn it on, personal money. There are three levels of
 protection, and each one sits inside the last.
 
+**What is true today (1.0.0).** Only the first level exists. The library is an encrypted database, and with no password set its key is kept
+beside it in a file, wrapped with a key that is the same in every copy of the app. That stops another program reading the file by opening it. It does
+not stop anyone who can use your computer account, or who gets a copy of the library together with its key file, and a backup is exactly that, so a
+backup is only as private as the folder it is kept in. A password, which is what makes the lock real, comes in a later version. The vault and personal
+money are not built, and the rest of this page is the design for them, which gets an independent review before it ships.
+
 | Level | What's in it | How it's protected |
 |---|---|---|
-| **The library** | Catalog, reports, costs, launches, accounts | An encrypted database, with its key kept by the computer's login. A copied file is a garbled mess. A password on the whole app is optional |
+| **The library** | Catalog, reports, costs, launches, accounts | An encrypted database. Designed to have its key kept by the computer's login, so that a copied file is a garbled mess, and an optional password on the whole app. Today the key is kept beside it (see above) |
 | **Personal money** | Bank data, budget, bills and debts | Its own key. Off until you turn it on |
 | **The vault** | Logins | Its own password, always. It locks by itself |
 
@@ -25,7 +31,7 @@ protection, and each one sits inside the last.
 | Linked apps, through App Link | Published facts only | Never | Never |
 | Claude and other AI | At the level you set | Its own switch, off by default | Never, at any level |
 | Automations | What you choose to send | The feed folder coming in, nothing going out | Never |
-| Backups | ✅ Encrypted | ✅ Still under its own key | ✅ Still under its own key |
+| Backups | ✅ The library and its key, in one file, so only as private as the folder it is kept in | ✅ Still under its own key | ✅ Still under its own key |
 | Plain exports | ✅ | Only with its own unlock | Only by a deliberate export, with a warning |
 | Logs and crash reports | Never any private data | Never | Never |
 
@@ -94,4 +100,4 @@ computer. Keys are kept in the system's encrypted storage, as in RT Markdown Rea
 
 ## Network
 
-The app makes no connection unless you ask it to, except checking for updates, which you can turn off. There's no telemetry.
+The app makes no connection unless you ask it to, except checking for updates, which you can turn off in Preferences. That check asks GitHub whether a newer version exists and carries nothing from your library. There's no telemetry.

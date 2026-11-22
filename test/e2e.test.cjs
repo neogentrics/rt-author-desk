@@ -247,6 +247,22 @@ e2e('Preferences: choose a folder, back up now, and find a backup there that che
   assert.equal(info.version, require('../package.json').version);
 }, { env: { RTAD_TEST_FILES: JSON.stringify({ backupFolder }) } });
 
+// Looking for a new version is the one thing the app does on the network, so it has a switch, and the switch is kept.
+e2e('Preferences: looking for new versions can be turned off, and the choice is kept', async (app) => {
+  await app.run('void AD.openPreferences()');
+  await app.until("document.querySelector('#pref-updates')", 'the Updates section');
+  assert.equal(await app.run("document.querySelector('#pref-updates').checked"), true, 'on to begin with, as it always was');
+  assert.match(await app.run("document.querySelector('#pref-updates').closest('.field').textContent"), /GitHub[\s\S]*Nothing from your library/);
+  await app.click('#pref-updates');
+  await app.until("document.querySelector('#pref-updates').checked === false");
+  const saved = () => JSON.parse(fs.readFileSync(path.join(app.userData, 'settings.json'), 'utf8'));
+  for (let i = 0; i < 40 && saved().autoUpdate !== false; i += 1) await new Promise((resolve) => setTimeout(resolve, 100));
+  assert.equal(saved().autoUpdate, false, 'it was written down');
+  assert.equal((await app.run('window.desk.settings()')).autoUpdate, false);
+  await app.click('#pref-updates');
+  await app.until("document.querySelector('#pref-updates').checked === true");
+});
+
 // A backup made elsewhere, to restore. The test stops at the question: the restart that follows can't be watched from the page.
 const backupToRestore = (() => {
   const { Library } = require('../src/main/storage/library');

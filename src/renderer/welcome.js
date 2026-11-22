@@ -11,7 +11,7 @@
       h('strong', null, title), h('span', null, text));
 
     const dialog = AD.dialog('Welcome to RT Author Desk', h('div', { class: 'stack' },
-      h('p', { class: 'lead' }, 'The business side of being an author, on your own computer: your books, where they are sold, what they cost, and what needs you. Everything stays here, encrypted, and nothing is sent anywhere.'),
+      h('p', { class: 'lead' }, 'The business side of being an author, on your own computer: your books, where they are sold, what they cost, and what needs you. Everything stays on this computer, and nothing you enter is ever sent anywhere.'),
       h('p', null, 'How would you like to begin?'),
       h('div', { class: 'choices' },
         option('Start my own catalog', 'Add your first book. A title is enough to begin.', () => AD.addBook(), true),
