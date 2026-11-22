@@ -19,13 +19,16 @@ const validId = (id) => typeof id === 'string' && /^[a-z0-9][a-z0-9-]{0,63}$/.te
 const clean = (text, fallback = '') => (typeof text === 'string' ? text.replace(/[\u0000-\u001f\u007f-\u009f‎‏‪-‮⁦-⁩]/g, '').trim().slice(0, 80) : '') || fallback;
 const isMacBundle = (file) => /\.app$/i.test(file);
 
-// Where the suite's apps leave their small files, the same place on every system and in every app.
+// Where the suite's apps leave their small files, the same place on every system and in every app. A path is written the way the system
+// it is for writes it (backslashes for Windows, slashes for the rest), whichever system this is running on, so the answer for one system
+// is the same wherever it is asked.
 function sharedFolder({ env = process.env, platform = process.platform, home }) {
   if (env.NMR_LINK_DIR) return env.NMR_LINK_DIR;
-  const base = platform === 'win32' ? env.APPDATA || path.join(home, 'AppData', 'Roaming')
-    : platform === 'darwin' ? path.join(home, 'Library', 'Application Support')
-      : env.XDG_CONFIG_HOME || path.join(home, '.config');
-  return path.join(base, 'Recon Towers', 'app-link');
+  const join = (platform === 'win32' ? path.win32 : path.posix).join;
+  const base = platform === 'win32' ? env.APPDATA || join(home, 'AppData', 'Roaming')
+    : platform === 'darwin' ? join(home, 'Library', 'Application Support')
+      : env.XDG_CONFIG_HOME || join(home, '.config');
+  return join(base, 'Recon Towers', 'app-link');
 }
 
 // The thing to start: on a Mac the .app that holds the running program, elsewhere the program itself. An AppImage is

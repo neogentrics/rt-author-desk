@@ -80,8 +80,9 @@ test('what to start: the AppImage, the .app on a Mac, or the program', () => {
 });
 
 test('the shared folder is the same place for every Recon Towers app', () => {
-  assert.equal(sharedFolder({ env: {}, platform: 'win32', home: 'C:\\Users\\me' }), path.join('C:\\Users\\me', 'AppData', 'Roaming', 'Recon Towers', 'app-link'));
-  assert.equal(sharedFolder({ env: { APPDATA: 'D:\\Roaming' }, platform: 'win32', home: 'x' }), path.join('D:\\Roaming', 'Recon Towers', 'app-link'));
+  // Each is written the way its own system writes it, whichever system the test runs on (the Windows one has backslashes everywhere).
+  assert.equal(sharedFolder({ env: {}, platform: 'win32', home: 'C:\\Users\\me' }), 'C:\\Users\\me\\AppData\\Roaming\\Recon Towers\\app-link');
+  assert.equal(sharedFolder({ env: { APPDATA: 'D:\\Roaming' }, platform: 'win32', home: 'x' }), 'D:\\Roaming\\Recon Towers\\app-link');
   assert.equal(sharedFolder({ env: {}, platform: 'darwin', home: '/Users/me' }), '/Users/me/Library/Application Support/Recon Towers/app-link');
   assert.equal(sharedFolder({ env: {}, platform: 'linux', home: '/home/me' }), '/home/me/.config/Recon Towers/app-link');
   assert.equal(sharedFolder({ env: { XDG_CONFIG_HOME: '/cfg' }, platform: 'linux', home: '/home/me' }), '/cfg/Recon Towers/app-link');
