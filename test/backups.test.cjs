@@ -55,18 +55,18 @@ test('a file that is not a backup, a damaged one, one that is missing a part, an
   const parts = unzipSync(new Uint8Array(fs.readFileSync(made.file)));
   const without = { ...parts };
   delete without['keys.json'];
-  refused(() => verifyBackup(write('b.rtadbackup', Buffer.from(zipSync(without)))), /part of it is missing/);
+  refused(() => verifyBackup(write('b.rtadbackup', Buffer.from(zipSync(without, { level: 0 })))), /part of it is missing/);
 
   const other = { ...parts, 'backup.json': strToU8(JSON.stringify({ app: 'rt-story-tracker', format: 1, step: 1 })) };
-  refused(() => verifyBackup(write('c.rtadbackup', Buffer.from(zipSync(other)))), /different app/);
+  refused(() => verifyBackup(write('c.rtadbackup', Buffer.from(zipSync(other, { level: 0 })))), /different app/);
 
   const newer = { ...parts, 'backup.json': strToU8(JSON.stringify({ app: 'rt-author-desk', format: 1, step: 999 })) };
-  refused(() => verifyBackup(write('d.rtadbackup', Buffer.from(zipSync(newer)))), /newer version of RT Author Desk/);
+  refused(() => verifyBackup(write('d.rtadbackup', Buffer.from(zipSync(newer, { level: 0 })))), /newer version of RT Author Desk/);
 
   const bad = Buffer.from(parts['library.db']);
   for (let i = 4096; i < Math.min(bad.length, 12288); i += 1) bad[i] ^= 0xff; // scribble over some pages
   const damaged = { ...parts, 'library.db': new Uint8Array(bad) };
-  refused(() => verifyBackup(write('e.rtadbackup', Buffer.from(zipSync(damaged)))), /damaged|can't be opened/);
+  refused(() => verifyBackup(write('e.rtadbackup', Buffer.from(zipSync(damaged, { level: 0 })))), /damaged|can't be opened/);
   library.close();
 });
 

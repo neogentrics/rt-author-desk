@@ -229,7 +229,7 @@ test('the export holds people and credits, with names beside the ids', () => {
   const { library, catalog, kdp, edited } = shelf();
   catalog.setListingCredits(kdp.id, [edited.id]);
   const made = exportAll(library, temp(), { now: () => new Date(2027, 0, 10, 9, 0, 0), version: '1.0.0' });
-  const read = (name) => parseCsv(fs.readFileSync(path.join(made.folder, 'csv', name), 'utf8').replace(/^﻿/, ''));
+  const read = (name) => parseCsv(fs.readFileSync(path.join(made.folder, 'csv', name), 'utf8').replace(/^\uFEFF/, ''));
   const [header, row] = read('credits.csv');
   const at = (rows, col) => rows.indexOf(col);
   assert.ok(header.includes('person_name') && header.includes('edition'));

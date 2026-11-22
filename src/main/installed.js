@@ -16,7 +16,7 @@ const FOLDER = 'installed';
 const MAX_PATH = 1024;
 
 const validId = (id) => typeof id === 'string' && /^[a-z0-9][a-z0-9-]{0,63}$/.test(id);
-const clean = (text, fallback = '') => (typeof text === 'string' ? text.replace(/[\u0000-\u001f\u007f-\u009f‎‏‪-‮⁦-⁩]/g, '').trim().slice(0, 80) : '') || fallback;
+const clean = (text, fallback = '') => (typeof text === 'string' ? text.replace(/[\u0000-\u001f\u007f-\u009f\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, '').trim().slice(0, 80) : '') || fallback;
 const isMacBundle = (file) => /\.app$/i.test(file);
 
 // Where the suite's apps leave their small files, the same place on every system and in every app. A path is written the way the system

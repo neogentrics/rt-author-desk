@@ -2,11 +2,12 @@
 // Backups. A backup is one closed file: the encrypted library, the key slots that open it, and a note of what it holds. It is
 // safe to leave in OneDrive or Dropbox, where a live database isn't, and it is checked before anything is ever replaced.
 // Nothing runs on a schedule until a folder is chosen.
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { strFromU8, strToU8, unzipSync, zipSync } = require('fflate');
-const { copyDatabase, openDatabase } = require('./storage/database');
+const { APPLICATION_ID, copyDatabase, migrate, openDatabase } = require('./storage/database');
 const { KEY_FILE, openWithAppSlot, writeFileSafely } = require('./storage/keys');
 const { DATABASE_FILE } = require('./storage/library');
 const { STEPS } = require('./storage/schema');
@@ -15,7 +16,6 @@ const APP = 'rt-author-desk';
 const ENDING = '.rtadbackup';
 const PREFIX = 'RT Author Desk backup ';
 const NOTE = 'backup.json';
-const MAX_UNZIPPED = 4 * 1024 ** 3;
 const EVERY_MS = { hour: 3_600_000, day: 86_400_000, week: 604_800_000 };
 const CHECK_MS = 10 * 60 * 1000;
 const FIRST_CHECK_MS = 30 * 1000;
@@ -79,12 +79,38 @@ function createBackup(library, folder, { now = () => new Date(), version = '' } 
   }
 }
 
+// The three parts of a backup, read with the sizes in the file checked and not trusted. This app writes a backup uncompressed, so each part's two
+// sizes are the same and none can be bigger than the file it is in. A file that says otherwise was not made by this app, and its sizes must not
+// be used to ask for memory: a made-up file could name several gigabytes for each part.
+function readParts(bytes) {
+  return unzipSync(bytes, {
+    filter: (entry) => {
+      if (![NOTE, KEY_FILE, DATABASE_FILE].includes(entry.name)) return false;
+      if (entry.compression !== 0 || entry.size !== entry.originalSize || entry.originalSize > bytes.length) throw new BackupError('The sizes in that file do not add up.');
+      return true;
+    },
+  });
+}
+
+// What a library at this step holds, and nothing more: its tables and their indexes. It is made fresh, so it is exactly what this app makes.
+function expectedObjects(step, work) {
+  const file = path.join(work, 'expected.db');
+  const key = crypto.randomBytes(32);
+  const fresh = openDatabase(file, key);
+  try {
+    migrate(fresh, file, { steps: STEPS.filter((s) => s.version <= step) });
+    return new Set(fresh.prepare('SELECT type, name FROM sqlite_master').all().map((o) => `${o.type}:${o.name}`));
+  } finally {
+    fresh.close();
+    key.fill(0);
+  }
+}
+
 // Opens a backup far enough to be sure it is a whole, working library from this app, and says what's in it. Nothing is changed.
 function verifyBackup(file) {
   let files;
   try {
-    const bytes = fs.readFileSync(file);
-    files = unzipSync(new Uint8Array(bytes), { filter: (entry) => [NOTE, KEY_FILE, DATABASE_FILE].includes(entry.name) && entry.originalSize <= MAX_UNZIPPED });
+    files = readParts(new Uint8Array(fs.readFileSync(file)));
   } catch (error) {
     throw new BackupError("That file isn't a backup this app made, or it has been damaged.");
   }
@@ -119,6 +145,16 @@ function verifyBackup(file) {
     }
     const checked = db.pragma('integrity_check', { simple: true });
     if (checked !== 'ok') throw new BackupError('That backup is damaged: the library inside it fails its own check.');
+    // Its key is the app's own, which anyone can make a pair with, so a file that opens proves nothing about who made it. What is in it is
+    // checked instead: it must be a library of this app at a step this app knows, holding the tables and indexes that step makes and nothing
+    // else. A database with a trigger, a view or a table of its own is one this app never made, and is refused before it is ever used.
+    const step = db.pragma('user_version', { simple: true });
+    if (!Number.isInteger(step) || step < 1 || step > latest || db.pragma('application_id', { simple: true }) !== APPLICATION_ID) {
+      throw new BackupError("That file isn't a library made by this app.");
+    }
+    const expected = expectedObjects(step, work);
+    const strange = db.prepare('SELECT type, name FROM sqlite_master').all().filter((o) => !expected.has(`${o.type}:${o.name}`));
+    if (strange.length) throw new BackupError('That backup has things in it that this app never makes (such as a trigger, a view or a table of its own), so it was not made by this app, and it is not safe to open.');
     return { ...note, holds: summarize(db), bytes: fs.statSync(file).size };
   } finally {
     db?.close();
@@ -130,7 +166,7 @@ function verifyBackup(file) {
 // restore can be undone by hand. If anything goes wrong part way, the library is put back as it was.
 function restoreBackup({ userData, file, now = () => new Date() }) {
   const info = verifyBackup(file);
-  const files = unzipSync(new Uint8Array(fs.readFileSync(file)), { filter: (entry) => [KEY_FILE, DATABASE_FILE].includes(entry.name) });
+  const files = readParts(new Uint8Array(fs.readFileSync(file)));
   const live = path.join(userData, 'library');
   const aside = path.join(userData, `library-before-restore-${stamp(now())}`);
   const moved = fs.existsSync(live);

@@ -27,7 +27,7 @@ const NOTION = [
 function start(csv = NOTION) {
   const library = new Library(temp()).open();
   const importer = new BookImporter(library);
-  const opened = importer.open(Buffer.from(`﻿${csv}`, 'utf8'), 'books.csv');
+  const opened = importer.open(Buffer.from(`\uFEFF${csv}`, 'utf8'), 'books.csv');
   const mapping = opened.guess;
   return { library, importer, opened, mapping, args: { id: opened.id, mapping } };
 }

@@ -60,10 +60,13 @@ const FORMAT_PHRASES = [...FORMAT_LOOKUP.keys()].sort((a, b) => b.length - a.len
 
 // A value from a Notion relation looks like "The Tidewater Books (https://www.notion.so/The-Tidewater-Books-ab12...)". The page
 // address is dropped. Two related pages in one cell leave only the first, and the row says so.
+// A name, a series or a date is short, and a spreadsheet cell can hold 32,767 characters at most, so what is matched is cut to a few thousand:
+// a hostile file with a cell of tens of thousands of spaces or brackets cannot make the matching crawl.
+const MATCHED = 4000;
 function cleanRelation(text) {
-  const raw = String(text ?? '');
-  const links = raw.match(/\s*\(https?:\/\/[^)]*\)/g) ?? [];
-  const name = raw.replace(/\s*\(https?:\/\/[^)]*\)/g, '|').split('|')[0].trim().replace(/\s+/g, ' ');
+  const raw = String(text ?? '').slice(0, MATCHED);
+  const links = raw.match(/\(https?:\/\/[^)]*\)/g) ?? [];
+  const name = raw.replace(/\(https?:\/\/[^)]*\)/g, '|').split('|')[0].trim().replace(/\s+/g, ' ');
   return { name, several: links.length > 1 };
 }
 
@@ -78,7 +81,7 @@ const pad = (n) => String(n).padStart(2, '0');
 // A date as people write it. A range such as "November 18, 2026 → November 25, 2026" is its first day. Slashes are the one
 // thing that can't be told by looking, so the person says which comes first, and the preview shows what was understood.
 function parseDateText(text, order = 'month-first') {
-  const first = String(text ?? '').split(/\s*(?:→|->|–|—| to )\s*/)[0].trim();
+  const first = String(text ?? '').slice(0, 200).split(/(?:→|->|–|—| to )/)[0].trim();
   if (!first) return { iso: null, empty: true };
   let year; let month; let day;
   let m;

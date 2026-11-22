@@ -36,7 +36,7 @@ class CsvError extends Error {
 }
 
 // Rows of cells. A row that is nothing but empty cells is dropped. A quote that never closes is an error, not a guess.
-function parseCsv(text, { delimiter = detectDelimiter(text), maxRows = 100_000, maxCell = 100_000 } = {}) {
+function parseCsv(text, { delimiter = detectDelimiter(text), maxRows = 100_000, maxCell = 32_767 } = {}) {
   const rows = [];
   let row = [];
   let cell = '';
@@ -78,8 +78,9 @@ function parseCsv(text, { delimiter = detectDelimiter(text), maxRows = 100_000, 
 function stringifyCsv(rows, { delimiter = ',', safe = true } = {}) {
   const cell = (value) => {
     let text = value === null || value === undefined ? '' : String(value);
-    if (safe && /^[=+@\t\r]/.test(text)) text = `'${text}`;
-    else if (safe && /^-[^0-9.,\s]/.test(text)) text = `'${text}`;
+    // A leading minus is only left alone on a plain number (-12.99, -1,234.50). Anything else that starts with one, such as -1+1 or
+    // -2+3+cmd|'/C calc'!A0, could be run as a formula.
+    if (safe && (/^[=+@\t\r]/.test(text) || (text.startsWith('-') && !/^-\d+(?:[.,]\d+)*$/.test(text)))) text = `'${text}`;
     return /["\r\n]/.test(text) || text.includes(delimiter) || /^\s|\s$/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
   };
   return `${rows.map((row) => row.map(cell).join(delimiter)).join('\r\n')}\r\n`;

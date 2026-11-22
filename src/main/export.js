@@ -127,7 +127,7 @@ function exportAll(library, parent, { now = () => new Date(), version = '' } = {
         const more = extra[table]?.(row) ?? {};
         return [...columns.map((c) => (table === 'trash_items' && c === 'payload' ? row.payload : row[c])), ...added.map((c) => more[c])];
       })];
-      fs.writeFileSync(path.join(folder, 'csv', `${table.replace(/_/g, '-')}.csv`), `﻿${stringifyCsv(lines)}`);
+      fs.writeFileSync(path.join(folder, 'csv', `${table.replace(/_/g, '-')}.csv`), `\uFEFF${stringifyCsv(lines)}`);
     }
     const info = library.info();
     fs.writeFileSync(path.join(folder, 'library.json'), `${JSON.stringify({

@@ -38,7 +38,7 @@ test('limits stop a file that is not a spreadsheet', () => {
 });
 
 test('text is read as UTF-8 with or without a byte order mark, or as Windows-1252 when it is not UTF-8', () => {
-  assert.equal(decodeText(Buffer.from('﻿Title,Café\n', 'utf8')).text, 'Title,Café\n');
+  assert.equal(decodeText(Buffer.from('\uFEFFTitle,Café\n', 'utf8')).text, 'Title,Café\n');
   assert.equal(decodeText(Buffer.from('Title,Café\n', 'utf8')).encoding, 'UTF-8');
   const old = Buffer.from([0x43, 0x61, 0x66, 0xe9, 0x20, 0x92]); // "Café ’" in Windows-1252
   assert.deepEqual([decodeText(old).text, decodeText(old).encoding], ['Café ’', 'Windows-1252']);

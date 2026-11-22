@@ -5,7 +5,7 @@
 const { unzipSync, strFromU8 } = require('fflate');
 const { XMLParser } = require('fast-xml-parser');
 
-const MAX_UNZIPPED = 200 * 1024 * 1024; // A sales report is a few MB. Anything near this is refused, not read.
+const MAX_UNZIPPED = 100 * 1024 * 1024; // A sales report is a few MB. Anything near this is refused, not read.
 
 class WorkbookError extends Error {
   constructor(message) {
@@ -59,7 +59,14 @@ function readWorkbook(buffer) {
     if (error instanceof WorkbookError) throw error;
     throw new WorkbookError('This isn\'t an Excel workbook (.xlsx), or it\'s damaged.');
   }
-  const xml = (name) => (files[name] ? parser.parse(strFromU8(files[name])) : null);
+  const xml = (name) => {
+    if (!files[name]) return null;
+    const source = strFromU8(files[name]);
+    // The parts of a real workbook never declare a document type or an entity, so one that does is not a workbook. It is refused before it
+    // is parsed, which also means nothing can be made to expand into something huge.
+    if (/<!(?:DOCTYPE|ENTITY)/i.test(source)) throw new WorkbookError('This isn\'t an Excel workbook (.xlsx), or it\'s damaged.');
+    return parser.parse(source);
+  };
   const workbook = xml('xl/workbook.xml');
   if (!workbook) throw new WorkbookError('This isn\'t an Excel workbook (.xlsx).');
 
