@@ -52,10 +52,16 @@ jobs:
         include:
           - os: windows-latest
             dist: dist:win
+            app: release/win-unpacked/RT Author Desk.exe
+            window: node --test test/packaged.test.cjs
           - os: ubuntu-latest
             dist: dist:linux
+            app: release/linux-unpacked/rt-author-desk
+            window: xvfb-run -a node --test test/packaged.test.cjs
           - os: macos-latest
             dist: dist:mac
+            app: release/mac-arm64/RT Author Desk.app/Contents/MacOS/RT Author Desk
+            window: node --test test/packaged.test.cjs
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -68,6 +74,12 @@ jobs:
       - run: npm run ${{ matrix.dist }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      # The self-test below has no window, so this opens the built app's window and checks that it draws: the toolbar, the sidebar, the
+      # icons, the fonts and the first screen, with nothing wrong in the console. A build that left out a file the window needs fails here.
+      - name: Open the built app's window
+        run: ${{ matrix.window }}
+        env:
+          RTAD_PACKAGED_APP: ${{ github.workspace }}/${{ matrix.app }}
       - run: npm run check:install
       - name: Keep the test results
         if: always()

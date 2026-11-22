@@ -6,6 +6,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Changed
+- **The app no longer carries the project's own docs, tests and scripts.** Version 1.0.0 shipped the whole project folder inside the app (its
+  docs, tests, scripts and notes, about 4 MB more than needed). A built app now holds only its source, its dependencies, its package file and its
+  two license files, and a test, the built app's own self-test and the pipeline check that it stays that way. Nothing private was ever in a
+  published build, which is made from a clean copy of the repository, but a build made on a computer that has private files in the folder
+  would have taken them along, and now cannot.
+
+### Security
+- **The build pipeline can only do what it needs.** Every outside action is pinned to the exact commit it was checked at, the jobs that build
+  can only read, a checkout no longer leaves the job's token where an installed dependency could read it, and only the last job, which
+  publishes the release, may write.
+- **Nothing in the environment can change where an installed app looks for updates.** It always asks this project's GitHub Releases. A
+  variable left over from another app could have named a local server, and is removed. The other test hooks that are read from the environment
+  are ignored by an installed copy.
+- **The window of every build is opened and checked before anything is published**, on Windows, Mac and Linux, so a build that opens blank
+  cannot go out.
+
 ## [1.0.0] - 2026-11-22
 
 The catalog. Version 1.0 is the catalog and everything needed to run it on a computer every day. The owner decided, after trying the first test

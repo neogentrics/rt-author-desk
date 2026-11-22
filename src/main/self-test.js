@@ -123,6 +123,14 @@ function runChecks(dir, version) {
   const { aboutLinks, detailsText } = require('../shared/about');
   check('About has its links and its details', aboutLinks('1.0.0').length === 4 && detailsText({ version: '1', electron: '1', chrome: '1', node: '1', os: 'x' }).split('\n').length === 3);
   check('the icon About shows is in the build', fs.existsSync(path.join(__dirname, '..', 'renderer', 'icon.svg')));
+  // A built copy holds only the app: its source, its dependencies, its package file and its two license files, and none of the project's docs,
+  // tests or scripts (nor anything private that happens to be in the folder it was built from). Run from the source, the whole folder is
+  // there, so this is only asked of a built copy.
+  const root = path.join(__dirname, '..', '..');
+  if (/app\.asar$/.test(root)) {
+    const found = fs.readdirSync(root).sort();
+    check('the app carries only what it needs', JSON.stringify(found) === JSON.stringify(['LICENSE', 'THIRD_PARTY_NOTICES.md', 'node_modules', 'package.json', 'src']), found.join(' '));
+  }
 
   return { checks, versions: { sqlite: info.sqlite, cipher: info.cipher, step: info.step } };
 }

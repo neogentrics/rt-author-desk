@@ -4,7 +4,8 @@ Thanks for your interest in RT Author Desk!
 
 This is **proprietary software** (see [LICENSE](LICENSE)). The source is public for transparency, but
 **code contributions are by invitation only**. Please don't open pull requests unless you've been
-asked to.
+asked to. The repository is set so that only invited collaborators can open one, so nothing is merged
+without the owner's say, and nothing can be added to a release by anyone else.
 
 You are very welcome to:
 

@@ -21,7 +21,8 @@ function freePort() {
   });
 }
 
-async function launch({ seed, env: extraEnv = {}, userData: given = null, welcome = false } = {}) {
+// `packaged` is the path of an installed (or unpacked) build to run instead of the source, so the window of the real thing can be checked.
+async function launch({ seed, env: extraEnv = {}, userData: given = null, welcome = false, packaged = null } = {}) {
   const userData = given ?? fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-e2e-'));
   // Most tests aren't about the welcome, so they start with it already seen. A test that is passes welcome: true.
   if (!welcome && !fs.existsSync(path.join(userData, 'settings.json'))) fs.writeFileSync(path.join(userData, 'settings.json'), '{ "welcomed": true }\n');
@@ -29,8 +30,8 @@ async function launch({ seed, env: extraEnv = {}, userData: given = null, welcom
   const port = await freePort();
   const env = { ...process.env, ...extraEnv };
   delete env.ELECTRON_RUN_AS_NODE;
-  const electron = require('electron');
-  const app = spawn(electron, [repo, '--no-sandbox', `--remote-debugging-port=${port}`, `--user-data-dir=${userData}`], { env, stdio: 'ignore' });
+  const electron = packaged ?? require('electron');
+  const app = spawn(electron, [...(packaged ? [] : [repo]), '--no-sandbox', `--remote-debugging-port=${port}`, `--user-data-dir=${userData}`], { env, stdio: 'ignore' });
   let target;
   for (let i = 0; i < 80 && !target; i += 1) {
     await sleep(250);
@@ -130,7 +131,15 @@ async function launch({ seed, env: extraEnv = {}, userData: given = null, welcom
       if (!given) fs.rmSync(userData, { recursive: true, force: true, maxRetries: 3 });
     },
   };
-  await page.until("window.AD && AD.routes && document.getElementById('nav')?.children.length > 0", 'the app to open');
+  try {
+    await page.until("window.AD && AD.routes && document.getElementById('nav')?.children.length > 0", 'the app to open');
+  } catch (error) {
+    // An app that never drew its page must not be left running, or the test run waits for it for ever.
+    try { ws.close(); } catch { /* already gone */ }
+    app.kill();
+    error.message += ` The page reported: ${problems.slice(0, 3).join(' | ') || 'nothing'}`;
+    throw error;
+  }
   return page;
 }
 

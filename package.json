@@ -29,7 +29,9 @@
     "check:install": "node scripts/check-install.cjs",
     "icons": "electron scripts/make-icons.cjs",
     "test:e2e": "node --test test/e2e.test.cjs",
-    "screenshots": "node scripts/screenshots.cjs"
+    "screenshots": "node scripts/screenshots.cjs",
+    "test:packaged": "node --test test/packaged.test.cjs",
+    "notices": "node scripts/make-notices.cjs"
   },
   "build": {
     "appId": "com.recontowers.authordesk",
@@ -45,6 +47,7 @@
       "src/renderer/**",
       "package.json",
       "LICENSE",
+      "THIRD_PARTY_NOTICES.md",
       "!node_modules/node-addon-api/**",
       "!node_modules/better-sqlite3-multiple-ciphers/deps/**",
       "!node_modules/better-sqlite3-multiple-ciphers/src/**",
@@ -57,6 +60,12 @@
         "portable"
       ],
       "files": [
+        "src/main/**",
+        "src/shared/**",
+        "src/renderer/**",
+        "package.json",
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/darwin-*",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/linux*",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/win32-arm64.node"
@@ -84,6 +93,12 @@
       "identity": "-",
       "hardenedRuntime": false,
       "files": [
+        "src/main/**",
+        "src/shared/**",
+        "src/renderer/**",
+        "package.json",
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/win32-*",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/linux*"
       ]
@@ -101,6 +116,12 @@
       "maintainer": "Recon Towers Dev Department <author@neogentrics.com>",
       "synopsis": "The business side of being an author",
       "files": [
+        "src/main/**",
+        "src/shared/**",
+        "src/renderer/**",
+        "package.json",
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/win32-*",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/darwin-*",
         "!node_modules/better-sqlite3-multiple-ciphers/prebuilds/linux*arm64.node"
