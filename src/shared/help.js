@@ -246,11 +246,15 @@ const GUIDES = [
   {
     slug: 'shortcuts',
     title: 'Keyboard shortcuts',
-    summary: 'The shortcuts for the menu and the screens.',
-    keywords: 'keyboard shortcut keys ctrl cmd hotkey',
+    summary: 'The shortcuts for the menu and the screens, and how to run any command by name.',
+    keywords: 'keyboard shortcut keys ctrl cmd hotkey go to command palette find a command',
     blocks: [
       { type: 'ul', items: [
-        '**Ctrl+N** (Cmd+N on a Mac): add a book',
+        '**Ctrl+K** (Cmd+K on a Mac): Go to. Type a few letters of a screen or a book, and press Enter',
+        '**Ctrl+Shift+K** (Cmd+Shift+K): Find a Command, which is Go to with the > already typed',
+        '**Ctrl+N** (Cmd+N): add a book',
+        '**Ctrl+Shift+I** (Cmd+Shift+I): bring in books from a file',
+        '**Ctrl+E** (Cmd+E): export everything',
         '**Ctrl+,** (Cmd+,): Preferences',
         '**F1**: this Help Center',
         '**Ctrl+1, Ctrl+2, Ctrl+3**: the Desk, Books and Calendar',
@@ -258,6 +262,9 @@ const GUIDES = [
         '**F11**: full screen',
         '**Esc**: close a window that has opened over the page',
       ] },
+      { type: 'h', text: 'Any command, by name' },
+      { type: 'p', text: 'Every command in the menus can also be run from **Go to**. Press Ctrl+K, type **>**, then a few letters of what you want: **>dark** changes the theme, **>back up** backs up, and **>new book** opens the form. Each result says which menu it is in and what its shortcut is. Something that is on or off says which.' },
+      { type: 'note', text: 'The menus are kept short on purpose. If you cannot find a command in them, it is here.' },
     ],
   },
   {

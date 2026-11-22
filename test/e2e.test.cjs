@@ -452,3 +452,115 @@ e2e('someone is credited on an edition, a store\'s credits are written down, and
   await app.until("document.getElementById('toast') && !document.getElementById('toast').hidden", 'a message');
   assert.match(await app.run("document.getElementById('toast').textContent"), /credited on 1 edition/);
 });
+
+// ---- Go to, and the commands in the menus ----
+
+const paletteRows = (app) => app.run("[...document.querySelectorAll('#palette-list li')].map((li) => ({ label: li.querySelector('.pi-label')?.textContent ?? li.textContent, detail: li.querySelector('.pi-detail')?.textContent ?? '', selected: li.getAttribute('aria-selected') }))");
+const openPalette = async (app, keys = { ctrl: true }) => {
+  await app.key('k', keys);
+  await app.until("document.querySelector('dialog#palette[open]') && document.activeElement?.id === 'palette-input'", 'Go to to open with its box ready');
+};
+
+e2e('Ctrl+K opens Go to, a few letters find a screen or a book, Enter goes there, and Escape puts you back where you were', async (app) => {
+  const book = await app.call('saveBook', { title: 'Tidewater' });
+  await app.call('saveBook', { title: 'Low Water' });
+  await app.run("document.querySelector('#nav a[href=\"#/books\"]').focus()");
+  await openPalette(app);
+  assert.equal(await app.run("document.querySelector('#palette-input').getAttribute('role')"), 'combobox');
+  await app.until("document.querySelectorAll('#palette-list li').length === 12", 'ten screens and two books');
+  let rows = await paletteRows(app);
+  assert.deepEqual(rows.slice(0, 3).map((r) => r.label), ['Desk', 'Books', 'Audiobooks'], 'screens first, in the sidebar\'s order');
+  assert.equal(rows.at(-1).detail, 'Book');
+
+  // Arrow keys move the choice, and the box says which one (for a screen reader) as well as showing it.
+  await app.key('ArrowDown');
+  assert.equal(await app.run("document.querySelector('#palette-input').getAttribute('aria-activedescendant')"), 'palette-opt-1');
+  assert.equal(await app.run("document.querySelector('#palette-opt-1').getAttribute('aria-selected')"), 'true');
+  await app.key('ArrowUp');
+  assert.equal(await app.run("document.querySelector('#palette-opt-0').getAttribute('aria-selected')"), 'true');
+
+  await app.fill('#palette-input', 'tide');
+  rows = await paletteRows(app);
+  assert.deepEqual([rows[0].label, rows[0].detail], ['Tidewater', 'Book']);
+  await app.key('Enter');
+  await app.until(`location.hash === '#/book/${book.id}'`, 'the book to open');
+  assert.equal(await app.run("Boolean(document.querySelector('dialog#palette'))"), false, 'Go to closes when you have gone');
+
+  await openPalette(app);
+  await app.fill('#palette-input', 'cal');
+  assert.equal((await paletteRows(app))[0].label, 'Calendar');
+  await app.key('Enter');
+  await app.until("location.hash === '#/calendar'");
+
+  // Escape closes it and puts you back on what you were on, with nothing changed.
+  await app.run("document.querySelector('#nav a[href=\"#/isbns\"]').focus()");
+  await openPalette(app);
+  await app.fill('#palette-input', 'zzzz');
+  assert.match((await paletteRows(app))[0].label, /Nothing matches/);
+  await app.key('Escape');
+  await app.until("!document.querySelector('dialog#palette')");
+  assert.equal(await app.run("document.activeElement.getAttribute('href')"), '#/isbns');
+  assert.equal(await app.run('location.hash'), '#/calendar');
+});
+
+e2e('Go to runs a command by name: > lists the menu commands with where each is and its shortcut, and running one does it', async (app) => {
+  await openPalette(app, { ctrl: true, shift: true });
+  assert.equal(await app.run("document.querySelector('#palette-input').value"), '>', 'Find a Command starts with the >');
+  await app.until("document.querySelectorAll('#palette-list li').length > 30", 'the commands to arrive');
+  const everything = await paletteRows(app);
+  const find = (rows, label) => rows.find((r) => r.label === label);
+  assert.equal(find(everything, 'New Book…').detail, 'File  ·  Ctrl+N');
+  assert.equal(find(everything, 'Go to…').detail, 'View  ·  Ctrl+K');
+  assert.equal(find(everything, 'Books').detail, 'View › Screens  ·  Ctrl+2');
+  assert.equal(find(everything, 'Help Center').detail, 'Help  ·  F1');
+  assert.equal(find(everything, 'Glass').detail, 'View  ·  Off');
+  assert.equal(find(everything, 'Follow System').detail, 'View › Theme  ·  Current');
+  assert.ok(!everything.some((r) => /^(Quit|Copy|Paste|Undo)$/.test(r.label)), 'standard items are not offered');
+
+  // A theme, by name: it changes at once, and is kept.
+  await app.fill('#palette-input', '>dark');
+  assert.deepEqual([(await paletteRows(app))[0].label, (await paletteRows(app))[0].detail], ['Dark', 'View › Theme']);
+  await app.key('Enter');
+  await app.until("document.documentElement.dataset.theme === 'dark'", 'the page to turn dark');
+  assert.equal((await app.run('window.desk.settings()')).theme, 'dark');
+
+  // The words of the menu help too: "theme sepia" finds Sepia under Theme.
+  await openPalette(app);
+  await app.fill('#palette-input', '>theme sepia');
+  const sepia = await paletteRows(app);
+  assert.equal(sepia[0].label, 'Sepia');
+  await app.key('Enter');
+  await app.until("document.documentElement.dataset.theme === 'sepia'");
+
+  // Something that is on or off says which, and running it flips it.
+  await openPalette(app);
+  await app.fill('#palette-input', '>glass');
+  assert.equal((await paletteRows(app))[0].detail, 'View  ·  Off');
+  await app.key('Enter');
+  await app.until("document.documentElement.dataset.surface === 'glass'", 'Glass to come on');
+  await openPalette(app);
+  await app.fill('#palette-input', '>glass');
+  assert.equal((await paletteRows(app))[0].detail, 'View  ·  On');
+  await app.key('Escape');
+
+  // A command that opens something opens it.
+  await openPalette(app);
+  await app.fill('#palette-input', '>new book');
+  assert.equal((await paletteRows(app))[0].label, 'New Book…');
+  await app.key('Enter');
+  await app.until("document.querySelector('dialog #f-title')", 'the Add a book form');
+});
+
+e2e('a change made from the View menu reaches Preferences while it is open, and F1 opens the Help Center', async (app) => {
+  await app.run('void AD.openPreferences()');
+  await app.until("document.querySelector('dialog#preferences #pref-theme')", 'Preferences to open');
+  assert.equal(await app.run("document.querySelector('#pref-theme').value"), 'system');
+  assert.equal(await app.run('window.desk.runCommand("theme-sepia")'), true);
+  await app.until("document.querySelector('#pref-theme').value === 'sepia'", 'Preferences to follow the menu');
+  assert.equal(await app.run('window.desk.runCommand("colour-safe")'), true);
+  await app.until("document.querySelector('#pref-safe').checked", 'colour-safe to show as on');
+  assert.equal(await app.run('window.desk.runCommand("no-such-command")'), false);
+  await app.run("document.querySelector('dialog#preferences').close()");
+  await app.key('F1');
+  await app.until("document.querySelector('dialog#help[open]')", 'the Help Center to open on F1');
+});

@@ -75,10 +75,10 @@ early.
 
 **Still to build before 1.0.0.** The owner asked that every app follow the suite's
 [look-and-feel standard](https://github.com/neogentrics/rt-markdown-reader/blob/main/docs/app-suite.md), with RT Markdown Reader as the
-reference. Built so far: the themes, Glass, colour-safe colours, fonts, Preferences, the Help Center and tour, About, and updates with
-"Restart to update". Not built yet, and listed in the table below: the Help menu in the suite's exact order, Follow System and
-Customize Theme with a visible theme button, the Ctrl+K command palette, the icon toolbar, the Copy details line and license links in
-About, and the accessibility checks for Windows high contrast and the keyboard.
+reference. Built so far: the themes, Glass, colour-safe colours, fonts, Preferences, the Help Center and tour, About, updates with
+"Restart to update", short menus with Help in the suite's order, and Go to with the Ctrl+K command palette. Not built yet, and listed in
+the table below: Follow System and Customize Theme with a visible theme button, the icon toolbar, the Copy details line and license links
+in About, and the accessibility checks for Windows high contrast and the keyboard.
 
 | Feature | Size | Details |
 |---|:-:|---|
@@ -105,7 +105,7 @@ About, and the accessibility checks for Windows high contrast and the keyboard.
 | Installers & updates | M | Windows, Mac and Linux, as in RT Story Tracker. The app checks for updates itself, test builds included, so an installed test build updates to the next one. |
 | 🙋 Preferences, themes & fonts | M | The suite's themes, Glass, colour-safe colours, fonts and text size, in a Preferences window (Ctrl+,). |
 | 🙋 Help Center | M | A Help menu (F1): short searchable guides, a first-run tour of a made-up catalog, About, and Check for Updates. |
-| 🙋 Short menus and a command palette | S | File, Edit, View and Help, with rarely used commands in submenus, and every command can be run by name with Ctrl+K, then `>`. Help is in the suite's order: Help Center (F1), Tutorial, Check for Updates…, About. **Not built yet.** |
+| 🙋 Short menus and a command palette | S | File, Edit, View and Help, with rarely used commands in submenus, and every command can be run by name with Ctrl+K, then `>`. Help is in the suite's order: Help Center (F1), Tutorial, Check for Updates…, About. **Built.** |
 | 🙋 The About window, in full | S | The icon, name and version, links to the website, what's new, reporting a problem and the source code, a line of Electron, Chromium, Node and system versions with a Copy details button, and links to the license and the open-source notices. **Partly built.** |
 | 🙋 Themes, the rest of the standard | M | Follow System, Customize Theme (your own colours), and a theme button on the main screen, beside the themes, Glass and colour-safe colours already built. **Not built yet.** |
 | 🙋 An icon toolbar | S | Icon buttons for the common commands, each with a name on hover that screen readers read out. **Not built yet.** |

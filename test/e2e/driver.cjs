@@ -67,6 +67,18 @@ async function launch({ seed, env: extraEnv = {}, userData: given = null, welcom
       if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text);
       return result.result.value;
     },
+    // Presses a key the way a keyboard does. A menu shortcut is listened for by the app, not the page, so this tries that path too.
+    async key(key, { ctrl = false, shift = false, alt = false } = {}) {
+      const named = { Enter: 13, Escape: 27, Tab: 9, ArrowDown: 40, ArrowUp: 38, ArrowLeft: 37, ArrowRight: 39, Home: 36, End: 35, ' ': 32, F1: 112 };
+      const single = key.length === 1 && key !== ' ';
+      const code = single ? (/[a-z]/i.test(key) ? `Key${key.toUpperCase()}` : /[0-9]/.test(key) ? `Digit${key}` : key) : key === ' ' ? 'Space' : key;
+      const virtual = named[key] ?? key.toUpperCase().charCodeAt(0);
+      const base = { modifiers: (alt ? 1 : 0) | (ctrl ? 2 : 0) | (shift ? 8 : 0), key, code, windowsVirtualKeyCode: virtual, nativeVirtualKeyCode: virtual };
+      await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', ...base });
+      if ((single || key === ' ') && !ctrl) await send('Input.dispatchKeyEvent', { type: 'char', ...base, text: key });
+      await send('Input.dispatchKeyEvent', { type: 'keyUp', ...base });
+      await sleep(120);
+    },
     // Saves a picture of the window, for looking at a screen rather than testing it.
     async screenshot(file) {
       const { result } = await send('Page.captureScreenshot', { format: 'png' });

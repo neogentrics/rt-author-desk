@@ -2,9 +2,9 @@
 // Opens the encrypted library and the window. The catalog is in v1.0's first test build; the money follows (ROADMAP.md).
 const fs = require('node:fs');
 const path = require('node:path');
-const { app, BrowserWindow, dialog, ipcMain, Menu, session, shell } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, session, shell } = require('electron');
 const { createApi } = require('./api');
-const { buildMenu } = require('./menu');
+const { buildMenu, commandList, runCommand } = require('./menu');
 const { Settings } = require('./settings');
 const { BookImportError } = require('./books-import');
 const { BackupError, BackupSchedule, restoreBackup, verifyBackup } = require('./backups');
@@ -123,7 +123,7 @@ if (selfTestArg) {
     } catch (error) {
       opened = { ok: false, message: error.message };
     }
-    ipcMain.handle('desk:info', () => ({ version: app.getVersion(), library: opened, sample: Boolean(sample), update: updater.status }));
+    ipcMain.handle('desk:info', () => ({ version: app.getVersion(), platform: process.platform, library: opened, sample: Boolean(sample), update: updater.status }));
     // The window's only way to the library: one allowlisted call, and only from this app's own page.
     ipcMain.handle('desk:call', (event, name, args) => {
       if (!fromApp(event)) return NOT_FROM_APP;
@@ -194,7 +194,12 @@ if (selfTestArg) {
     // How it looks lives beside the library, so it's right before anything is opened.
     const settings = new Settings(app.getPath('userData'));
     ipcMain.handle('desk:settings', (event) => (fromApp(event) ? settings.values : null));
-    ipcMain.handle('desk:save-settings', (event, changes) => (fromApp(event) ? settings.saveFromWindow(changes) : null));
+    ipcMain.handle('desk:save-settings', (event, changes) => {
+      if (!fromApp(event)) return null;
+      const values = settings.saveFromWindow(changes);
+      rebuildMenu(); // so the checked theme in the View menu is the one just chosen
+      return values;
+    });
 
     // Backups: to a folder chosen here, on a schedule once one is, and restored from a file chosen here. A restore swaps the library
     // for the backup (the old one is kept to one side) and starts the app again, so nothing is half one and half the other.
@@ -282,20 +287,32 @@ if (selfTestArg) {
       if (fromApp(event)) shell.openExternal(RELEASES_URL);
     });
 
-    // A menu item names what the window should do, and the window does it.
+    // A menu item names what the window should do, and the window does it. The menu is built again whenever the look changes, so the
+    // checked items are right, and the commands in it are kept so Go to can run any of them by name.
     const send = (name, arg) => window?.webContents.send('desk:menu', name, arg);
-    Menu.setApplicationMenu(buildMenu({
-      send,
-      about: showAbout,
-      help: [
-        { label: 'Help Center', accelerator: 'F1', click: () => send('help') },
-        { label: 'Take the Tour of a Made-up Catalog', click: () => send('tour') },
-        { label: 'Keyboard Shortcuts', click: () => send('help', 'shortcuts') },
-        { type: 'separator' },
-        { label: 'Report a Problem…', click: () => shell.openExternal(`${REPO_URL}/issues/new?template=bug_report.yml`) },
-        { label: 'Check for Updates…', click: checkForUpdatesFromMenu },
-      ],
-    }));
+    let commands = new Map();
+    const changeSettings = (changes) => {
+      const values = settings.save(changes);
+      send('look', values);
+      rebuildMenu();
+      return values;
+    };
+    function rebuildMenu() {
+      commands = buildMenu({
+        send,
+        settings: settings.values,
+        version: app.getVersion(),
+        actions: {
+          about: showAbout,
+          changeSettings,
+          checkForUpdates: checkForUpdatesFromMenu,
+          reportProblem: () => shell.openExternal(`${REPO_URL}/issues/new?template=bug_report.yml`),
+        },
+      });
+    }
+    rebuildMenu();
+    ipcMain.handle('desk:commands', (event) => (fromApp(event) ? commandList(commands) : []));
+    ipcMain.handle('desk:run-command', (event, key) => (fromApp(event) ? runCommand(commands, key) : false));
 
     window = new BrowserWindow({
       width: 1200,

@@ -18,6 +18,25 @@
     }
   };
 
+  // Backs up now, from the File menu or Go to, without opening Preferences unless a folder is still to be chosen.
+  AD.backUpNow = async () => {
+    try {
+      const status = await window.desk.backupStatus();
+      if (!status.ok) throw new Error(status.message);
+      if (!status.value.folder) {
+        AD.toast('Choose a folder for your backups first.');
+        AD.openPreferences();
+        return;
+      }
+      AD.toast('Backing up…');
+      const result = await window.desk.backupNow();
+      if (!result.ok) throw new Error(result.message);
+      AD.toast(`Backed up to ${result.value.file}.`);
+    } catch (problem) {
+      AD.toast(problem.message);
+    }
+  };
+
   AD.openPreferences = async () => {
     document.getElementById('preferences')?.remove();
     let settings = await window.desk.settings();
@@ -80,6 +99,10 @@
       if (!done.ok) note.textContent = done.message;
     };
 
+    // The look can also be changed from the View menu while this is open.
+    const followMenu = (event) => { settings = event.detail; refresh(); };
+    document.addEventListener('ad:look', followMenu);
+
     const refresh = () => {
       themeSelect.value = settings.theme;
       fontSelect.value = settings.uiFont;
@@ -123,6 +146,7 @@
         h('button', { type: 'button', onclick: () => change({ theme: DEFAULT_SETTINGS.theme, glass: DEFAULT_SETTINGS.glass, colorSafe: DEFAULT_SETTINGS.colorSafe, uiFont: DEFAULT_SETTINGS.uiFont, textSize: DEFAULT_SETTINGS.textSize }) }, 'Back to the usual'),
         h('button', { type: 'button', class: 'primary', onclick: () => dialog.close() }, 'Done'))));
     dialog.id = 'preferences';
+    dialog.addEventListener('close', () => document.removeEventListener('ad:look', followMenu));
     refresh();
   };
 })();

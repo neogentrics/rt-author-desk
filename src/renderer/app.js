@@ -7,20 +7,10 @@
   let drawing = 0;
   let lastHash = null;
 
-  const LINKS = [
-    ['', 'Desk'],
-    ['books', 'Books'],
-    ['audiobooks', 'Audiobooks'],
-    ['money', 'Money'],
-    ['royalties', 'Royalties'],
-    ['calendar', 'Calendar'],
-    ['clashes', 'Clashes'],
-    ['isbns', 'ISBNs'],
-    ['names', 'Stores and names'],
-    ['trash', 'Trash'],
-  ];
-
-  const EARLY = new Set(['money', 'royalties']);
+  // The sidebar, the View menu and Go to all read the same list of screens.
+  const { SCREENS } = window.ADScreens;
+  const LINKS = SCREENS.map((screen) => [screen.hash, screen.label]);
+  const EARLY = new Set(SCREENS.filter((screen) => screen.early).map((screen) => screen.hash));
 
   function where() {
     const [, name = '', id] = (location.hash || '#/').split('/');
@@ -71,7 +61,16 @@
     else if (name === 'new-book') AD.addBook();
     else if (name === 'import-books') AD.importBooks();
     else if (name === 'export-all') AD.exportAll();
-    else if (name === 'go') location.hash = where === 'desk' ? '#/' : `#/${where}`;
+    else if (name === 'backup-now') AD.backUpNow();
+    else if (name === 'palette') AD.openPalette(where ?? '');
+    else if (name === 'look') {
+      // The look was changed from the menu, so the page follows it, and so does Preferences if it is open.
+      AD.applyLook(where);
+      document.dispatchEvent(new CustomEvent('ad:look', { detail: where }));
+    } else if (name === 'go') {
+      const screen = SCREENS.find((item) => item.key === where);
+      if (screen) location.hash = screen.hash ? `#/${screen.hash}` : '#/';
+    }
   });
 
   (async () => {
@@ -84,6 +83,7 @@
     try {
       const info = await window.desk.info();
       const { library } = info;
+      AD.platform = info.platform;
       AD.state.update = info.update ?? AD.state.update;
       AD.state.sample = Boolean(info.sample);
       AD.drawBars();

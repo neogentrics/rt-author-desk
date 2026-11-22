@@ -22,6 +22,10 @@ build (`1.0.0-alpha.0`), that the app leaves alpha when the catalog is solid and
 - **The store grid**: one page per book, editions down the side and stores across the top, so a gap shows at a glance.
 - **The audiobook tracker**: every audiobook on every store, with the live recording, its voice, its rights and what is
   waiting to be replaced.
+- **Go to and short menus**: Ctrl+K finds a screen or a book from a few letters, and starting with > runs any command from the menus by
+  name, each with where it is and its shortcut. The menus are File, Edit, View and Help, with the screens and the themes in submenus, and
+  Help is in the suite's order: Help Center (F1), Tutorial, Check for Updates…, About. The View menu has every theme, Follow System, Glass
+  and colour-safe colours, and changing one there changes Preferences if it is open.
 - **People and credits**: editors, proofreaders, cover artists, illustrators, narrators, translators and formatters, credited on each
   edition. A person is kept once and can be credited on many editions, and in two roles on one. For each store you can write down which
   credits it shows. Nothing is checked until you have.
