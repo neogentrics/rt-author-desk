@@ -126,9 +126,18 @@ async function launch({ seed, env: extraEnv = {}, userData: given = null, welcom
     },
     async close() {
       try { ws.close(); } catch { /* already gone */ }
+      const gone = new Promise((resolve) => (app.exitCode !== null || app.signalCode !== null ? resolve() : app.once('exit', resolve)));
       app.kill();
-      await sleep(300);
-      if (!given) fs.rmSync(userData, { recursive: true, force: true, maxRetries: 3 });
+      await Promise.race([gone, sleep(3000)]);
+      if (app.exitCode === null && app.signalCode === null) {
+        app.kill('SIGKILL');
+        await Promise.race([gone, sleep(3000)]);
+      }
+      await sleep(300); // the helper processes (the graphics one and the like) finish writing into the profile folder
+      // A temporary folder that could not be removed is not a failed test, and a slow machine can take a moment to let go of it.
+      if (!given) {
+        try { fs.rmSync(userData, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); } catch { /* left for the system's own cleanup */ }
+      }
     },
   };
   try {
