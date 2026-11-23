@@ -22,9 +22,10 @@ nothing else to install.
 RT Author Desk is part of the **Recon Towers** suite, built by its Dev Department. It was inspired by the owner writing his
 own books.
 
-> **Version 1.1 is out.** The catalog (1.0): books, editions, ISBNs, store listings, audiobooks and clashes, with backups, a Trash, and a way to get everything
+> **Version 1.2 is out.** The catalog (1.0): books, editions, ISBNs, store listings, audiobooks and clashes, with backups, a Trash, and a way to get everything
 > out. And the first of the money: KDP sales reports, royalties, and a calculator with rate cards of your own, marked "early" in the menu until they have been
-> checked against real reports from every store.
+> checked against real reports from every store. Version 1.2 adds Match your columns, for reading a report from a store the app has no reader for yet, and
+> the Desk now says which store's next report is ready to download.
 
 <table>
 <tr>
@@ -61,7 +62,7 @@ own books.
 |---|---|---|
 | `.exe` installer, or a portable `.exe` | `.dmg` for Apple silicon or Intel | `AppImage` or `.deb` |
 
-Version 1.1.0 is on the [Releases](https://github.com/neogentrics/rt-author-desk/releases/latest) page. Every change is built and
+Version 1.2.0 is on the [Releases](https://github.com/neogentrics/rt-author-desk/releases/latest) page. Every change is built and
 checked on all three systems by [CI](https://github.com/neogentrics/rt-author-desk/actions/workflows/ci.yml), which also installs
 each build and runs a self-test.
 

@@ -6,6 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-22
+
+The first "every store" release. A store the app has no reader for can now be read by matching its columns, and the Desk says which store's next report is
+ready. The readers for individual stores are still to come, each as its report arrives: Draft2Digital, Kobo, Apple Books, Lulu, Barnes & Noble Press, ACX and
+IngramSpark's report of sales. The money screens are still marked early.
+
 ### Added
 - **Reports due on the Desk.** Each store you have imported sales reports from, whose next report is ready to download, is listed with the month, how long it has been ready and a link to
   import it. A month's report is there once the month is over, so after September the October report is due from 1 November. The others are noted with when theirs comes. A store with

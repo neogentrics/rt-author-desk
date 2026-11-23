@@ -28,7 +28,7 @@ losing anything, and pass its automated tests on Windows, Mac and Linux.
 | [Step zero](#step-zero--settle-the-foundations) | Settle the foundations | Built. The installers for Windows, Mac and Linux are built and checked by CI |
 | [v1.0](#v10--the-catalog) | The catalog | **Released as 1.0.0 on 22 November 2026.** Contributors and credits and the suite's look and feel are built |
 | [v1.1](#v11--the-money) | The money | **Part released as 1.1.0 on 22 November 2026.** KDP import and royalties, the calculator with your own rate cards, and one price check. The other stores' readers, two price checks and the test against real reports are still to do |
-| [v1.2](#v12--every-store) | Every store | **Started.** Match your columns, the notice when a kept layout no longer fits, and Reports due are built. The readers for four more stores each wait for a real report |
+| [v1.2](#v12--every-store) | Every store | **Part released as 1.2.0 on 22 November 2026.** Match your columns, the notice when a kept layout no longer fits, and Reports due are built. The readers for four more stores each wait for a real report |
 | [v1.3](#v13--accounts-and-the-vault) | Accounts and the vault | Planned |
 | [v1.4](#v14--what-a-book-really-made) | What a book really made | Planned |
 | [v1.5](#v15--launch-a-book) | Launch a book | Planned |
