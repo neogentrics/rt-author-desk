@@ -234,7 +234,7 @@ test('the other stores are empty slots that say they are waiting, and read nothi
   const slots = importer.readers();
   assert.deepEqual(slots.filter((r) => r.ready).map((r) => r.name), ['Amazon KDP']);
   assert.deepEqual(slots.filter((r) => !r.ready).map((r) => r.name), ['Barnes & Noble Press', 'ACX', 'Google Play Books', 'IngramSpark', 'Draft2Digital', 'Kobo', 'Apple Books', 'Lulu']);
-  assert.ok(slots.filter((r) => !r.ready).every((r) => /Waiting for a real report/.test(r.waiting)));
+  assert.ok(slots.filter((r) => !r.ready).every((r) => /[Ww]aiting for/.test(r.waiting)));
   library.close();
 });
 

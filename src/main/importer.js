@@ -7,7 +7,7 @@ const crypto = require('node:crypto');
 const { LayoutError } = require('./reports/kdp');
 const { readReport, readerStatus } = require('./reports/index');
 const { readWorkbook, WorkbookError } = require('./reports/xlsx');
-const { FIELDS, MappingError, compareLayout, guessMapping, headingsOf, layoutOf, readMapped, readTable } = require('./reports/mapped');
+const { FIELDS, MappingError, compareLayout, guessMapping, headingsOf, knownFor, layoutOf, readMapped, readTable } = require('./reports/mapped');
 const { parseIsbn } = require('../shared/isbn');
 const { add, format, money, toDecimalString, zero } = require('../shared/money');
 
@@ -137,7 +137,7 @@ class Importer {
     if (!store) throw new ImportError('Choose which store this report is from.');
     const choice = {
       mapping: Object.fromEntries(Object.entries(mapping ?? {}).map(([k, v]) => [k, v === '' || v == null ? null : Number(v)])),
-      options: { headerRow: options.headerRow ? Number(options.headerRow) : null, dateOrder: options.dateOrder, decimal: options.decimal, currency: options.currency },
+      options: { headerRow: options.headerRow ? Number(options.headerRow) : null, dateOrder: options.dateOrder, decimal: options.decimal, currency: options.currency, period: options.period },
     };
     let report;
     try {
@@ -180,6 +180,10 @@ class Importer {
       else if (result.overlap >= 0.5) changed.push({ ...base, gone: result.gone, added: result.added });
     }
     recognized.sort((a, b) => Number(b.same) - Number(a.same));
+    // After the ones you kept, the layouts known from a real report with exactly these headings.
+    for (const known of knownFor(headingsOf(sheet, headerRow ?? null).names)) {
+      recognized.push({ ...known, storeName: stores.get(known.storeId) ?? known.storeId, same: true, builtIn: true, options: { dateOrder: 'month-first', decimal: '.', currency: '' } });
+    }
     return { recognized, changed };
   }
 

@@ -198,7 +198,7 @@ const GUIDES = [
       { type: 'ol', items: [
         'Say which **store** the report is from, and which sheet if the file has several. If the headings are not on the first line, say which row they are on.',
         'The app guesses the columns. Check each one: the **date**, the **title** or ISBN, the **country**, the **copies sold**, **what you earned** and the **currency**. If the file has no currency column, say which currency the whole file is in.',
-        'Say how a date such as 03/04/2026 is written, and how numbers are (1,234.56 or 1.234,56).',
+        'Say how a date such as 03/04/2026 is written, and how numbers are (1,234.56 or 1.234,56). If the report has no date column, say which month it covers, and if it has no currency, which currency the whole file is in. Google Play Books\' Sales Summary report is recognized by its headings and asks for exactly those two.',
         'Choose **See what this does**. Every row is accounted for. A line with no title, such as a total, is left out and named. A cell the app cannot read stops everything and says which row, so nothing is half imported.',
         'Choose **Import**. Tick **Keep these columns** and the next report from that store with the same headings is read the same way.',
       ] },

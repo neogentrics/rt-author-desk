@@ -36,7 +36,7 @@ test('a file is opened with its headings, a few rows and a guess, and nothing is
   const { opened } = choose(importer, csv(...SEPTEMBER));
   assert.equal(opened.format, 'csv');
   assert.deepEqual(opened.sheets[0].headers, HEAD.split(','));
-  assert.deepEqual(opened.sheets[0].guess, { date: 0, title: 1, item: 2, marketplace: 3, units: 4, royalty: 5, currency: 6 });
+  assert.deepEqual(opened.sheets[0].guess, { date: 0, title: 1, item: 2, marketplace: 3, units: 4, royalty: 5, kind: null, currency: 6 });
   assert.equal(opened.sheets[0].sample.length, 3);
   assert.deepEqual([opened.sheets[0].recognized, opened.sheets[0].changed], [[], []]);
   assert.equal(count(library, 'sale_lines') + count(library, 'report_files'), 0);
@@ -168,5 +168,25 @@ test('a kept layout is in the export, with the store\'s name beside it', () => {
   const made = exportAll(library, temp(), { now: () => new Date('2026-11-22T12:00:00'), version: '1.2.0' });
   assert.equal(made.counts.report_layouts, 1);
   assert.match(fs.readFileSync(path.join(made.folder, 'csv', 'report-layouts.csv'), 'utf8'), /Kobo monthly.*Kobo|Kobo.*Kobo monthly/s);
+  library.close();
+});
+
+test('a Google Play Books Sales Summary report is recognized by its headings, and the month and currency it lacks are asked for, never assumed', () => {
+  const { library, importer } = start();
+  const head = ['Title', 'Author', 'Primary ISBN', 'Country of Sale', 'Units Purchased', 'Units Refunded', 'Net Units Sold', 'Total Publisher Earnings', 'Line of Business'];
+  const row = ['A Made-up Book', 'A. Writer', 'GGKEY:MADEUP0001', 'AU', '2', '1', '1', '0.73', 'Audiobook'];
+  const text = [head, row].map((cells) => cells.map((c) => `"${c}"`).join('\t')).join('\n');
+  const opened = importer.openColumns(Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text, 'utf16le')]), 'GoogleSalesSummaryReport.csv');
+  const [known] = opened.sheets[0].recognized;
+  assert.deepEqual([known.name, known.storeId, known.builtIn, known.mapping.royalty, known.mapping.units, known.mapping.date], ['Google Play Books: Sales Summary report', 'store-google-play-books', true, 7, 6, null]);
+  assert.match(known.ask, /no date and no currency/);
+  const args = { id: opened.id, sheet: opened.sheets[0].name, storeId: known.storeId, mapping: known.mapping };
+  refused(() => importer.previewColumns(args), /Say which column holds the date of the sale \(or, if the report has none, the month it covers\)/);
+  refused(() => importer.previewColumns({ ...args, options: { period: '2026-09' } }), /the currency/);
+  const shown = importer.previewColumns({ ...args, options: { period: '2026-09', currency: 'USD' } });
+  assert.deepEqual(shown.totals.map((t) => [t.currency, t.amount]), [['USD', '0.73']]);
+  assert.ok(shown.notes.some((n) => /every row is put in 2026-09/.test(n)));
+  importer.accept({ previewId: shown.previewId });
+  assert.deepEqual(library.db.prepare('SELECT period, store_item, marketplace, royalty_type, net_units FROM sale_lines').all(), [{ period: '2026-09', store_item: 'GGKEY:MADEUP0001', marketplace: 'AU', royalty_type: 'Audiobook', net_units: 1 }]);
   library.close();
 });

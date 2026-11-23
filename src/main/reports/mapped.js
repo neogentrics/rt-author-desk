@@ -24,6 +24,7 @@ const FIELDS = [
   { key: 'marketplace', label: 'Country or marketplace', names: ['marketplace', 'country', 'territory', 'region', 'store', 'sales channel', 'market', 'country of sale'] },
   { key: 'units', label: 'Copies sold (after refunds)', names: ['units', 'net units', 'net units sold', 'quantity', 'qty', 'copies', 'units sold', 'sales', 'downloads', 'net quantity'] },
   { key: 'royalty', label: 'What you earned', required: true, names: ['royalty', 'royalties', 'earnings', 'net earnings', 'net revenue', 'author earnings', 'amount', 'your earnings', 'payable', 'net', 'revenue share', 'publisher earnings', 'royalty earned', 'total royalty'] },
+  { key: 'kind', label: 'Kind of sale or format (ebook, audiobook…)', names: ['line of business', 'format', 'product type', 'sale type', 'type', 'product format'] },
   { key: 'currency', label: 'Currency', names: ['currency', 'currency code', 'ccy', 'payment currency'] },
 ];
 
@@ -146,10 +147,13 @@ function fingerprinter(kind) {
 function readMapped({ sheet, mapping, options = {}, storeId, storeName }) {
   const head = headingsOf(sheet, options.headerRow);
   if (head.index < 0) throw new MappingError('There is nothing in that sheet.');
+  if (!sheet.rows.slice(head.index + 1).some((row) => !blank(row.cells))) throw new MappingError('There are no rows under the headings, so there is nothing to import. Check that this is the report of sales, and not something else, such as a list of invoices.');
   const pick = (key) => (Number.isInteger(mapping[key]) && mapping[key] >= 0 && mapping[key] < head.names.length ? mapping[key] : null);
   const at = Object.fromEntries(FIELDS.map((f) => [f.key, pick(f.key)]));
   const missing = [];
-  if (at.date == null) missing.push('the date of the sale');
+  const period = String(options.period ?? '').trim();
+  if (period && !/^\d{4}-(?:0[1-9]|1[0-2])$/.test(period)) throw new MappingError(`Say the month the report covers like 2026-09, not "${period}".`);
+  if (at.date == null && !period) missing.push('the date of the sale (or, if the report has none, the month it covers)');
   if (at.royalty == null) missing.push('what you earned');
   if (at.title == null && at.item == null) missing.push('the title or the ISBN, ASIN or store number');
   if (at.currency == null && !options.currency) missing.push('the currency (a column, or say which currency the whole file is in)');
@@ -180,7 +184,7 @@ function readMapped({ sheet, mapping, options = {}, storeId, storeName }) {
     // A total or a note at the bottom has no title or number for a book: it is not a sale. It is said to be set aside, with its row, so it is never lost silently.
     if (!title && !item) { account(row.number, 'not a sale', 'no title: a total or a note'); setAside.push(row.number); return; }
 
-    const when = readDate(dateText, order);
+    const when = at.date == null ? { date: period } : readDate(dateText, order);
     if (when.problem) { problem(row.number, `the date ${when.problem}`); return; }
     const currency = at.currency == null ? fixed : cell(row.cells, 'currency').toUpperCase();
     let royalty;
@@ -201,7 +205,7 @@ function readMapped({ sheet, mapping, options = {}, storeId, storeName }) {
     }
     sales.push({
       sheet: sheet.name, row: row.number, fingerprint: print(row.cells), royaltyDate: when.date, title: title || item, author: '', storeId: item,
-      marketplace: cell(row.cells, 'marketplace'), royaltyType: '', transactionType: '', unitsSold: Math.max(units, 0), unitsRefunded: Math.max(-units, 0), netUnits: units,
+      marketplace: cell(row.cells, 'marketplace'), royaltyType: cell(row.cells, 'kind'), transactionType: '', unitsSold: Math.max(units, 0), unitsRefunded: Math.max(-units, 0), netUnits: units,
       listPrice: null, offerPrice: null, cost: null, royalty, estimate: true,
     });
     account(row.number, 'imported');
@@ -211,12 +215,14 @@ function readMapped({ sheet, mapping, options = {}, storeId, storeName }) {
     const first = problems.slice(0, 5).map((p) => `row ${p.row}: ${p.what}`).join('; ');
     throw new MappingError(`${problems.length > 5 ? `${problems.length} rows could not be read. The first: ` : 'A row could not be read: '}${first}. Nothing was imported. Check the columns, the date order and the number style.`);
   }
+  if (!sales.length) throw new MappingError('No row of this file is a sale, so there is nothing to import. Check the columns, or that this is the report of sales and not something else, such as a list of invoices.');
   const counts = {};
   for (const item of accounting) counts[item.outcome] = (counts[item.outcome] ?? 0) + 1;
   const notes = [
     'This report was read with the columns you chose, and the file has no total of its own to check the rows against. Compare the total shown with the store\'s own figure.',
   ];
   if (setAside.length) notes.push(`${setAside.length === 1 ? 'This row has' : 'These rows have'} no title, so ${setAside.length === 1 ? 'it was' : 'they were'} taken for a total or a note and left out: row${setAside.length === 1 ? '' : 's'} ${setAside.slice(0, 10).join(', ')}${setAside.length > 10 ? ' and more' : ''}.`);
+  if (at.date == null) notes.push(`The report has no dates, so every row is put in ${period}.`);
   if (at.units == null) notes.push('There is no column of copies sold, so copies show as 0.');
   return {
     kind: 'mapped', sales, orders: [], pagesRead: [], payments: [], accounting, problems: [], notes,
@@ -224,6 +230,23 @@ function readMapped({ sheet, mapping, options = {}, storeId, storeName }) {
     totals: totals(sales.map((s) => s.royalty)), store: { id: storeId, name: storeName },
   };
 }
+
+// ---- Layouts built from a real report ----------------------------------------------------------------------------------------
+
+// A report whose exact headings were seen in a real file, so its columns are known and not guessed. What such a file does not hold (a date, a
+// currency) is still asked for, never assumed.
+const KNOWN = [
+  {
+    id: 'google-play-books-sales-summary', storeId: 'store-google-play-books', name: 'Google Play Books: Sales Summary report',
+    headers: ['Title', 'Author', 'Primary ISBN', 'Country of Sale', 'Units Purchased', 'Units Refunded', 'Net Units Sold', 'Total Publisher Earnings', 'Line of Business'],
+    columns: { title: 'Title', item: 'Primary ISBN', marketplace: 'Country of Sale', units: 'Net Units Sold', royalty: 'Total Publisher Earnings', kind: 'Line of Business' },
+    ask: 'This report has no date and no currency in it. Say which month it covers and which currency the earnings are in.',
+  },
+];
+const knownFor = (names) => KNOWN.filter((k) => k.headers.length === names.length && k.headers.every((h, i) => h === names[i])).map((k) => ({
+  id: k.id, name: k.name, storeId: k.storeId, ask: k.ask,
+  mapping: Object.fromEntries(FIELDS.map((f) => [f.key, k.columns[f.key] ? names.indexOf(k.columns[f.key]) : null])),
+}));
 
 // ---- A remembered layout ---------------------------------------------------------------------------------------------------
 
@@ -261,4 +284,4 @@ function compareLayout(saved, names) {
   };
 }
 
-module.exports = { FIELDS, MappingError, columnName, compareLayout, guessMapping, headingsOf, layoutOf, readDate, readMapped, readNumber, readTable };
+module.exports = { FIELDS, KNOWN, MappingError, knownFor, columnName, compareLayout, guessMapping, headingsOf, layoutOf, readDate, readMapped, readNumber, readTable };

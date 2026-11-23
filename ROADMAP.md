@@ -154,7 +154,7 @@ made true). The open finding about the sample KDP report is in
 Import the same file again and nothing changes. Undo a batch. A price worked out by the calculator matches the store's own
 calculator for a set of real books.
 
-**Still needed from the owner to finish it:** a real report from each of Barnes & Noble Press, ACX, Google Play Books and IngramSpark, a recent
+**Still needed from the owner to finish it:** a real report from each of Barnes & Noble Press and ACX, a Google Play Books report that has dates, IngramSpark's report of sales (the invoices report is not it), a recent
 KDP report with pages read, what "the rate you want" means for the ebook price check, and what is locked (and until when) for the locked-period check.
 Four of the eight shipped rate cards (B&N ebook and print, KDP ebook before 7 July 2026, ACX's old rates) were not read on the store's own page, and the
 Calculator says so for each.
@@ -163,7 +163,7 @@ Calculator says so for each.
 
 🙋 Sales from everywhere you sell, and no store left typed in by hand.
 
-**Where it stands (22 November 2026).** Match your columns is built: for a store with no reader, choose its report (a CSV or an Excel file), say which store it is from and which column is which, and see every row accounted for before anything is saved. The columns can be kept by their headings, so the next report from that store is recognized, and when a store renames a column the app says which one has gone and never reads past it by guessing. It is for stores with no reader yet; a reader built from a real report is better when there is one. Reports due on the Desk is built too. The four readers are still to do, and each waits for a real report.
+**Where it stands (22 November 2026).** Match your columns is built: for a store with no reader, choose its report (a CSV or an Excel file), say which store it is from and which column is which, and see every row accounted for before anything is saved. The columns can be kept by their headings, so the next report from that store is recognized, and when a store renames a column the app says which one has gone and never reads past it by guessing. It is for stores with no reader yet; a reader built from a real report is better when there is one. Reports due on the Desk is built too. The four readers are still to do, and each waits for a real report. Two samples have come in: Google Play Books' Sales Summary report (tab-separated, UTF-16, with no date and no currency in it) is recognized by its headings and asks for the month and currency; IngramSpark's report turned out to be a list of invoices, which are bills and not sales, so the report of sales is still needed.
 
 | Feature | Size | Details |
 |---|:-:|---|

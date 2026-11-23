@@ -433,6 +433,7 @@ e2e('Match your columns: choose the store and the columns, see every row account
 
   // the store renames a column: it is said, and nothing is guessed
   await app.run("document.querySelector('dialog').close()");
+  await app.until("!document.querySelector('dialog')", 'the dialog to go');
   fs.writeFileSync(matchFile, ['Sale Date,Book Title,ISBN,Country,Quantity,Net Royalty,Currency', '2026-11-03,Tidewater,9780000000002,US,1,2.99,USD'].join('\n'));
   await app.click('#match-columns');
   await app.until("document.querySelector('dialog #mc-store')", 'the dialog a third time');
@@ -457,6 +458,36 @@ e2e('the Desk lists a store whose next report is ready to download, and links to
     library.close();
   },
 });
+
+// A report with no date and no currency, in the layout of Google Play Books' Sales Summary: tab-separated and saved as UTF-16. It is recognized by its
+// headings, and the month and currency it lacks are asked for.
+const googleFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-google-')), 'GoogleSalesSummaryReport.csv');
+e2e('Match your columns: a Sales Summary report with no date or currency is recognized, and the month and currency are asked for', async (app) => {
+  const head = ['Title', 'Author', 'Primary ISBN', 'Country of Sale', 'Units Purchased', 'Units Refunded', 'Net Units Sold', 'Total Publisher Earnings', 'Line of Business'];
+  const text = [head, ['A Made-up Book', 'A. Writer', 'GGKEY:MADEUP0001', 'AU', '2', '1', '1', '0.73', 'Audiobook']].map((cells) => cells.map((c) => `"${c}"`).join('\t')).join('\n');
+  fs.writeFileSync(googleFile, Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text, 'utf16le')]));
+  await app.goTo('#/money');
+  await app.until("document.querySelector('#match-columns')", 'the Money screen');
+  await app.click('#match-columns');
+  await app.until("document.querySelector('dialog #mc-store')", 'the dialog');
+  assert.match(await app.run("document.querySelector('dialog [role=status]').textContent"), /This is the Google Play Books: Sales Summary report.*no date and no currency/);
+  assert.equal(await app.run("document.querySelector('#mc-store').value"), 'store-google-play-books');
+  assert.equal(await app.run("Boolean(document.querySelector('#mc-period'))"), true, 'the month is asked for because there is no date column');
+  await app.click('#mc-go');
+  await app.until("document.querySelector('dialog [role=alert]')", 'the month to be asked for');
+  assert.match(await app.run("document.querySelector('dialog [role=alert]').textContent"), /the month it covers/);
+  await app.fill('#mc-period', '2026-09');
+  await app.fill('#mc-fixed-currency', 'USD');
+  await app.click('#mc-go');
+  await app.until("document.querySelector('#mc-import')", 'the summary');
+  const summary = await app.run("document.querySelector('dialog').textContent");
+  assert.match(summary, /every row is put in 2026-09/);
+  assert.match(summary, /\$0\.73/);
+  assert.deepEqual(await audit(app), []);
+  await app.click('#mc-import');
+  await app.until("!document.querySelector('dialog')", 'the import');
+  assert.equal((await app.run("window.desk.call('royalties', { by: ['month'] }).then((r) => r.value.estimated.rows.length)")), 1);
+}, { env: { RTAD_TEST_FILES: JSON.stringify({ columns: googleFile }) } });
 
 // A backup made elsewhere, to restore. The test stops at the question: the restart that follows can't be watched from the page.
 const backupToRestore = (() => {

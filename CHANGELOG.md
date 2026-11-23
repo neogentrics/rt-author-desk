@@ -15,6 +15,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
   and a number are written, and takes a fixed currency for a file with none. It then shows what it would do, every row accounted for, before anything is saved:
   a line with no title (a total, a note) is set aside and named, a cell it cannot read stops everything and names the row, rows already in the library count as repeats,
   and the whole batch can be undone. The money is an estimate, and the file has no total of its own, so it says to compare the total with the store's.
+- **A report with no dates, a file saved as UTF-16, and Google Play Books' Sales Summary report.** When a report has no date column, say which month it covers and every row is put in it. A file saved as
+  UTF-16, with or without a byte order mark, is read, and so is one with tabs. Google Play Books' Sales Summary report is recognized by its exact headings, and since it holds no date and no currency,
+  both are asked for and never assumed. A sheet with no rows under its headings, such as IngramSpark's list of invoices (bills, not sales), is refused in words.
 - **Kept layouts**, by their headings (database step 10). The next report from that store with the same headings is recognized, even with the columns in another order, and one
   whose columns have been renamed is told which are gone and which are new, never read by guessing past them. They are in the export.
 

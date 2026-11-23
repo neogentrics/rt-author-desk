@@ -28,7 +28,7 @@
 
   function openDialog(file, stores) {
     const state = {
-      step: 1, sheet: file.sheets[0], storeId: '', mapping: { ...file.sheets[0].guess }, headerRow: null, dateOrder: 'month-first', decimal: '.', currency: '',
+      step: 1, sheet: file.sheets[0], storeId: '', mapping: { ...file.sheets[0].guess }, headerRow: null, dateOrder: 'month-first', decimal: '.', currency: '', period: '',
       note: '', preview: null, remember: true, layoutName: '', busy: false, error: '',
     };
     const body = h('div', { class: 'import-body' });
@@ -41,7 +41,8 @@
       state.note = '';
       if (first) {
         Object.assign(state, { storeId: first.storeId, mapping: { ...first.mapping }, dateOrder: first.options.dateOrder, decimal: first.options.decimal, currency: first.options.currency ?? '', layoutName: first.name });
-        state.note = `This looks like your layout "${first.name}" for ${first.storeName}, so the columns are filled in. Check them, then go on.`;
+        // A layout known from a real report is said to be one, and what the report lacks is asked for.
+        state.note = first.builtIn ? `This is the ${first.name}, so the columns are filled in. ${first.ask}` : `This looks like your layout "${first.name}" for ${first.storeName}, so the columns are filled in. Check them, then go on.`;
       } else if (state.sheet.changed.length) {
         const c = state.sheet.changed[0];
         state.note = `Your layout "${c.name}" for ${c.storeName} doesn't fit this file any more: no column called ${c.gone.map((g) => `"${g}"`).join(' or ')}${c.added.length ? ` (new: ${c.added.map((a) => `"${a}"`).join(', ')})` : ''}. Match the columns again, and the new layout replaces it.`;
@@ -52,7 +53,7 @@
     apply();
 
     const fail = (problem) => { state.error = problem.message; state.busy = false; draw(); };
-    const options = () => ({ headerRow: state.headerRow ?? state.sheet.headerRow, dateOrder: state.dateOrder, decimal: state.decimal, currency: state.currency });
+    const options = () => ({ headerRow: state.headerRow ?? state.sheet.headerRow, dateOrder: state.dateOrder, decimal: state.decimal, currency: state.currency, period: state.period });
     const args = () => ({ id: file.id, sheet: state.sheet.name, storeId: state.storeId, mapping: state.mapping, options: options(), remember: state.remember, layoutName: state.layoutName });
 
     const draw = () => {
@@ -74,7 +75,7 @@
 
     function stepOne() {
       const sheet = state.sheet;
-      const choose = (field) => h('select', { id: `mc-${field.key}`, onchange: (e) => { state.mapping[field.key] = e.target.value === '' ? null : Number(e.target.value); state.error = ''; } },
+      const choose = (field) => h('select', { id: `mc-${field.key}`, onchange: (e) => { state.mapping[field.key] = e.target.value === '' ? null : Number(e.target.value); state.error = ''; if (field.key === 'date') draw(); } },
         h('option', { value: '' }, '(not in the file)'),
         sheet.headers.map((name, i) => (name ? h('option', { value: String(i), selected: state.mapping[field.key] === i }, name) : null)));
       const row = (field) => h('div', { class: 'field' }, h('label', { for: `mc-${field.key}` }, field.label, field.required ? ' (needed)' : ''), choose(field));
@@ -104,6 +105,9 @@
           h('thead', null, h('tr', null, sheet.headers.map((name, i) => h('th', { scope: 'col' }, name || `Column ${i + 1}`)))),
           h('tbody', null, sheet.sample.map((cells) => h('tr', null, sheet.headers.map((_, i) => h('td', null, cells[i] ?? ''))))))),
         h('fieldset', { class: 'card' }, h('legend', null, 'Which column is which'), file.fields.map(row)),
+        sheet.headers.length && state.mapping.date == null ? h('div', { class: 'field' }, h('label', { for: 'mc-period' }, 'The month this report covers'),
+          h('input', { id: 'mc-period', type: 'month', value: state.period, onchange: (e) => { state.period = e.target.value; } }),
+          h('p', { class: 'help' }, 'The report has no date column, so every row is put in this month.')) : null,
         h('div', { class: 'row start' },
           h('div', { class: 'field' }, h('label', { for: 'mc-fixed-currency' }, 'Currency of the whole file'), h('input', { id: 'mc-fixed-currency', type: 'text', maxlength: '3', value: state.currency, onchange: (e) => { state.currency = e.target.value.trim().toUpperCase(); } }),
             h('p', { class: 'help' }, 'Only if there is no currency column, such as USD.')),

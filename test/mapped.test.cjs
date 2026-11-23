@@ -16,8 +16,8 @@ const KOBO = ['Sale Date,Book Title,ISBN,Country,Quantity,Royalty,Currency',
 
 test('the columns are guessed from the headings stores really use, and a column is used for one thing only', () => {
   const names = ['Sale Date', 'Book Title', 'ISBN', 'Country', 'Quantity', 'Royalty', 'Currency'];
-  assert.deepEqual(guessMapping(names), { date: 0, title: 1, item: 2, marketplace: 3, units: 4, royalty: 5, currency: 6 });
-  assert.deepEqual(guessMapping(['x', 'y']), { date: null, title: null, item: null, marketplace: null, units: null, royalty: null, currency: null });
+  assert.deepEqual(guessMapping(names), { date: 0, title: 1, item: 2, marketplace: 3, units: 4, royalty: 5, kind: null, currency: 6 });
+  assert.deepEqual(guessMapping(['x', 'y']), { date: null, title: null, item: null, marketplace: null, units: null, royalty: null, kind: null, currency: null });
   const twice = guessMapping(['Date', 'Statement Date', 'Title', 'Net Earnings']);
   assert.deepEqual([twice.date, twice.royalty], [0, 3]);
   assert.equal(new Set(Object.values(twice).filter((v) => v != null)).size, Object.values(twice).filter((v) => v != null).length);
@@ -125,7 +125,7 @@ test('a layout is remembered by its headings, fits a file with the columns in an
   const reordered = compareLayout(saved, moved);
   assert.equal(reordered.fits, true, 'the columns are found by what they are called');
   assert.equal(reordered.same, false);
-  assert.deepEqual(reordered.mapping, { date: 6, title: 5, item: 4, marketplace: 3, units: 2, royalty: 1, currency: 0 });
+  assert.deepEqual(reordered.mapping, { date: 6, title: 5, item: 4, marketplace: 3, units: 2, royalty: 1, kind: null, currency: 0 });
 
   const renamed = compareLayout(saved, ['Sale Date', 'Book Title', 'ISBN', 'Country', 'Quantity', 'Net Royalty', 'Currency']);
   assert.deepEqual([renamed.fits, renamed.gone, renamed.added], [false, ['Royalty'], ['Net Royalty']]);
@@ -146,4 +146,45 @@ test('a file that is not a report is refused in words, and a hostile cell is onl
   const report = readMapped({ sheet, mapping: { date: 0, title: 1, royalty: 2, currency: 3 }, storeId: 's', storeName: 'S' });
   assert.equal(report.sales[0].title, '=HYPERLINK("http://x.test")', 'kept as text, as typed, and never run');
   assert.throws(() => readTable(Buffer.from('PK\u0003\u0004 not really a zip')), (e) => e.name === 'WorkbookError');
+});
+
+// ---- Reports with no date, a file saved as UTF-16, and a list of invoices --------------------------------------------------------
+
+// Made up, in the layout of a real Google Play Books Sales Summary report: tab-separated, quoted, saved as UTF-16 with a byte order mark, with no
+// date and no currency in it.
+const GOOGLE_HEAD = ['Title', 'Author', 'Primary ISBN', 'Country of Sale', 'Units Purchased', 'Units Refunded', 'Net Units Sold', 'Total Publisher Earnings', 'Line of Business'];
+const tabs = (...rows) => rows.map((cells) => cells.map((c) => `"${c}"`).join('\t')).join('\n') + '\n';
+const utf16 = (text, { mark = true } = {}) => Buffer.concat([mark ? Buffer.from([0xff, 0xfe]) : Buffer.alloc(0), Buffer.from(text, 'utf16le')]);
+
+test('a tab-separated file saved as UTF-16, with or without a byte order mark, is read', () => {
+  const text = tabs(GOOGLE_HEAD, ['A Made-up Book', 'A. Writer', 'GGKEY:MADEUP0001', 'AU', '2', '1', '1', '0.73', 'Audiobook']);
+  for (const mark of [true, false]) {
+    const sheet = readTable(utf16(text, { mark }), 'Sales.csv').sheets[0];
+    assert.deepEqual(headingsOf(sheet).names, GOOGLE_HEAD, `mark: ${mark}`);
+    assert.equal(sheet.rows.length, 2);
+  }
+  const big = readTable(Buffer.concat([Buffer.from([0xfe, 0xff]), Buffer.from(text, 'utf16le').swap16()]), 'be.csv').sheets[0];
+  assert.deepEqual(headingsOf(big).names, GOOGLE_HEAD, 'big-endian too');
+  assert.equal(readTable(Buffer.from('a,b\n1,2\n'), 'plain.csv').sheets[0].rows.length, 2, 'plain text is still plain text');
+});
+
+test('a report with no dates is put in the month the person says, and a month said badly is refused', () => {
+  const sheet = readTable(utf16(tabs(GOOGLE_HEAD, ['A Made-up Book', 'A. Writer', 'GGKEY:MADEUP0001', 'AU', '2', '1', '1', '0.73', 'Audiobook'], ['Another Book', 'A. Writer', '9780000000002', 'US', '3', '0', '3', '4.50', 'Ebook'])), 'Sales.csv').sheets[0];
+  const mapping = { date: null, title: 0, item: 2, marketplace: 3, units: 6, royalty: 7, kind: 8, currency: null };
+  const report = readMapped({ sheet, mapping, options: { period: '2026-09', currency: 'usd' }, storeId: 'store-google-play-books', storeName: 'Google Play Books' });
+  assert.deepEqual(report.sales.map((s) => [s.royaltyDate, s.title, s.storeId, s.marketplace, s.netUnits, s.royalty.minor, s.royaltyType]), [
+    ['2026-09', 'A Made-up Book', 'GGKEY:MADEUP0001', 'AU', 1, 73n, 'Audiobook'], ['2026-09', 'Another Book', '9780000000002', 'US', 3, 450n, 'Ebook'],
+  ]);
+  assert.ok(report.notes.some((n) => /no dates, so every row is put in 2026-09/.test(n)));
+  refused(() => readMapped({ sheet, mapping, options: { currency: 'USD' }, storeId: 's', storeName: 'S' }), /the date of the sale \(or, if the report has none, the month it covers\)/);
+  for (const bad of ['September', '2026-13', '26-09', '2026-9']) refused(() => readMapped({ sheet, mapping, options: { period: bad, currency: 'USD' }, storeId: 's', storeName: 'S' }), /Say the month the report covers like 2026-09/);
+  const withDates = readMapped({ sheet: readTable(csv('Date,Title,Royalty', '2026-08-02,A,1.00'), 'x.csv').sheets[0], mapping: { date: 0, title: 1, royalty: 2 }, options: { period: '2026-09', currency: 'USD' }, storeId: 's', storeName: 'S' });
+  assert.equal(withDates.sales[0].royaltyDate, '2026-08-02', 'a date in the file wins over the month said');
+});
+
+test('a list of invoices with no rows is refused as not being a sales report, and says so', () => {
+  const invoices = ['Invoice Number', 'Customer Reference', 'Order Number', 'Date', 'Description', 'Amount', 'Currency', 'Due Date', 'Past Due'];
+  const sheet = readTable(utf16(`"${invoices.join('","')}"\n`, { mark: false }), 'invoices.csv').sheets[0];
+  assert.deepEqual(headingsOf(sheet).names, invoices);
+  refused(() => readMapped({ sheet, mapping: guessMapping(invoices), storeId: 'store-ingramspark', storeName: 'IngramSpark' }), /no rows under the headings.*list of invoices/);
 });
