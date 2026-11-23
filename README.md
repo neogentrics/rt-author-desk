@@ -22,8 +22,9 @@ nothing else to install.
 RT Author Desk is part of the **Recon Towers** suite, built by its Dev Department. It was inspired by the owner writing his
 own books.
 
-> **Version 1.0 is the catalog.** Books, editions, ISBNs, store listings, audiobooks and clashes, with backups, a Trash, and a way to get everything
-> out. The money (sales reports, royalties and a calculator) is 1.1, and some of it already works, marked "early" in the menu.
+> **Version 1.1 is out.** The catalog (1.0): books, editions, ISBNs, store listings, audiobooks and clashes, with backups, a Trash, and a way to get everything
+> out. And the first of the money: KDP sales reports, royalties, and a calculator with rate cards of your own, marked "early" in the menu until they have been
+> checked against real reports from every store.
 
 <table>
 <tr>
@@ -96,8 +97,9 @@ anyway*), and macOS will ask you to open the app from *System Settings → Priva
 | **Private by default** | Your library is an encrypted database on your own computer. Until a password is set it keeps out a casual look, not someone who can use your account |
 | **Works offline** | No account, no server, and nothing you enter is ever sent anywhere. The one thing the app contacts is GitHub, to look for a newer version, and you can turn that off |
 
-Coming next: 1.1, the money: a royalty and pricing calculator, and readers for Barnes & Noble Press, ACX, Google Play
-Books and IngramSpark, which are waiting for a real report to build from. After that: the other stores, costs and profit per book,
+Coming next: the rest of the money: readers for Barnes & Noble Press, ACX, Google Play
+Books and IngramSpark, which are waiting for a real report to build from, two more price checks, and a check of the calculator against real
+reports. After that: the other stores, costs and profit per book,
 launches, accounts and a locked vault for logins, links to the other Recon Towers apps, and moving off Notion. See the
 [roadmap](ROADMAP.md).
 
