@@ -60,6 +60,119 @@
     return card.source.verified ? ['Read on the store\'s page, ', dayText(card.source.checked_on)] : 'Not confirmed on the store\'s own page yet';
   };
 
+
+  // "70" or "70%" or "7.5" as the rate the calculator wants (0.70, 0.075), by moving the point, so nothing is ever a floating-point number.
+  function percentToRate(text) {
+    const t = String(text ?? '').trim().replace(/%$/, '');
+    if (!/^\d+(\.\d+)?$/.test(t)) return t; // the app says in words what is wrong with it
+    const [whole, fraction = ''] = t.split('.');
+    const scale = fraction.length + 2;
+    const s = `${whole}${fraction}`.padStart(scale + 1, '0');
+    return `${s.slice(0, -scale)}.${s.slice(-scale)}`;
+  }
+
+  // A card of your own: new, copied from one the app ships, or one of yours changed. Yours win over the app's for the same store, format,
+  // channel and currency, and an update to the app never touches them.
+  async function editCard(existing, shipped, done) {
+    const { stores } = await AD.call('names');
+    const error = h('p', { class: 'error', role: 'alert', hidden: true });
+    const text = (id, value, extra = {}) => h('input', { id, type: 'text', autocomplete: 'off', value: value ?? '', ...extra });
+    const row = (label, control, help) => h('div', { class: 'field' }, h('label', { for: control.id }, label), control, help ? h('p', { class: 'help' }, help) : null);
+    const store = h('select', { id: 'cc-store' }, stores.filter((s) => s.active !== 0).map((s) => h('option', { value: s.id }, s.name)));
+    const name = text('cc-name', existing?.name);
+    const kind = text('cc-format', existing?.format, { placeholder: 'ebook, paperback, audiobook…' });
+    const channel = text('cc-channel', existing?.channel, { placeholder: 'Amazon.com, Direct, a contract…' });
+    const currency = text('cc-currency', existing?.currency ?? 'USD', { maxlength: '3' });
+    const from = h('input', { id: 'cc-from', type: 'date', value: existing?.applies_from ?? '' });
+    const until = h('input', { id: 'cc-until', type: 'date', value: existing?.applies_until ?? '' });
+    const perMb = text('cc-permb', existing?.delivery?.per_mb);
+    const minimum = text('cc-min', existing?.delivery?.minimum);
+    const notes = h('textarea', { id: 'cc-notes', rows: '2' }, existing?.notes ?? '');
+    if (existing) store.value = existing.store_id;
+    let basedOn = null;
+
+    const rows = [];
+    const optionsBox = h('div');
+    const renumber = () => rows.forEach((r, i) => { r.legend.textContent = `Rate ${i + 1}`; r.remove.hidden = rows.length < 2; });
+    function addOption(option = {}) {
+      const n = rows.length + 1;
+      const legend = h('legend', null, `Rate ${n}`);
+      const id = (part) => `cc-o${Math.random().toString(36).slice(2, 8)}-${part}`;
+      const oName = text(id('name'), option.name, { placeholder: '70% option' });
+      const oRate = text(id('rate'), option.rate == null ? '' : percent(option.rate), { inputmode: 'decimal' });
+      const oMin = text(id('min'), option.price_min, { inputmode: 'decimal' });
+      const oMax = text(id('max'), option.price_max, { inputmode: 'decimal' });
+      const printingBox = h('input', { id: id('printing'), type: 'checkbox', checked: (option.deduct ?? []).includes('printing') });
+      const deliveryBox = h('input', { id: id('delivery'), type: 'checkbox', checked: (option.deduct ?? []).includes('delivery') });
+      const remove = h('button', { type: 'button', class: 'small' }, 'Remove this rate');
+      const { name: _n, rate: _r, price_min: _a, price_max: _b, deduct: _d, ...extra } = option; // what the form has no box for (a lowest price by file size) is kept
+      const box = h('fieldset', { class: 'card' }, legend,
+        h('div', { class: 'row start' }, row('Name', oName), row('Rate, as a percentage of the list price', oRate)),
+        h('div', { class: 'row start' }, row('Lowest list price it accepts', oMin), row('Highest list price it accepts', oMax)),
+        h('div', { class: 'row start' }, h('label', { class: 'row start' }, printingBox, 'Printing cost comes off'), h('label', { class: 'row start' }, deliveryBox, 'Delivery cost comes off')),
+        remove);
+      const entry = {
+        legend, remove, box,
+        read: () => ({
+          ...extra, name: oName.value, rate: percentToRate(oRate.value), price_min: oMin.value.trim(), price_max: oMax.value.trim(),
+          deduct: [printingBox.checked && 'printing', deliveryBox.checked && 'delivery'].filter(Boolean),
+        }),
+      };
+      remove.addEventListener('click', () => { rows.splice(rows.indexOf(entry), 1); box.remove(); renumber(); });
+      rows.push(entry);
+      optionsBox.append(box);
+      renumber();
+    }
+    for (const option of existing?.options ?? [{}]) addOption(option);
+
+    // Start from a card the app ships: its rates are copied in, and the card remembers which it came from.
+    const start = h('select', { id: 'cc-start' }, h('option', { value: '' }, '(start empty)'), shipped.map((c) => h('option', { value: c.id }, `${where(c)}, ${formatName(c.format)}, ${c.currency}`)));
+    start.addEventListener('change', () => {
+      const from = shipped.find((c) => c.id === start.value);
+      basedOn = from?.id ?? null;
+      if (!from) return;
+      store.value = from.store_id; kind.value = from.format; channel.value = from.channel; currency.value = from.currency;
+      name.value = name.value || `My ${where(from)} rates`;
+      perMb.value = from.delivery?.per_mb ?? ''; minimum.value = from.delivery?.minimum ?? '';
+      rows.splice(0).forEach((r) => r.box.remove());
+      for (const option of from.options) addOption(option);
+    });
+
+    const body = h('div', null,
+      existing ? null : row('Start from', start, 'Copy the rates of a card the app ships, then change what is different in your contract.'),
+      row('What to call it', name),
+      h('div', { class: 'row start' }, row('Store', store), row('Format', kind), row('Where', channel, 'The marketplace or the deal, as you write it on a price.'), row('Currency', currency)),
+      h('div', { class: 'row start' }, row('In force from', from, 'Leave empty for always.'), row('In force until', until)),
+      h('h3', null, 'The rates'), optionsBox,
+      h('p', null, h('button', { type: 'button', id: 'cc-add' }, 'Add another rate')),
+      h('div', { class: 'row start' }, row('Delivery cost per MB', perMb, 'Only if a rate takes delivery off.'), row('Delivery cost at least', minimum)),
+      row('Notes', notes),
+      error);
+    const save = h('button', { type: 'button', class: 'primary', id: 'cc-save' }, 'Save this card');
+    const cancel = h('button', { type: 'button' }, 'Cancel');
+    const dialog = AD.dialog(existing ? 'Change your rate card' : 'A rate card of your own', h('div', null, body, h('div', { class: 'actions' }, cancel, save)), { wide: true });
+    body.querySelector('#cc-add').addEventListener('click', () => addOption());
+    cancel.addEventListener('click', () => dialog.close());
+    save.addEventListener('click', async () => {
+      error.hidden = true;
+      const fields = {
+        ...(existing ? { id: existing.id } : {}), ...(basedOn ? { based_on: basedOn } : {}),
+        name: name.value, store_id: store.value, format: kind.value, channel: channel.value, currency: currency.value.trim().toUpperCase(),
+        applies_from: from.value || null, applies_until: until.value || null, notes: notes.value,
+        options: rows.map((r) => r.read()), delivery: perMb.value.trim() || minimum.value.trim() ? { per_mb: perMb.value.trim(), minimum: minimum.value.trim() } : null,
+      };
+      try {
+        await AD.call('saveRateCard', fields);
+        dialog.close();
+        AD.toast('Saved your rate card.');
+        done();
+      } catch (problem) {
+        error.textContent = problem.message;
+        error.hidden = false;
+      }
+    });
+  }
+
   AD.routes.calculator = async () => {
     const memory = recall();
     const state = { date: todayText(), cards: [] };
@@ -124,14 +237,21 @@
       rates.replaceChildren(state.cards.length
         ? h('div', { class: 'tablewrap' }, h('table', null,
           h('caption', { class: 'visually-hidden' }, `The rate cards in force on ${dayText(state.date)}`),
-          h('thead', null, h('tr', null, ['Where', 'Format', 'Currency', 'In force', 'Rates', 'Where the rates came from'].map((t) => h('th', { scope: 'col' }, t)))),
+          h('thead', null, h('tr', null, ['Where', 'Format', 'Currency', 'In force', 'Rates', 'Where the rates came from', 'Yours'].map((t) => h('th', { scope: 'col' }, t)))),
           h('tbody', null, state.cards.map((card) => h('tr', null,
             h('th', { scope: 'row' }, where(card), card.own ? [' ', h('span', { class: 'chip check' }, 'yours')] : null),
             h('td', null, formatName(card.format)),
             h('td', null, card.currency),
             h('td', null, inForce(card)),
             h('td', null, card.options.map((o) => `${o.name}: ${percent(o.rate)}`).join('; ')),
-            h('td', null, sourceCell(card)))))))
+            h('td', null, sourceCell(card)),
+            h('td', null, card.own ? h('span', { class: 'row start' },
+              h('button', { type: 'button', class: 'small', 'aria-label': `Change your card for ${where(card)}, ${formatName(card.format)}`, onclick: () => editCard(card, state.cards.filter((c) => !c.own), load) }, 'Change'),
+              h('button', { type: 'button', class: 'small', 'aria-label': `Remove your card for ${where(card)}, ${formatName(card.format)}`, onclick: async () => {
+                if (await AD.confirm('This removes your rate card. The calculator goes back to the card the app ships for it, if there is one.')) {
+                  try { await AD.call('removeRateCard', { id: card.id }); AD.toast('Removed.'); await load(); } catch (problem) { AD.toast(problem.message); }
+                }
+              } }, 'Remove')) : ''))))))
         : h('p', { class: 'note' }, 'No rate card applies on this date.'));
     }
 
@@ -266,7 +386,8 @@
         wantStatus, wantOut),
       section('calc-rates-h', 'The rates behind these numbers',
         h('p', { class: 'note' }, 'Only stores that have a rate card are shown. A rate is added once it has been read from the store\'s own page, and a rate that has not is marked, so you can check it before you rely on it.'),
-        rates),
+        rates,
+        h('p', null, h('button', { type: 'button', id: 'calc-add-card', onclick: () => editCard(null, state.cards.filter((c) => !c.own), load) }, 'Add a rate card of my own…'))),
     ];
   };
 })();

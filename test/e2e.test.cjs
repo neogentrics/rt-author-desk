@@ -340,6 +340,53 @@ e2e('Calculator: a price shows what each store\'s rates earn, a price under a li
   assert.equal(await app.run("document.querySelectorAll('#calc-earn-0').length"), 0);
 });
 
+// A rate card of your own: copied from one the app ships, changed, used by the calculator in place of the shipped one, and taken away again.
+e2e('Calculator: a card of your own is made from a shipped one, wins over it, can be changed, and goes when removed', async (app) => {
+  await app.goTo('#/calculator');
+  await app.until("document.querySelector('#calc-add-card')", 'the Calculator');
+  await app.click('#calc-add-card');
+  await app.until("document.querySelector('dialog #cc-start')", 'the card form');
+  await app.fill('#cc-start', 'kdp-paperback-usd-amazon');
+  assert.equal(await app.run("document.querySelector('#cc-format').value"), 'paperback');
+  assert.equal(await app.run("document.querySelectorAll('dialog fieldset legend').length"), 2, 'the two rates were copied in');
+  // a mistake is said in words and keeps the form open
+  await app.fill('#cc-currency', 'dollars');
+  await app.click('#cc-save');
+  await app.until("document.querySelector('dialog [role=alert]:not([hidden])')", 'the mistake to be named');
+  assert.match(await app.run("document.querySelector('dialog [role=alert]').textContent"), /currency/);
+  await app.fill('#cc-currency', 'usd');
+  // keep only a 65% rate that takes off printing
+  await app.run("document.querySelectorAll('dialog fieldset button')[1].click()");
+  await app.run("(() => { const f = document.querySelector('dialog fieldset'); const set = (sel, v) => { const el = f.querySelector(sel); el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); }; set('input[id$=-name]', '65% deal'); set('input[id$=-rate]', '65'); set('input[id$=-min]', '0.01'); set('input[id$=-max]', ''); })()");
+  assert.deepEqual(await audit(app), [], 'the card form passes the accessibility checks');
+  await app.click('#cc-save');
+  await app.until("!document.querySelector('dialog')", 'the form to close');
+  // 0.65 x 10.00 = 6.50, less 4.00 = 2.50, and the shipped 60% rate is no longer offered at KDP
+  await app.until("document.querySelector('#calc-format')");
+  await app.fill('#calc-format', 'paperback');
+  await app.fill('#calc-price', '10.00');
+  await app.fill('#calc-printing', '4.00');
+  await app.click('#calc-earn');
+  await app.until("document.querySelector('#calc-earn-0')", 'the answer');
+  const block = "[...document.querySelectorAll('section[aria-labelledby=calc-earn-h] section.card')].find((s) => s.querySelector('h3').textContent.startsWith('Amazon KDP, Amazon.com'))";
+  assert.match(await app.run(`${block}.textContent`), /your card.*65% deal\$6\.50Printing cost \$4\.00\$2\.50/);
+  assert.doesNotMatch(await app.run(`${block}.textContent`), /60% \(list price/);
+  // change it
+  await app.run("[...document.querySelectorAll('#calc-rates-h ~ * button, section[aria-labelledby=calc-rates-h] button')].find((b) => /^Change your card/.test(b.getAttribute('aria-label'))).click()");
+  await app.until("document.querySelector('dialog #cc-name')", 'the card to open again');
+  assert.equal(await app.run("document.querySelector('#cc-name').value"), 'My Amazon KDP, Amazon.com rates');
+  await app.fill('#cc-name', 'Renamed deal');
+  await app.click('#cc-save');
+  await app.until("!document.querySelector('dialog')");
+  assert.equal((await app.call('rateCards', {})).find((c) => c.own).name, 'Renamed deal', 'the change was kept');
+  // remove it: the shipped card comes back
+  await app.run("[...document.querySelectorAll('section[aria-labelledby=calc-rates-h] button')].find((b) => /^Remove your card/.test(b.getAttribute('aria-label'))).click()");
+  await app.until("document.querySelector('dialog')", 'the question');
+  await app.run("[...document.querySelectorAll('dialog button')].find((b) => b.textContent.trim() === 'Remove').click()");
+  await app.until("!document.querySelector('dialog') && !document.querySelector('section[aria-labelledby=calc-rates-h] .chip.check')", 'the card to go');
+  assert.equal((await app.call('rateCards', {})).filter((c) => c.own).length, 0);
+});
+
 // A backup made elsewhere, to restore. The test stops at the question: the restart that follows can't be watched from the page.
 const backupToRestore = (() => {
   const { Library } = require('../src/main/storage/library');

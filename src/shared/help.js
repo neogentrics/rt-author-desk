@@ -183,6 +183,8 @@ const GUIDES = [
       { type: 'p', text: 'Enter what you want to earn on each copy and choose **Find the price**. Each price is rounded up to the next cent, so a copy never earns a cent less than you asked.' },
       { type: 'h', text: 'Where the rates come from' },
       { type: 'p', text: 'Rates are never written into the app\'s code. Each is a dated card that says where it came from, and whether it was read on the store\'s own page. A card marked as not confirmed has not been, so check it before you rely on it.' },
+      { type: 'h', text: 'Your own rates' },
+      { type: 'p', text: 'A contract can pay differently from the published rate. Under **The rates behind these numbers**, choose **Add a rate card of my own**, start from one the app ships if you like, and change what is different. Your card is used in place of the app\'s for the same store, format, where and currency, and an update never touches it. You can change or remove it later, and it is in your export.' },
       { type: 'note', text: 'The Calculator is marked early in the menu. It is part of the next release, the money, and has not yet been checked against the stores\' own calculators for a set of real books.' },
     ],
   },
