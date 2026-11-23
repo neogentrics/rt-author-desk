@@ -80,7 +80,7 @@ class Importer {
     }
     if (!report) {
       const waiting = readerStatus().filter((r) => !r.ready).map((r) => r.name);
-      throw new ImportError(`This isn't a report the app can read yet. It reads Amazon KDP's orders and payments reports. ${waiting.join(', ')} are waiting for a real report to build from.`);
+      throw new ImportError(`This isn't a report the app can read yet. It reads Amazon KDP's orders and payments reports. ${waiting.join(', ')} are waiting for a real report to build from. For any of them, Match your columns reads its report in the meantime.`);
     }
     return this.#show(report, buffer, fileName);
   }
