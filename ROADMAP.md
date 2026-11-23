@@ -9,7 +9,7 @@ tags: [roadmap, planning]
 # Roadmap
 
 RT Author Desk is the business side of being an author. This page lists the releases, each one something that can be tested
-on its own. **Building has started, on the catalog first.** The reasons behind it are in the
+on its own. **The catalog (1.0.0) and the first of the money (1.1.0) are released, and building goes on.** The reasons behind it are in the
 [product plan](docs/product-plan.md), and the choices are in [decisions](docs/decisions.md).
 
 > [!TIP]
@@ -125,7 +125,7 @@ backup. Export everything and find it all in the files.
 
 🙋 The sales reports, and what the books earn. It follows the catalog, so a problem here never holds up the catalog's release.
 
-**Where it stands (18 November 2026).** It has been started early, as test code that isn't part of v1.0. KDP's orders and
+**Where it stands (22 November 2026).** Part of it is released as **1.1.0**, with the money screens marked early. KDP's orders and
 payments reports go into the library: one batch at a time, rows matched to editions by ASIN or ISBN (with one question for the
 rest), rows already imported skipped, a whole batch undoable, the original file kept encrypted, and earned shown beside paid. A
 report whose own Summary doesn't match its rows is shown, refused unless you say you know, and flagged for good. The Barnes &
@@ -134,7 +134,9 @@ Royalties by month, book, edition, store, marketplace and currency are built too
 paid, and last month's earnings on the Desk. The calculator is built and tested to the cent against worked examples, and has its own screen (marked early): what a price earns
 per copy at KDP, Barnes & Noble Press and ACX from dated rate cards, side by side, the price that earns what you want, the lines where a rate changes,
 and each rate saying where it came from and whether it was read on the store's own page. Your own cards are kept apart from the shipped ones, and
-can be made, changed and removed on the screen. The remaining price checks, the other stores' cards and readers, and the test against real reports are next. The open finding about the sample KDP report is in
+can be made, changed and removed on the screen. The remaining price checks, the other stores' cards and readers, and the test against real reports are still to do, and ship in the next updates. 1.1.0 also
+carries the security work done since 1.0.0 (files from outside treated as hostile, the window's locks tested, a switch for the update check, and the privacy wording
+made true). The open finding about the sample KDP report is in
 [decisions](docs/decisions.md#to-check-before-or-during-the-build).
 
 | Feature | Size | Details |
@@ -151,6 +153,11 @@ can be made, changed and removed on the screen. The remaining price checks, the 
 **Test:** import two years of real KDP reports: every row is accounted for, and each month's total matches the report to the cent.
 Import the same file again and nothing changes. Undo a batch. A price worked out by the calculator matches the store's own
 calculator for a set of real books.
+
+**Still needed from the owner to finish it:** a real report from each of Barnes & Noble Press, ACX, Google Play Books and IngramSpark, a recent
+KDP report with pages read, what "the rate you want" means for the ebook price check, and what is locked (and until when) for the locked-period check.
+Four of the eight shipped rate cards (B&N ebook and print, KDP ebook before 7 July 2026, ACX's old rates) were not read on the store's own page, and the
+Calculator says so for each.
 
 ## v1.2 — Every store
 
