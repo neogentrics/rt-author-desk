@@ -234,7 +234,7 @@ function layoutOf({ names, mapping, options }) {
     const i = mapping[field.key];
     columns[field.key] = Number.isInteger(i) && names[i] !== undefined ? columnName(names, i) : null;
   }
-  return { headers: names, columns, options: { dateOrder: options.dateOrder === 'day-first' ? 'day-first' : 'month-first', decimal: options.decimal === ',' ? ',' : '.', currency: String(options.currency ?? '').toUpperCase() } };
+  return { headers: names, columns, options: { headerRow: options.headerRow ? Number(options.headerRow) : null, dateOrder: options.dateOrder === 'day-first' ? 'day-first' : 'month-first', decimal: options.decimal === ',' ? ',' : '.', currency: String(options.currency ?? '').toUpperCase() } };
 }
 
 // Does a file's headings still fit a remembered layout? `fits` when every column it uses is still there. When it doesn't, it says which are gone and

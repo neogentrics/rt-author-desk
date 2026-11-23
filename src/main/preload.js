@@ -28,4 +28,5 @@ contextBridge.exposeInMainWorld('desk', {
   exportAll: () => ipcRenderer.invoke('desk:export-all'),
   pickBooksFile: () => ipcRenderer.invoke('desk:pick-books-file'),
   pickReport: () => ipcRenderer.invoke('desk:pick-report'),
+  pickColumnsFile: () => ipcRenderer.invoke('desk:pick-columns-file'),
 });

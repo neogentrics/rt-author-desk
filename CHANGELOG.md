@@ -6,6 +6,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+- **Match your columns** (early, part of 1.2). For a store the app has no reader for, choose its report on the Money screen (a CSV or an Excel file), say which store it
+  is from, and show the app which column is the date, the title or ISBN, the country, the copies, what you earned and the currency. It guesses first, says how a date
+  and a number are written, and takes a fixed currency for a file with none. It then shows what it would do, every row accounted for, before anything is saved:
+  a line with no title (a total, a note) is set aside and named, a cell it cannot read stops everything and names the row, rows already in the library count as repeats,
+  and the whole batch can be undone. The money is an estimate, and the file has no total of its own, so it says to compare the total with the store's.
+- **Kept layouts**, by their headings (database step 10). The next report from that store with the same headings is recognized, even with the columns in another order, and one
+  whose columns have been renamed is told which are gone and which are new, never read by guessing past them. They are in the export.
+
 ### Security
 - **Electron 45.4.1 and electron-builder 26.18.1**, the newest patch of each. `npm audit` finds nothing in what ships in the app. It still lists 6 moderate
   problems in the build tools (a slow-pattern problem in `minimatch`, which only matters if someone hands the build a hostile pattern); the fix `npm audit fix --force`

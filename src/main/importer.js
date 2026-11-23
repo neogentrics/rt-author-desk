@@ -7,7 +7,7 @@ const crypto = require('node:crypto');
 const { LayoutError } = require('./reports/kdp');
 const { readReport, readerStatus } = require('./reports/index');
 const { readWorkbook, WorkbookError } = require('./reports/xlsx');
-const { MappingError, compareLayout, guessMapping, headingsOf, layoutOf, readMapped, readTable } = require('./reports/mapped');
+const { FIELDS, MappingError, compareLayout, guessMapping, headingsOf, layoutOf, readMapped, readTable } = require('./reports/mapped');
 const { parseIsbn } = require('../shared/isbn');
 const { add, format, money, toDecimalString, zero } = require('../shared/money');
 
@@ -102,15 +102,28 @@ class Importer {
     const stores = new Map(this.library.list('stores').map((s) => [s.id, s.name]));
     return {
       id, fileName: String(fileName).slice(0, 200), format: table.format,
-      sheets: table.sheets.map((sheet) => {
-        const head = headingsOf(sheet);
-        const body = sheet.rows.slice(head.index + 1).filter((row) => row.cells.some((c) => String(c ?? '').trim() !== ''));
-        return {
-          name: sheet.name, headerRow: head.number, headers: head.names, rowCount: sheet.rows.length,
-          sample: body.slice(0, 5).map((row) => row.cells.map((c) => String(c ?? '').slice(0, 80))),
-          guess: guessMapping(head.names), ...this.#layoutsFor(head.names, stores),
-        };
-      }),
+      fields: FIELDS.map(({ key, label, required }) => ({ key, label, required: Boolean(required) })),
+      sheets: table.sheets.map((sheet) => this.#sheetView(sheet, null, stores)),
+    };
+  }
+
+  // The same sheet seen with the headings on another row (a store that puts a title block above them).
+  columnsFor({ id, sheet, headerRow } = {}) {
+    const pending = this.tables.get(id);
+    if (!pending) throw new ImportError('That file is no longer open here. Choose it again.');
+    const found = pending.table.sheets.find((s) => s.name === sheet);
+    if (!found) throw new ImportError('Choose which sheet of the file holds the sales.');
+    const stores = new Map(this.library.list('stores').map((s) => [s.id, s.name]));
+    return this.#sheetView(found, headerRow ? Number(headerRow) : null, stores);
+  }
+
+  #sheetView(sheet, headerRow, stores) {
+    const head = headingsOf(sheet, headerRow);
+    const body = sheet.rows.slice(head.index + 1).filter((row) => row.cells.some((c) => String(c ?? '').trim() !== ''));
+    return {
+      name: sheet.name, headerRow: head.number, headers: head.names, rowCount: sheet.rows.length,
+      sample: body.slice(0, 5).map((row) => row.cells.map((c) => String(c ?? '').slice(0, 80))),
+      guess: guessMapping(head.names), ...this.#layoutsFor(sheet, headerRow, stores),
     };
   }
 
@@ -154,11 +167,13 @@ class Importer {
   }
 
   // Which kept layouts fit a file's headings, and which look like the same report whose columns have changed.
-  #layoutsFor(names, stores) {
+  #layoutsFor(sheet, headerRow, stores) {
     const recognized = [];
     const changed = [];
     for (const row of this.library.list('report_layouts')) {
       const saved = { headers: JSON.parse(row.headers), columns: JSON.parse(row.columns), options: JSON.parse(row.options) };
+      // A layout made with the headings on a later row is looked for there.
+      const names = headingsOf(sheet, headerRow ?? saved.options.headerRow ?? null).names;
       const result = compareLayout(saved, names);
       const base = { id: row.id, name: row.name, storeId: row.store_id, storeName: stores.get(row.store_id) ?? row.store_id };
       if (result.fits) recognized.push({ ...base, same: result.same, mapping: result.mapping, options: result.options });

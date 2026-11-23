@@ -117,7 +117,7 @@ test('a layout is remembered by its headings, fits a file with the columns in an
   const sheet = sheetOf(csv(...KOBO));
   const names = headingsOf(sheet).names;
   const saved = layoutOf({ names, mapping: guessMapping(names), options: { dateOrder: 'day-first', decimal: ',', currency: 'usd' } });
-  assert.deepEqual(saved.options, { dateOrder: 'day-first', decimal: ',', currency: 'USD' });
+  assert.deepEqual(saved.options, { headerRow: null, dateOrder: 'day-first', decimal: ',', currency: 'USD' });
   const same = compareLayout(saved, names);
   assert.deepEqual([same.fits, same.same, same.gone, same.added], [true, true, [], []]);
 

@@ -387,6 +387,58 @@ e2e('Calculator: a card of your own is made from a shipped one, wins over it, ca
   assert.equal((await app.call('rateCards', {})).filter((c) => c.own).length, 0);
 });
 
+// Match your columns: a made-up report from a store with no reader is read with the columns chosen, imported, and its layout is kept and recognized.
+const matchFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-match-')), 'kobo.csv');
+const KOBO_HEAD = 'Sale Date,Book Title,ISBN,Country,Quantity,Royalty,Currency';
+e2e('Match your columns: choose the store and the columns, see every row accounted for, import, and the next file with the same headings is recognized', async (app) => {
+  fs.writeFileSync(matchFile, [KOBO_HEAD, '2026-09-03,Tidewater,9780000000002,US,2,5.98,USD', '2026-09-05,Low Water,9780000000019,US,-1,-2.99,USD', 'Total,,,,1,2.99,'].join('\n'));
+  await app.goTo('#/money');
+  await app.until("document.querySelector('#match-columns')", 'the Money screen');
+  await app.click('#match-columns');
+  await app.until("document.querySelector('dialog #mc-store')", 'the columns dialog');
+  assert.equal(await app.run("document.querySelector('#mc-royalty').selectedOptions[0].textContent"), 'Royalty', 'the columns are guessed');
+  assert.equal(await app.run("document.querySelectorAll('dialog table.sample tbody tr').length"), 3);
+  assert.deepEqual(await audit(app), [], 'the dialog passes the accessibility checks');
+
+  // no store chosen yet: said in words
+  await app.click('#mc-go');
+  await app.until("document.querySelector('dialog [role=alert]')", 'the store to be asked for');
+  assert.match(await app.run("document.querySelector('dialog [role=alert]').textContent"), /Choose which store/);
+  await app.fill('#mc-store', 'store-kobo');
+  await app.click('#mc-go');
+  await app.until("document.querySelector('#mc-import')", 'the summary');
+  const summary = await app.run("document.querySelector('dialog').textContent");
+  assert.match(summary, /Kobo/);
+  assert.match(summary, /4 rows in the file/);
+  assert.match(summary, /2 new rows to save/);
+  assert.match(summary, /headings, empty lines, totals and notes/);
+  assert.match(summary, /\$2\.99/, '5.98 less the refund of 2.99');
+  assert.match(summary, /no title, so it was taken for a total or a note and left out: row 4/);
+  assert.match(summary, /no total of its own/);
+  assert.deepEqual(await audit(app), []);
+  await app.click('#mc-import');
+  await app.until("!document.querySelector('dialog')", 'the import to finish');
+  const rows = await app.run("window.desk.call('royalties', { by: ['store'] }).then((r) => r.value.estimated.rows.map((x) => [x.currency, x.earned.amount]))");
+  assert.deepEqual(rows, [['USD', '2.99']]);
+  assert.equal((await app.call('layouts')).length, 1, 'the columns were kept');
+
+  // next month: the same headings are recognized and filled in
+  fs.writeFileSync(matchFile, [KOBO_HEAD, '2026-10-03,Tidewater,9780000000002,US,1,2.99,USD'].join('\n'));
+  await app.goTo('#/money');
+  await app.until("document.querySelector('#match-columns')");
+  await app.click('#match-columns');
+  await app.until("document.querySelector('dialog #mc-store')", 'the dialog again');
+  assert.match(await app.run("document.querySelector('dialog [role=status]').textContent"), /looks like your layout "Kobo report" for Kobo/);
+  assert.equal(await app.run("document.querySelector('#mc-store').value"), 'store-kobo');
+
+  // the store renames a column: it is said, and nothing is guessed
+  await app.run("document.querySelector('dialog').close()");
+  fs.writeFileSync(matchFile, ['Sale Date,Book Title,ISBN,Country,Quantity,Net Royalty,Currency', '2026-11-03,Tidewater,9780000000002,US,1,2.99,USD'].join('\n'));
+  await app.click('#match-columns');
+  await app.until("document.querySelector('dialog #mc-store')", 'the dialog a third time');
+  assert.match(await app.run("document.querySelector('dialog [role=status]').textContent"), /doesn't fit this file any more: no column called "Royalty" \(new: "Net Royalty"\)/);
+}, { env: { RTAD_TEST_FILES: JSON.stringify({ columns: matchFile }) } });
+
 // A backup made elsewhere, to restore. The test stops at the question: the restart that follows can't be watched from the page.
 const backupToRestore = (() => {
   const { Library } = require('../src/main/storage/library');

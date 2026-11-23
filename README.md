@@ -86,6 +86,7 @@ anyway*), and macOS will ask you to open the app from *System Settings → Priva
 | **Sales reports** (early, part of 1.1) | Choose an Amazon KDP orders or payments report and see what it holds before accepting it. Every row is accounted for, rows you already have are skipped, rows that match no book are asked about once, and a whole import can be undone. The original file is kept inside your library |
 | **Earned and paid** (early, part of 1.1) | What the reports say you earned, beside what the payment reports say you were paid, by currency and month. A report whose own total doesn't match its rows is flagged and never hidden |
 | **Royalties** (early, part of 1.1) | Added up by month, book, edition, store and marketplace, in any mix, always by currency. Estimates from the sales reports are kept apart from what the payment reports say was paid, and last month's earnings show on the Desk |
+| **Match your columns** (early, part of 1.2) | For a store the app has no reader for: choose its report (CSV or Excel), say which column is the date, the title, the copies and what you earned, and see every row accounted for before anything is saved. The columns are kept, so next month's report is read the same way, and a store that renames a column is told apart from one that did not, with the column named |
 | **Calculator** (early, part of 1.1) | What a price earns on each copy at every store that has a rate card, side by side, and the price that earns what you want. A price just under a line says what stepping over it would earn. Every rate says where it came from and whether it was read on the store's own page, and it is an estimate for planning: the store's own report is what counts |
 | **Backups, Trash and export** | Backups to a folder you choose, each one file holding the library and its key, so keep it where only you can reach. Anything you remove waits 30 days in the Trash and comes back exactly. Everything can be exported as JSON and CSV, with your original reports |
 | **Bring in your books** | From a CSV file, such as a Notion export: match the columns, check what it found, and bring them in. Every row is accounted for, a title you already have is skipped, and the whole import can be undone |
@@ -98,8 +99,8 @@ anyway*), and macOS will ask you to open the app from *System Settings → Priva
 | **Works offline** | No account, no server, and nothing you enter is ever sent anywhere. The one thing the app contacts is GitHub, to look for a newer version, and you can turn that off |
 
 Coming next: the rest of the money: readers for Barnes & Noble Press, ACX, Google Play
-Books and IngramSpark, which are waiting for a real report to build from, two more price checks, and a check of the calculator against real
-reports. After that: the other stores, costs and profit per book,
+Books and IngramSpark, and for Draft2Digital, Kobo, Apple Books and Lulu, which are waiting for a real report to build from, two more price checks,
+and a check of the calculator against real reports. Until a store has a reader, Match your columns reads its report. After that: the other stores, costs and profit per book,
 launches, accounts and a locked vault for logins, links to the other Recon Towers apps, and moving off Notion. See the
 [roadmap](ROADMAP.md).
 

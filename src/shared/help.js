@@ -189,6 +189,24 @@ const GUIDES = [
     ],
   },
   {
+    slug: 'match-columns',
+    title: 'A report from any store',
+    summary: 'Match your columns: read a report from a store the app has no reader for.',
+    keywords: 'match columns report csv excel xlsx store import sales royalties kobo draft2digital apple lulu layout remember map',
+    blocks: [
+      { type: 'p', text: 'The app reads Amazon KDP\'s reports by itself. For any other store, choose **Match your columns…** on the Money screen, pick the report (a CSV or an Excel file), and show the app which column is which.' },
+      { type: 'ol', items: [
+        'Say which **store** the report is from, and which sheet if the file has several. If the headings are not on the first line, say which row they are on.',
+        'The app guesses the columns. Check each one: the **date**, the **title** or ISBN, the **country**, the **copies sold**, **what you earned** and the **currency**. If the file has no currency column, say which currency the whole file is in.',
+        'Say how a date such as 03/04/2026 is written, and how numbers are (1,234.56 or 1.234,56).',
+        'Choose **See what this does**. Every row is accounted for. A line with no title, such as a total, is left out and named. A cell the app cannot read stops everything and says which row, so nothing is half imported.',
+        'Choose **Import**. Tick **Keep these columns** and the next report from that store with the same headings is read the same way.',
+      ] },
+      { type: 'p', text: 'If a store renames a column, the app says which one has gone and asks you to match again. It never reads past a change by guessing.' },
+      { type: 'note', text: 'A report read this way has no total of its own to check against, so compare the total shown with the store\'s own figure. The money is an estimate until a payment report says otherwise. A reader built from a real report is better when there is one.' },
+    ],
+  },
+  {
     slug: 'trash-and-backups',
     title: 'The Trash, backups and export',
     summary: 'Getting back what you removed, keeping a copy, and taking everything out.',
