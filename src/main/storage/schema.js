@@ -44,6 +44,8 @@ const TABLES = {
   people: ['name', 'notes'],
   credits: ['edition_id', 'person_id', 'role', 'notes'],
   listing_credits: ['listing_id', 'credit_id'],
+  own_rate_cards: ['name', 'based_on', 'based_on_version', 'store_id', 'format', 'channel', 'currency', 'applies_from', 'applies_until',
+    'options', 'delivery', 'notes'],
 };
 
 // The stores every library starts with. Their IDs are fixed, so two computers that each made a new library agree on
@@ -340,6 +342,24 @@ const STEPS = [
         CREATE UNIQUE INDEX listing_credits_one_each ON listing_credits (listing_id, credit_id);
         CREATE INDEX listing_credits_by_credit ON listing_credits (credit_id);
         ALTER TABLE listings ADD COLUMN credits_recorded INTEGER NOT NULL DEFAULT 0 CHECK (credits_recorded IN (0, 1));
+      `);
+    },
+  },
+  {
+    version: 9,
+    up(db) {
+      const date = (column) => `${column} TEXT CHECK (${column} IS NULL OR ${column} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]')`;
+      // Rates you've entered or changed yourself. The cards that ship with the app are data in the app, never in here, so an
+      // update to them can't overwrite anything of yours.
+      db.exec(`
+        CREATE TABLE own_rate_cards (
+          id TEXT PRIMARY KEY, name TEXT NOT NULL DEFAULT '', based_on TEXT, based_on_version INTEGER,
+          store_id TEXT NOT NULL, format TEXT NOT NULL CHECK (length(format) > 0), channel TEXT NOT NULL DEFAULT '',
+          currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'), ${date('applies_from')}, ${date('applies_until')},
+          options TEXT NOT NULL, delivery TEXT, notes TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
+        );
+        CREATE INDEX own_rate_cards_by_store ON own_rate_cards (store_id, format);
       `);
     },
   },

@@ -5,6 +5,7 @@ const { Catalog, CatalogError } = require('./catalog');
 const { ROLES, roleLabel } = require('../shared/credits');
 const { ClashError, dismissClash, findClashes, restoreClash } = require('./clashes');
 const { BookImportError, BookImporter } = require('./books-import');
+const { Calculator, CalculatorError } = require('./calculator');
 const { ImportError, Importer } = require('./importer');
 const { RoyaltyError, royalties } = require('./royalties');
 const { Trash } = require('./trash');
@@ -14,12 +15,13 @@ const { today: todayOf } = require('../shared/dates');
 const { displayIsbn } = require('../shared/isbn');
 const { MoneyError, format, toDecimalString } = require('../shared/money');
 
-const FRIENDLY = [BookImportError, CatalogError, ClashError, ImportError, MoneyError, RoyaltyError];
+const FRIENDLY = [BookImportError, CalculatorError, CatalogError, ClashError, ImportError, MoneyError, RoyaltyError];
 
 function createApi(library, { now = () => new Date(), locale } = {}) {
   const catalog = new Catalog(library);
   const importer = new Importer(library, { locale, now });
   const booksImporter = new BookImporter(library);
+  const calculator = new Calculator(library, { locale, now });
   const trash = new Trash(library, { now });
   const today = () => todayOf(now());
   const options = () => ({ today: today(), locale });
@@ -40,7 +42,7 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
     desk: () => desk(library, options()),
     calendar: ({ includePast = false } = {}) => releaseCalendar(library, { today: today(), includePast }),
     audiobooks: () => audiobookTracker(library, { today: today() }),
-    clashes: ({ includeDismissed = false } = {}) => findClashes(library, { today: today(), includeDismissed }),
+    clashes: ({ includeDismissed = false } = {}) => findClashes(library, { today: today(), includeDismissed, locale }),
     dismissClash: ({ key, reason }) => (dismissClash(library, key, reason), true),
     restoreClash: ({ key }) => restoreClash(library, key),
 
@@ -127,6 +129,13 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
     matchItem: ({ storeId, storeItem, editionId }) => importer.matchItem({ storeId, storeItem, editionId }),
     earnings: () => importer.earnedVsPaid(),
     royalties: ({ by, from, to } = {}) => royalties(library, { by, from, to, locale }),
+
+    // ---- The royalty and pricing calculator. The cards that ship are data in the app; the cards of your own live in the library. ----
+    rateCards: ({ date } = {}) => calculator.cards({ date }),
+    earn: (args) => calculator.earn(args),
+    priceFor: (args) => calculator.target(args),
+    saveRateCard: (fields) => calculator.saveOwnCard(fields),
+    removeRateCard: ({ id }) => (calculator.removeOwnCard(id), true),
 
     // ---- Bringing books in from a spreadsheet. The file is chosen and read in the main process (booksImporter.open). ----
     planBooksImport: (args) => booksImporter.plan(args),

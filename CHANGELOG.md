@@ -6,6 +6,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-22
+
+The first money release. It brings the calculator and a round of security work. The money screens are still marked early: the sales-report
+reader is Amazon KDP only, and nothing here has yet been checked against real reports from every store.
+
+### Added
+- **The royalty and pricing calculator** (early, part of 1.1), with its own screen in the menu. From dated rate cards it works out what a price earns per copy
+  (KDP paperback at 60% or 50% less the printing cost, KDP ebook at 70% less the delivery cost or 35%, Barnes & Noble Press, ACX), the price that earns what you
+  want (rounded up so it never falls a cent short), and where a rate changes, so a price a cent under a line says what stepping over it would earn.
+  Each card says where it came from and whether it was read on the store's own page. Your own cards live in your library and win over the shipped ones, an
+  update never touches them, and they are in the export. Everything is exact whole-cent maths, rounded once at the end. The database goes to step 9 for them.
+  The screen shows every store that has a card side by side for the format you choose, marks the best, says when a copy would lose money, points out a
+  price just under a line, works backwards from what you want to earn, and shows the rates behind the numbers with where each came from. A rate that was
+  not read on the store's own page says so, in full. You can make a rate card of your own there (a contract's rate), starting from one the app ships, and change
+  or remove it later. It is marked early, and has not yet been checked against the stores' own calculators for real books.
+- **A price check in Clashes: a price just under a royalty line.** A paperback at $9.98 on Amazon.com, where KDP's rate goes from 50% to 60% at $9.99, is
+  pointed out with what stepping over the line earns on each copy (about $1.00 there). It reads the rate cards, including cards of your own, looks at the price in
+  force today, and compares only rates that take off the same things, so it needs no printing cost. It is a check, not a fault, and can be dismissed with a reason.
+
 ### Changed
 - **The app no longer carries the project's own docs, tests and scripts.** Version 1.0.0 shipped the whole project folder inside the app (its
   docs, tests, scripts and notes, about 4 MB more than needed). A built app now holds only its source, its dependencies, its package file and its

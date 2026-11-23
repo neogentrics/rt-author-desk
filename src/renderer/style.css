@@ -119,6 +119,7 @@ dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--s
 dialog.wide { width: min(720px, 94vw); }
 dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
 .field { display: grid; gap: 4px; margin-bottom: 12px; }
+.field[hidden] { display: none; }
 .field.check { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .field label { font-weight: 600; font-size: 0.933rem; }
 .field.check label { font-weight: 400; }

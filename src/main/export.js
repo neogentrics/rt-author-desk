@@ -17,7 +17,7 @@ class ExportError extends Error {
 
 // In the order a person thinks of them. A table that isn't listed isn't exported.
 const ORDER = ['publisher_names', 'pen_names', 'series', 'books', 'editions', 'people', 'credits', 'isbns', 'stores', 'recordings', 'listings', 'listing_credits', 'prices',
-  'dismissed_clashes', 'report_files', 'sale_lines', 'pages_read', 'order_counts', 'payments', 'item_matches', 'catalog_imports', 'trash_items'];
+  'own_rate_cards', 'dismissed_clashes', 'report_files', 'sale_lines', 'pages_read', 'order_counts', 'payments', 'item_matches', 'catalog_imports', 'trash_items'];
 const HIDDEN = { report_files: ['original'] };
 const ID_COLUMNS = ['id', 'created_at', 'updated_at'];
 
@@ -63,6 +63,7 @@ function readableColumns(library) {
       edition: edition(listings.get(r.listing_id)?.edition_id), store_name: store(listings.get(r.listing_id)?.store_id),
       person_name: people.get(credits.get(r.credit_id)?.person_id)?.name ?? '', role: credits.get(r.credit_id)?.role ?? '',
     }),
+    own_rate_cards: (r) => ({ store_name: store(r.store_id) }),
     isbns: (r) => ({ edition: edition(r.edition_id), store_name: store(r.store_id) }),
     recordings: (r) => ({ edition: edition(r.edition_id), exclusive_store_name: store(r.exclusive_store_id) }),
     listings: (r) => ({ edition: edition(r.edition_id), store_name: store(r.store_id), via_store_name: store(r.via_store_id) }),

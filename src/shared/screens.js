@@ -8,6 +8,7 @@ const SCREENS = [
   { key: 'audiobooks', hash: 'audiobooks', label: 'Audiobooks' },
   { key: 'money', hash: 'money', label: 'Money', early: true },
   { key: 'royalties', hash: 'royalties', label: 'Royalties', early: true },
+  { key: 'calculator', hash: 'calculator', label: 'Calculator', early: true },
   { key: 'calendar', hash: 'calendar', label: 'Calendar', accelerator: 'CmdOrCtrl+3' },
   { key: 'clashes', hash: 'clashes', label: 'Clashes' },
   { key: 'isbns', hash: 'isbns', label: 'ISBNs' },

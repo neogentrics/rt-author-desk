@@ -263,6 +263,130 @@ e2e('Preferences: looking for new versions can be turned off, and the choice is 
   await app.until("document.querySelector('#pref-updates').checked === true");
 });
 
+// The calculator, by the cent: each number below was worked out by hand from the card's rule (the same ones test/calculator.test.cjs checks).
+e2e('Calculator: a price shows what each store\'s rates earn, a price under a line says so, and working backwards finds the price', async (app) => {
+  await app.goTo('#/calculator');
+  await app.until("document.querySelector('#calc-format')", 'the Calculator to open');
+  assert.equal(await app.run("document.querySelector('main h1').textContent"), 'Calculator');
+  assert.deepEqual(await app.run("[...document.querySelectorAll('#calc-format option')].map((o) => o.value)"), ['ebook', 'paperback', 'audiobook'], 'the formats that have a rate card');
+  // The answer for one store, in the part of the screen that worked it out (what a price earns, or what to charge).
+  const block = (title, part = 'calc-earn-h') => `[...document.querySelectorAll('section[aria-labelledby=${part}] section.card')].find((s) => s.querySelector('h3')?.textContent.trim().startsWith(${JSON.stringify(title)}))?.textContent ?? ''`;
+  const said = (id) => `document.querySelector('section[aria-labelledby=${id}] [role=status]').textContent`;
+
+  // A paperback needs the printing cost and not the file size, and says so when it is missing.
+  await app.fill('#calc-format', 'paperback');
+  assert.equal(await app.run("document.querySelector('#calc-printing').closest('.field').hidden"), false);
+  assert.equal(await app.run("document.querySelector('#calc-size').closest('.field').hidden"), true);
+  await app.fill('#calc-price', '12.99');
+  await app.click('#calc-earn');
+  await app.until("document.querySelector('section[aria-labelledby=calc-earn-h] [role=alert]:not([hidden])')", 'the printing cost to be asked for');
+  assert.match(await app.run("document.querySelector('section[aria-labelledby=calc-earn-h] [role=alert]').textContent"), /Enter the printing cost/);
+
+  // 0.60 x 12.99 = 7.794, less 4.25 = 3.544, which is $3.54, at KDP; the other stores' rates come out lower
+  await app.fill('#calc-printing', '4.25');
+  await app.click('#calc-earn');
+  await app.until("document.querySelector('#calc-earn-0')", 'the answer');
+  assert.match(await app.run(said('calc-earn-h')), /At \$12\.99, the best is Amazon KDP, Amazon\.com, 60% \(list price \$9\.99 or more\): \$3\.54 on each copy\./);
+  const kdp = await app.run(block('Amazon KDP, Amazon.com'));
+  assert.match(kdp, /60% \(list price \$9\.99 or more\) Best here\$7\.79Printing cost \$4\.25\$3\.54/);
+  assert.match(kdp, /The price can be at most \$9\.98 for this option\./, 'a rate this price does not fit says why');
+  assert.match(await app.run(block('Barnes & Noble Press')), /\$2\.89/, '0.55 x 12.99 = 7.1445, less 4.25 = 2.8945');
+  assert.match(await app.run(block('Amazon KDP, Expanded distribution')), /\$0\.95/, '0.40 x 12.99 = 5.196, less 4.25 = 0.946');
+  assert.match(kdp, /Rates read on the store's own page/);
+  assert.match(kdp, /What to know about these rates/, 'what to know about a rate is one press away');
+  assert.match(await app.run(block('Barnes & Noble Press')), /Not confirmed on the store's own page\./, 'a card that was not read on the store\'s page says so');
+  assert.deepEqual(await audit(app), [], 'the screen with an answer on it passes the accessibility checks');
+
+  // a price one cent under the line says what stepping over it would earn
+  await app.fill('#calc-price', '9.98');
+  await app.click('#calc-earn');
+  await app.until("/Worth knowing/.test(document.querySelector('#view').textContent)", 'the line to be pointed out');
+  assert.match(await app.run(block('Amazon KDP, Amazon.com')), /Worth knowing: At \$9\.99 .*\$1\.74 a copy, against \$0\.74 now/);
+  // 0.40 x 9.98 = 3.992, less 4.25 = -0.258, which is -$0.26: a copy loses money, and it says so
+  assert.match(await app.run(block('Amazon KDP, Expanded distribution')), /-\$0\.26.*loses money/);
+
+  // working backwards: (3.00 + 4.25) / 0.60 = 12.0833, rounded up to $12.09
+  await app.fill('#calc-want', '3.00');
+  await app.click('#calc-want-go');
+  await app.until("document.querySelector('#calc-want-0')", 'the price');
+  assert.match(await app.run(said('calc-want-h')), /To earn \$3\.00 on each copy, the lowest price is \$12\.09, at Amazon KDP, Amazon\.com, 60% \(list price \$9\.99 or more\)\./);
+  assert.match(await app.run(block('Amazon KDP, Amazon.com', 'calc-want-h')), /Cheapest here\$12\.09\$3\.00/);
+  assert.match(await app.run(block('Amazon KDP, Amazon.com')), /Worth knowing/, 'and the answer above it is still there');
+
+  // an ebook asks for the file size instead; Barnes & Noble Press has no delivery cost: 0.70 x 4.99 = 3.493, which is $3.49, against KDP's $3.27
+  await app.fill('#calc-format', 'ebook');
+  assert.equal(await app.run("document.querySelector('#calc-printing').closest('.field').hidden"), true);
+  assert.equal(await app.run("document.querySelector('#calc-size').closest('.field').hidden"), false);
+  await app.fill('#calc-price', '4.99');
+  await app.fill('#calc-size', '1.5');
+  await app.click('#calc-earn');
+  await app.until("document.querySelector('#calc-earn-0')", 'the ebook answer');
+  assert.match(await app.run(said('calc-earn-h')), /the best is Barnes & Noble Press, 70% of the retail price: \$3\.49 on each copy\./);
+  assert.match(await app.run(block('Amazon KDP, Amazon.com')), /70% option Best here\$3\.49Delivery cost \$0\.23\$3\.27/);
+
+  // the date picks the card in force: before 7 July 2026 KDP's 70% band stopped at $9.99
+  await app.fill('#calc-date', '2026-07-06');
+  await app.until("/Until July 6, 2026/.test(document.querySelector('#view').textContent)", 'the earlier cards');
+  await app.fill('#calc-price', '10.99');
+  await app.click('#calc-earn');
+  await app.until("document.querySelector('#calc-earn-0')", 'the earlier answer');
+  assert.match(await app.run(block('Amazon KDP, Amazon.com')), /The price can be at most \$9\.99 for this option\./);
+
+  // a price that is not a number is said once, not once for each store
+  await app.fill('#calc-price', 'abc');
+  await app.click('#calc-earn');
+  await app.until("document.querySelector('section[aria-labelledby=calc-earn-h] [role=alert]:not([hidden])')", 'the mistake to be named');
+  assert.match(await app.run("document.querySelector('section[aria-labelledby=calc-earn-h] [role=alert]').textContent"), /The price isn't a number: "abc"\./);
+  assert.equal(await app.run("document.querySelectorAll('#calc-earn-0').length"), 0);
+});
+
+// A rate card of your own: copied from one the app ships, changed, used by the calculator in place of the shipped one, and taken away again.
+e2e('Calculator: a card of your own is made from a shipped one, wins over it, can be changed, and goes when removed', async (app) => {
+  await app.goTo('#/calculator');
+  await app.until("document.querySelector('#calc-add-card')", 'the Calculator');
+  await app.click('#calc-add-card');
+  await app.until("document.querySelector('dialog #cc-start')", 'the card form');
+  await app.fill('#cc-start', 'kdp-paperback-usd-amazon');
+  assert.equal(await app.run("document.querySelector('#cc-format').value"), 'paperback');
+  assert.equal(await app.run("document.querySelectorAll('dialog fieldset legend').length"), 2, 'the two rates were copied in');
+  // a mistake is said in words and keeps the form open
+  await app.fill('#cc-currency', 'dollars');
+  await app.click('#cc-save');
+  await app.until("document.querySelector('dialog [role=alert]:not([hidden])')", 'the mistake to be named');
+  assert.match(await app.run("document.querySelector('dialog [role=alert]').textContent"), /currency/);
+  await app.fill('#cc-currency', 'usd');
+  // keep only a 65% rate that takes off printing
+  await app.run("document.querySelectorAll('dialog fieldset button')[1].click()");
+  await app.run("(() => { const f = document.querySelector('dialog fieldset'); const set = (sel, v) => { const el = f.querySelector(sel); el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); }; set('input[id$=-name]', '65% deal'); set('input[id$=-rate]', '65'); set('input[id$=-min]', '0.01'); set('input[id$=-max]', ''); })()");
+  assert.deepEqual(await audit(app), [], 'the card form passes the accessibility checks');
+  await app.click('#cc-save');
+  await app.until("!document.querySelector('dialog')", 'the form to close');
+  // 0.65 x 10.00 = 6.50, less 4.00 = 2.50, and the shipped 60% rate is no longer offered at KDP
+  await app.until("document.querySelector('#calc-format')");
+  await app.fill('#calc-format', 'paperback');
+  await app.fill('#calc-price', '10.00');
+  await app.fill('#calc-printing', '4.00');
+  await app.click('#calc-earn');
+  await app.until("document.querySelector('#calc-earn-0')", 'the answer');
+  const block = "[...document.querySelectorAll('section[aria-labelledby=calc-earn-h] section.card')].find((s) => s.querySelector('h3').textContent.startsWith('Amazon KDP, Amazon.com'))";
+  assert.match(await app.run(`${block}.textContent`), /your card.*65% deal\$6\.50Printing cost \$4\.00\$2\.50/);
+  assert.doesNotMatch(await app.run(`${block}.textContent`), /60% \(list price/);
+  // change it
+  await app.run("[...document.querySelectorAll('#calc-rates-h ~ * button, section[aria-labelledby=calc-rates-h] button')].find((b) => /^Change your card/.test(b.getAttribute('aria-label'))).click()");
+  await app.until("document.querySelector('dialog #cc-name')", 'the card to open again');
+  assert.equal(await app.run("document.querySelector('#cc-name').value"), 'My Amazon KDP, Amazon.com rates');
+  await app.fill('#cc-name', 'Renamed deal');
+  await app.click('#cc-save');
+  await app.until("!document.querySelector('dialog')");
+  assert.equal((await app.call('rateCards', {})).find((c) => c.own).name, 'Renamed deal', 'the change was kept');
+  // remove it: the shipped card comes back
+  await app.run("[...document.querySelectorAll('section[aria-labelledby=calc-rates-h] button')].find((b) => /^Remove your card/.test(b.getAttribute('aria-label'))).click()");
+  await app.until("document.querySelector('dialog')", 'the question');
+  await app.run("[...document.querySelectorAll('dialog button')].find((b) => b.textContent.trim() === 'Remove').click()");
+  await app.until("!document.querySelector('dialog') && !document.querySelector('section[aria-labelledby=calc-rates-h] .chip.check')", 'the card to go');
+  assert.equal((await app.call('rateCards', {})).filter((c) => c.own).length, 0);
+});
+
 // A backup made elsewhere, to restore. The test stops at the question: the restart that follows can't be watched from the page.
 const backupToRestore = (() => {
   const { Library } = require('../src/main/storage/library');
@@ -483,7 +607,8 @@ e2e('Ctrl+K opens Go to, a few letters find a screen or a book, Enter goes there
   await app.run("document.querySelector('#nav a[href=\"#/books\"]').focus()");
   await openPalette(app);
   assert.equal(await app.run("document.querySelector('#palette-input').getAttribute('role')"), 'combobox');
-  await app.until("document.querySelectorAll('#palette-list li').length === 12", 'ten screens and two books');
+  const screens = await app.run('window.ADScreens.SCREENS.length'); // every screen in the sidebar, and the two books
+  await app.until(`document.querySelectorAll('#palette-list li').length === ${screens + 2}`, 'every screen and two books');
   let rows = await paletteRows(app);
   assert.deepEqual(rows.slice(0, 3).map((r) => r.label), ['Desk', 'Books', 'Audiobooks'], 'screens first, in the sidebar\'s order');
   assert.equal(rows.at(-1).detail, 'Book');
@@ -872,7 +997,7 @@ e2e('every screen and every window passes the checks: names, labels, headings, i
 
   await app.run('window.desk.startSample().then(() => { AD.state.sample = true; AD.drawBars(); AD.refresh(); })');
   await settle(900);
-  for (const hash of ['#/', '#/books', '#/audiobooks', '#/money', '#/royalties', '#/calendar', '#/clashes', '#/isbns', '#/names', '#/trash']) {
+  for (const hash of ['#/', '#/books', '#/audiobooks', '#/money', '#/royalties', '#/calculator', '#/calendar', '#/clashes', '#/isbns', '#/names', '#/trash']) {
     await app.goTo(hash);
     await settle();
     await check(`the screen ${hash}`);
@@ -975,7 +1100,7 @@ e2e('the first screen does not take the focus, so Tab begins at the top: the ski
   const first = (region) => regions.indexOf(region);
   assert.ok(first('bars') > 0 && first('bars') < first('toolbar') && first('toolbar') < first('sidebar') && first('sidebar') < first('main'), `in the order they are drawn: ${[...new Set(regions)]}`);
   assert.deepEqual(stops.filter((s) => s.region === 'toolbar').map((s) => s.id), ['tb-goto', 'tb-new', 'tb-import', 'theme-button', 'tb-prefs', 'tb-help']);
-  assert.equal(stops.filter((s) => s.region === 'sidebar').length, 10, 'every screen is a stop in the sidebar');
+  assert.equal(stops.filter((s) => s.region === 'sidebar').length, await app.run('window.ADScreens.SCREENS.length'), 'every screen is a stop in the sidebar');
   assert.equal(new Set(stops.map((s) => `${s.id}|${s.text}|${s.region}`)).size, stops.length, 'no stop comes twice, so nothing traps the focus');
   assert.equal(stops.length, tabbable, `every one of the ${tabbable} things that can be pressed or typed in is a stop`);
   assert.deepEqual(stops.filter((s) => !s.ring || !s.focusVisible).map((s) => s.text), [], 'and each shows where the focus is');
