@@ -60,7 +60,7 @@ own books.
 |---|---|---|
 | `.exe` installer, or a portable `.exe` | `.dmg` for Apple silicon or Intel | `AppImage` or `.deb` |
 
-Version 1.0.0 is on the [Releases](https://github.com/neogentrics/rt-author-desk/releases/latest) page. Every change is built and
+Version 1.1.0 is on the [Releases](https://github.com/neogentrics/rt-author-desk/releases/latest) page. Every change is built and
 checked on all three systems by [CI](https://github.com/neogentrics/rt-author-desk/actions/workflows/ci.yml), which also installs
 each build and runs a self-test.
 

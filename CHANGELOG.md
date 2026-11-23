@@ -6,6 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-22
+
+The first money release. It brings the calculator and a round of security work. The money screens are still marked early: the sales-report
+reader is Amazon KDP only, and nothing here has yet been checked against real reports from every store.
+
 ### Added
 - **The royalty and pricing calculator** (early, part of 1.1), with its own screen in the menu. From dated rate cards it works out what a price earns per copy
   (KDP paperback at 60% or 50% less the printing cost, KDP ebook at 70% less the delivery cost or 35%, Barnes & Noble Press, ACX), the price that earns what you
