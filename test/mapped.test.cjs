@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const { MappingError, compareLayout, guessMapping, headingsOf, layoutOf, readDate, readMapped, readNumber, readTable } = require('../src/main/reports/mapped');
 const { makeXlsx } = require('./helpers/make-xlsx.cjs');
 
-const csv = (...lines) => Buffer.from(`﻿${lines.join('\n')}\n`, 'utf8');
+const csv = (...lines) => Buffer.from(`\uFEFF${lines.join('\n')}\n`, 'utf8');
 const sheetOf = (buffer) => readTable(buffer, 'made-up-store.csv').sheets[0];
 const refused = (fn, pattern) => assert.throws(fn, (e) => e instanceof MappingError && pattern.test(e.message), String(pattern));
 const KOBO = ['Sale Date,Book Title,ISBN,Country,Quantity,Royalty,Currency',

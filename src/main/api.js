@@ -123,6 +123,9 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
     // ---- Sales reports. Reading a file happens in the main process (importer.preview), so the window never holds one. ----
     acceptReport: ({ previewId, knowingMismatch }) => importer.accept({ previewId, knowingMismatch }),
     undoReport: ({ id }) => importer.undo({ id }),
+    previewColumns: (args) => importer.previewColumns(args),
+    layouts: () => importer.layouts(),
+    removeLayout: ({ id }) => importer.removeLayout({ id }),
     imports: () => importer.reports(),
     readers: () => importer.readers(),
     needsMatching: () => importer.needsMatching(),
