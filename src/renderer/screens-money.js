@@ -75,8 +75,8 @@
       AD.call('earnings'), AD.call('imports'), AD.call('needsMatching'), AD.call('readers'), AD.call('editionChoices'),
     ]);
     const out = [
-      h('div', { class: 'row' }, h('h1', null, 'Money'), h('button', { class: 'primary', onclick: choose }, 'Import a report')),
-      h('p', { class: 'lead' }, 'Download a report from a store, then choose it here. Every row is accounted for, and importing a file twice does no harm.'),
+      h('div', { class: 'row' }, h('h1', null, 'Money'), h('span', { class: 'row start' }, h('button', { class: 'primary', onclick: choose }, 'Import a report'), h('button', { type: 'button', id: 'match-columns', onclick: () => AD.matchColumns() }, 'Match your columns…'))),
+      h('p', { class: 'lead' }, 'Download a report from a store, then choose it here. Every row is accounted for, and importing a file twice does no harm. A store the app cannot read yet? Use Match your columns.'),
     ];
 
     for (const warning of earnings.warnings) {

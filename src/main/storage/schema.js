@@ -46,6 +46,7 @@ const TABLES = {
   listing_credits: ['listing_id', 'credit_id'],
   own_rate_cards: ['name', 'based_on', 'based_on_version', 'store_id', 'format', 'channel', 'currency', 'applies_from', 'applies_until',
     'options', 'delivery', 'notes'],
+  report_layouts: ['name', 'store_id', 'sheet', 'headers', 'columns', 'options'],
 };
 
 // The stores every library starts with. Their IDs are fixed, so two computers that each made a new library agree on
@@ -360,6 +361,21 @@ const STEPS = [
           created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
         );
         CREATE INDEX own_rate_cards_by_store ON own_rate_cards (store_id, format);
+      `);
+    },
+  },
+  {
+    version: 10,
+    up(db) {
+      // The columns you matched for a store's report, kept by their headings so the next file from that store is read the same way, and so a
+      // file whose headings no longer fit can be told apart from one that does.
+      db.exec(`
+        CREATE TABLE report_layouts (
+          id TEXT PRIMARY KEY, name TEXT NOT NULL DEFAULT '', store_id TEXT NOT NULL, sheet TEXT NOT NULL DEFAULT '',
+          headers TEXT NOT NULL, columns TEXT NOT NULL, options TEXT NOT NULL DEFAULT '{}',
+          created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
+        );
+        CREATE INDEX report_layouts_by_store ON report_layouts (store_id);
       `);
     },
   },

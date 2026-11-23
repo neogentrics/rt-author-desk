@@ -387,6 +387,108 @@ e2e('Calculator: a card of your own is made from a shipped one, wins over it, ca
   assert.equal((await app.call('rateCards', {})).filter((c) => c.own).length, 0);
 });
 
+// Match your columns: a made-up report from a store with no reader is read with the columns chosen, imported, and its layout is kept and recognized.
+const matchFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-match-')), 'kobo.csv');
+const KOBO_HEAD = 'Sale Date,Book Title,ISBN,Country,Quantity,Royalty,Currency';
+e2e('Match your columns: choose the store and the columns, see every row accounted for, import, and the next file with the same headings is recognized', async (app) => {
+  fs.writeFileSync(matchFile, [KOBO_HEAD, '2026-09-03,Tidewater,9780000000002,US,2,5.98,USD', '2026-09-05,Low Water,9780000000019,US,-1,-2.99,USD', 'Total,,,,1,2.99,'].join('\n'));
+  await app.goTo('#/money');
+  await app.until("document.querySelector('#match-columns')", 'the Money screen');
+  await app.click('#match-columns');
+  await app.until("document.querySelector('dialog #mc-store')", 'the columns dialog');
+  assert.equal(await app.run("document.querySelector('#mc-royalty').selectedOptions[0].textContent"), 'Royalty', 'the columns are guessed');
+  assert.equal(await app.run("document.querySelectorAll('dialog table.sample tbody tr').length"), 3);
+  assert.deepEqual(await audit(app), [], 'the dialog passes the accessibility checks');
+
+  // no store chosen yet: said in words
+  await app.click('#mc-go');
+  await app.until("document.querySelector('dialog [role=alert]')", 'the store to be asked for');
+  assert.match(await app.run("document.querySelector('dialog [role=alert]').textContent"), /Choose which store/);
+  await app.fill('#mc-store', 'store-kobo');
+  await app.click('#mc-go');
+  await app.until("document.querySelector('#mc-import')", 'the summary');
+  const summary = await app.run("document.querySelector('dialog').textContent");
+  assert.match(summary, /Kobo/);
+  assert.match(summary, /4 rows in the file/);
+  assert.match(summary, /2 new rows to save/);
+  assert.match(summary, /headings, empty lines, totals and notes/);
+  assert.match(summary, /\$2\.99/, '5.98 less the refund of 2.99');
+  assert.match(summary, /no title, so it was taken for a total or a note and left out: row 4/);
+  assert.match(summary, /no total of its own/);
+  assert.deepEqual(await audit(app), []);
+  await app.click('#mc-import');
+  await app.until("!document.querySelector('dialog')", 'the import to finish');
+  const rows = await app.run("window.desk.call('royalties', { by: ['store'] }).then((r) => r.value.estimated.rows.map((x) => [x.currency, x.earned.amount]))");
+  assert.deepEqual(rows, [['USD', '2.99']]);
+  assert.equal((await app.call('layouts')).length, 1, 'the columns were kept');
+
+  // next month: the same headings are recognized and filled in
+  fs.writeFileSync(matchFile, [KOBO_HEAD, '2026-10-03,Tidewater,9780000000002,US,1,2.99,USD'].join('\n'));
+  await app.goTo('#/money');
+  await app.until("document.querySelector('#match-columns')");
+  await app.click('#match-columns');
+  await app.until("document.querySelector('dialog #mc-store')", 'the dialog again');
+  assert.match(await app.run("document.querySelector('dialog [role=status]').textContent"), /looks like your layout "Kobo report" for Kobo/);
+  assert.equal(await app.run("document.querySelector('#mc-store').value"), 'store-kobo');
+
+  // the store renames a column: it is said, and nothing is guessed
+  await app.run("document.querySelector('dialog').close()");
+  await app.until("!document.querySelector('dialog')", 'the dialog to go');
+  fs.writeFileSync(matchFile, ['Sale Date,Book Title,ISBN,Country,Quantity,Net Royalty,Currency', '2026-11-03,Tidewater,9780000000002,US,1,2.99,USD'].join('\n'));
+  await app.click('#match-columns');
+  await app.until("document.querySelector('dialog #mc-store')", 'the dialog a third time');
+  assert.match(await app.run("document.querySelector('dialog [role=status]').textContent"), /doesn't fit this file any more: no column called "Royalty" \(new: "Net Royalty"\)/);
+}, { env: { RTAD_TEST_FILES: JSON.stringify({ columns: matchFile }) } });
+
+// Reports due: a store whose last imported report ended in September has its October report ready, and the Desk says so.
+e2e('the Desk lists a store whose next report is ready to download, and links to where it is imported', async (app) => {
+  await app.goTo('#/');
+  await app.until("document.querySelector('section[aria-labelledby=due]')", 'Reports due');
+  const text = await app.run("document.querySelector('section[aria-labelledby=due]').textContent");
+  assert.match(text, /Reports due/);
+  assert.match(text, /Kobo: the report for .* is ready to download, since .*The last one you imported ends September 30, 2026/);
+  assert.equal(await app.run("document.querySelector('section[aria-labelledby=due] a').getAttribute('href')"), '#/money');
+  assert.deepEqual(await audit(app), [], 'the Desk with a report due passes the accessibility checks');
+}, {
+  seed: async (userData) => {
+    const { Library } = require('../src/main/storage/library');
+    const library = new Library(path.join(userData, 'library')).open();
+    new (require('../src/main/catalog').Catalog)(library).saveBook({ title: 'Tidewater' }); // a library with a book, so the Desk is not the empty welcome
+    library.put('report_files', { store_id: 'store-kobo', kind: 'mapped', file_name: 'kobo-september.csv', fingerprint: 'seeded', period_start: '2026-09-01', period_end: '2026-09-30', status: 'accepted', rows_in_file: 1, original: null });
+    library.close();
+  },
+});
+
+// A report with no date and no currency, in the layout of Google Play Books' Sales Summary: tab-separated and saved as UTF-16. It is recognized by its
+// headings, and the month and currency it lacks are asked for.
+const googleFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-google-')), 'GoogleSalesSummaryReport.csv');
+e2e('Match your columns: a Sales Summary report with no date or currency is recognized, and the month and currency are asked for', async (app) => {
+  const head = ['Title', 'Author', 'Primary ISBN', 'Country of Sale', 'Units Purchased', 'Units Refunded', 'Net Units Sold', 'Total Publisher Earnings', 'Line of Business'];
+  const text = [head, ['A Made-up Book', 'A. Writer', 'GGKEY:MADEUP0001', 'AU', '2', '1', '1', '0.73', 'Audiobook']].map((cells) => cells.map((c) => `"${c}"`).join('\t')).join('\n');
+  fs.writeFileSync(googleFile, Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text, 'utf16le')]));
+  await app.goTo('#/money');
+  await app.until("document.querySelector('#match-columns')", 'the Money screen');
+  await app.click('#match-columns');
+  await app.until("document.querySelector('dialog #mc-store')", 'the dialog');
+  assert.match(await app.run("document.querySelector('dialog [role=status]').textContent"), /This is the Google Play Books: Sales Summary report.*no date and no currency/);
+  assert.equal(await app.run("document.querySelector('#mc-store').value"), 'store-google-play-books');
+  assert.equal(await app.run("Boolean(document.querySelector('#mc-period'))"), true, 'the month is asked for because there is no date column');
+  await app.click('#mc-go');
+  await app.until("document.querySelector('dialog [role=alert]')", 'the month to be asked for');
+  assert.match(await app.run("document.querySelector('dialog [role=alert]').textContent"), /the month it covers/);
+  await app.fill('#mc-period', '2026-09');
+  await app.fill('#mc-fixed-currency', 'USD');
+  await app.click('#mc-go');
+  await app.until("document.querySelector('#mc-import')", 'the summary');
+  const summary = await app.run("document.querySelector('dialog').textContent");
+  assert.match(summary, /every row is put in 2026-09/);
+  assert.match(summary, /\$0\.73/);
+  assert.deepEqual(await audit(app), []);
+  await app.click('#mc-import');
+  await app.until("!document.querySelector('dialog')", 'the import');
+  assert.equal((await app.run("window.desk.call('royalties', { by: ['month'] }).then((r) => r.value.estimated.rows.length)")), 1);
+}, { env: { RTAD_TEST_FILES: JSON.stringify({ columns: googleFile }) } });
+
 // A backup made elsewhere, to restore. The test stops at the question: the restart that follows can't be watched from the page.
 const backupToRestore = (() => {
   const { Library } = require('../src/main/storage/library');

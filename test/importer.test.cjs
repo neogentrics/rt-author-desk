@@ -225,7 +225,7 @@ test('a file the app cannot read says so, and names the stores still waiting for
   const { library, importer } = start();
   refused(() => importer.preview(Buffer.from('not a spreadsheet'), 'x.xlsx'), /Nothing was imported/);
   const other = makeXlsx([{ name: 'Sheet1', rows: [['Date', 'Title', 'Units'], ['2026-09-01', 'A Book', 3]] }]);
-  refused(() => importer.preview(other, 'sales.xlsx'), /Barnes & Noble Press, ACX, Google Play Books, IngramSpark are waiting for a real report/);
+  refused(() => importer.preview(other, 'sales.xlsx'), /Barnes & Noble Press, ACX, Google Play Books, IngramSpark, Draft2Digital, Kobo, Apple Books, Lulu are waiting for a real report.*Match your columns/);
   library.close();
 });
 
@@ -233,8 +233,8 @@ test('the other stores are empty slots that say they are waiting, and read nothi
   const { library, importer } = start();
   const slots = importer.readers();
   assert.deepEqual(slots.filter((r) => r.ready).map((r) => r.name), ['Amazon KDP']);
-  assert.deepEqual(slots.filter((r) => !r.ready).map((r) => r.name), ['Barnes & Noble Press', 'ACX', 'Google Play Books', 'IngramSpark']);
-  assert.ok(slots.filter((r) => !r.ready).every((r) => /Waiting for a real report/.test(r.waiting)));
+  assert.deepEqual(slots.filter((r) => !r.ready).map((r) => r.name), ['Barnes & Noble Press', 'ACX', 'Google Play Books', 'IngramSpark', 'Draft2Digital', 'Kobo', 'Apple Books', 'Lulu']);
+  assert.ok(slots.filter((r) => !r.ready).every((r) => /[Ww]aiting for/.test(r.waiting)));
   library.close();
 });
 
@@ -273,7 +273,7 @@ test('the window can ask for all of this, and gets plain data or plain words', (
   assert.equal(ok('imports').length, 1);
   assert.equal(ok('needsMatching').length, 2);
   assert.equal(ok('earnings').currencies.length, 2);
-  assert.equal(ok('readers').length, 5);
+  assert.equal(ok('readers').length, 9);
   const bad = call('acceptReport', { previewId: preview.previewId });
   assert.equal(bad.ok, false);
   assert.match(bad.message, /no longer open|already imported/);

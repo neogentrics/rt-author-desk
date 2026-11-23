@@ -7,6 +7,7 @@ const crypto = require('node:crypto');
 const { LayoutError } = require('./reports/kdp');
 const { readReport, readerStatus } = require('./reports/index');
 const { readWorkbook, WorkbookError } = require('./reports/xlsx');
+const { FIELDS, MappingError, compareLayout, guessMapping, headingsOf, knownFor, layoutOf, readMapped, readTable } = require('./reports/mapped');
 const { parseIsbn } = require('../shared/isbn');
 const { add, format, money, toDecimalString, zero } = require('../shared/money');
 
@@ -22,6 +23,7 @@ const MAX_WAITING = 5; // Files shown but not yet accepted, kept in memory only.
 const KIND_LABELS = {
   'kdp-orders': 'Orders report (estimated royalties)',
   'kdp-payments': 'Payments report (what was paid)',
+  mapped: 'Report read with the columns you matched',
 };
 const SALE_TABLES = ['sale_lines', 'pages_read', 'order_counts'];
 
@@ -60,6 +62,7 @@ class Importer {
     this.locale = locale;
     this.now = now;
     this.waiting = new Map();
+    this.tables = new Map(); // files opened for Match your columns and not yet read, in memory only
   }
 
   // ---- Reading a file, and showing what it holds ----------------------------------------------------------------------
@@ -77,15 +80,122 @@ class Importer {
     }
     if (!report) {
       const waiting = readerStatus().filter((r) => !r.ready).map((r) => r.name);
-      throw new ImportError(`This isn't a report the app can read yet. It reads Amazon KDP's orders and payments reports. ${waiting.join(', ')} are waiting for a real report to build from.`);
+      throw new ImportError(`This isn't a report the app can read yet. It reads Amazon KDP's orders and payments reports. ${waiting.join(', ')} are waiting for a real report to build from. For any of them, Match your columns reads its report in the meantime.`);
     }
+    return this.#show(report, buffer, fileName);
+  }
+
+  // ---- Match your columns: a report from a store with no reader, read with the columns the person points out ----------------
+
+  // Opens the file far enough to show its headings and a few rows, with a guess at the columns and any layout kept for it. Nothing is saved.
+  openColumns(buffer, fileName = '') {
+    let table;
+    try {
+      table = readTable(buffer, fileName);
+    } catch (error) {
+      if (error instanceof MappingError || error instanceof WorkbookError) throw new ImportError(`${error.message} Nothing was imported.`);
+      throw error;
+    }
+    const id = crypto.randomUUID();
+    this.tables.set(id, { buffer, fileName: String(fileName).slice(0, 200), table });
+    while (this.tables.size > MAX_WAITING) this.tables.delete(this.tables.keys().next().value);
+    const stores = new Map(this.library.list('stores').map((s) => [s.id, s.name]));
+    return {
+      id, fileName: String(fileName).slice(0, 200), format: table.format,
+      fields: FIELDS.map(({ key, label, required }) => ({ key, label, required: Boolean(required) })),
+      sheets: table.sheets.map((sheet) => this.#sheetView(sheet, null, stores)),
+    };
+  }
+
+  // The same sheet seen with the headings on another row (a store that puts a title block above them).
+  columnsFor({ id, sheet, headerRow } = {}) {
+    const pending = this.tables.get(id);
+    if (!pending) throw new ImportError('That file is no longer open here. Choose it again.');
+    const found = pending.table.sheets.find((s) => s.name === sheet);
+    if (!found) throw new ImportError('Choose which sheet of the file holds the sales.');
+    const stores = new Map(this.library.list('stores').map((s) => [s.id, s.name]));
+    return this.#sheetView(found, headerRow ? Number(headerRow) : null, stores);
+  }
+
+  #sheetView(sheet, headerRow, stores) {
+    const head = headingsOf(sheet, headerRow);
+    const body = sheet.rows.slice(head.index + 1).filter((row) => row.cells.some((c) => String(c ?? '').trim() !== ''));
+    return {
+      name: sheet.name, headerRow: head.number, headers: head.names, rowCount: sheet.rows.length,
+      sample: body.slice(0, 5).map((row) => row.cells.map((c) => String(c ?? '').slice(0, 80))),
+      guess: guessMapping(head.names), ...this.#layoutsFor(sheet, headerRow, stores),
+    };
+  }
+
+  // What accepting would do with the columns chosen. Nothing is saved. A cell that can't be read is said in words, with its row.
+  previewColumns({ id, sheet, storeId, mapping = {}, options = {}, remember = false, layoutName = '' } = {}) {
+    const pending = this.tables.get(id);
+    if (!pending) throw new ImportError('That file is no longer open here. Choose it again.');
+    const found = pending.table.sheets.find((s) => s.name === sheet) ?? (pending.table.sheets.length === 1 ? pending.table.sheets[0] : null);
+    if (!found) throw new ImportError('Choose which sheet of the file holds the sales.');
+    const store = this.library.get('stores', storeId);
+    if (!store) throw new ImportError('Choose which store this report is from.');
+    const choice = {
+      mapping: Object.fromEntries(Object.entries(mapping ?? {}).map(([k, v]) => [k, v === '' || v == null ? null : Number(v)])),
+      options: { headerRow: options.headerRow ? Number(options.headerRow) : null, dateOrder: options.dateOrder, decimal: options.decimal, currency: options.currency, period: options.period },
+    };
+    let report;
+    try {
+      report = readMapped({ sheet: found, mapping: choice.mapping, options: choice.options, storeId, storeName: store.name });
+    } catch (error) {
+      if (error instanceof MappingError) throw new ImportError(error.message);
+      throw error;
+    }
+    report.reader = { id: 'mapped', storeId, name: store.name };
+    const names = headingsOf(found, choice.options.headerRow).names;
+    const layout = remember ? { storeId, name: String(layoutName).trim().slice(0, 80) || `${store.name} report`, sheet: pending.table.format === 'xlsx' ? found.name : '', ...layoutOf({ names, mapping: choice.mapping, options: choice.options }) } : null;
+    return this.#show(report, pending.buffer, pending.fileName, layout);
+  }
+
+  // The layouts kept for a store, and taking one away.
+  layouts() {
+    const stores = new Map(this.library.list('stores').map((s) => [s.id, s.name]));
+    return this.library.list('report_layouts').map((row) => ({
+      id: row.id, name: row.name, storeId: row.store_id, storeName: stores.get(row.store_id) ?? row.store_id, headers: JSON.parse(row.headers),
+    })).sort((a, b) => a.storeName.localeCompare(b.storeName) || a.name.localeCompare(b.name));
+  }
+
+  removeLayout({ id } = {}) {
+    if (!this.library.get('report_layouts', id)) throw new ImportError("That layout isn't in your library.");
+    this.library.remove('report_layouts', id);
+    return true;
+  }
+
+  // Which kept layouts fit a file's headings, and which look like the same report whose columns have changed.
+  #layoutsFor(sheet, headerRow, stores) {
+    const recognized = [];
+    const changed = [];
+    for (const row of this.library.list('report_layouts')) {
+      const saved = { headers: JSON.parse(row.headers), columns: JSON.parse(row.columns), options: JSON.parse(row.options) };
+      // A layout made with the headings on a later row is looked for there.
+      const names = headingsOf(sheet, headerRow ?? saved.options.headerRow ?? null).names;
+      const result = compareLayout(saved, names);
+      const base = { id: row.id, name: row.name, storeId: row.store_id, storeName: stores.get(row.store_id) ?? row.store_id };
+      if (result.fits) recognized.push({ ...base, same: result.same, mapping: result.mapping, options: result.options });
+      else if (result.overlap >= 0.5) changed.push({ ...base, gone: result.gone, added: result.added });
+    }
+    recognized.sort((a, b) => Number(b.same) - Number(a.same));
+    // After the ones you kept, the layouts known from a real report with exactly these headings.
+    for (const known of knownFor(headingsOf(sheet, headerRow ?? null).names)) {
+      recognized.push({ ...known, storeName: stores.get(known.storeId) ?? known.storeId, same: true, builtIn: true, options: { dateOrder: 'month-first', decimal: '.', currency: '' } });
+    }
+    return { recognized, changed };
+  }
+
+  // Shows what accepting a read report would do, and keeps it until it is accepted.
+  #show(report, buffer, fileName, layout = null) {
     if (!report.complete) throw new ImportError("The rows in this file didn't add up, so nothing was imported.");
 
     const fingerprint = crypto.createHash('sha256').update(buffer).digest('hex');
     const plan = this.#plan(report);
     const earlier = this.#liveFile(fingerprint);
     const id = crypto.randomUUID();
-    this.waiting.set(id, { buffer, fileName: String(fileName).slice(0, 200), fingerprint, report });
+    this.waiting.set(id, { buffer, fileName: String(fileName).slice(0, 200), fingerprint, report, layout });
     while (this.waiting.size > MAX_WAITING) this.waiting.delete(this.waiting.keys().next().value);
 
     return {
@@ -101,6 +211,8 @@ class Importer {
       newRows: plan.newRows,
       totals: this.#shown([...report.totals?.values?.() ?? []]),
       problems: report.problems,
+      notes: report.notes ?? [],
+      layoutKept: Boolean(layout),
       needsMatching: plan.unmatched,
     };
   }
@@ -112,7 +224,7 @@ class Importer {
   accept({ previewId, knowingMismatch = false } = {}) {
     const pending = this.waiting.get(previewId);
     if (!pending) throw new ImportError('That file is no longer open here. Choose it again.');
-    const { report, buffer, fileName, fingerprint } = pending;
+    const { report, buffer, fileName, fingerprint, layout } = pending;
     const earlier = this.#liveFile(fingerprint);
     if (earlier) throw new ImportError(`You already imported this exact file on ${earlier.created_at.slice(0, 10)}. Nothing was changed.`);
     if (report.problems.length && !knowingMismatch) {
@@ -164,7 +276,15 @@ class Importer {
           fx_rate: row.rate, payout_currency: row.payout?.currency ?? null, payout: minor(row.payout), status: row.status,
         });
       }
-      return { reportId: file.id, counts: plan.counts, newRows: plan.newRows, needsMatching: plan.unmatched };
+      if (layout) {
+        // The layout is kept with the batch, so a file with the same headings next time needs no matching. The same store and headings update the one kept.
+        const kept = this.library.list('report_layouts').find((row) => row.store_id === layout.storeId && row.headers === JSON.stringify(layout.headers));
+        this.library.put('report_layouts', {
+          ...(kept ? { id: kept.id } : {}), name: layout.name, store_id: layout.storeId, sheet: layout.sheet,
+          headers: JSON.stringify(layout.headers), columns: JSON.stringify(layout.columns), options: JSON.stringify(layout.options),
+        });
+      }
+      return { reportId: file.id, counts: plan.counts, newRows: plan.newRows, needsMatching: plan.unmatched, layoutKept: Boolean(layout) };
     })();
     this.waiting.delete(previewId);
     return result;

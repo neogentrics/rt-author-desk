@@ -162,6 +162,27 @@ if (selfTestArg) {
 
     // A report is chosen here, in the main process, and read here. The window only ever sees what the app says is in it,
     // and then asks to accept it by the number it was given.
+    // Match your columns: a report from a store the app has no reader for. The file is chosen and read here, never by the window.
+    ipcMain.handle('desk:pick-columns-file', async (event) => {
+      if (!fromApp(event)) return NOT_FROM_APP;
+      if (sample) return { ok: false, message: 'This is a made-up catalog, so there is nothing to import into. Leave it first.' };
+      if (!real) return { ok: false, message: 'Your library is not open.' };
+      const choice = await chooseFile('columns', {
+        title: 'Choose a sales report',
+        properties: ['openFile'],
+        filters: [{ name: 'Sales reports (.csv, .xlsx)', extensions: ['csv', 'txt', 'tsv', 'xlsx'] }],
+      });
+      if (choice.canceled || !choice.filePaths[0]) return { ok: true, value: null };
+      try {
+        const file = choice.filePaths[0];
+        if (fs.statSync(file).size > 50 * 1024 * 1024) return { ok: false, message: 'That file is too big to be a sales report.' };
+        return { ok: true, value: real.api.importer.openColumns(fs.readFileSync(file), path.basename(file)) };
+      } catch (error) {
+        if (error instanceof ImportError) return { ok: false, message: error.message };
+        console.error('[pick-columns-file]', error);
+        return { ok: false, message: "That file couldn't be read, and nothing was imported." };
+      }
+    });
     ipcMain.handle('desk:pick-report', async (event) => {
       if (!fromApp(event)) return NOT_FROM_APP;
       if (sample) return { ok: false, message: 'This is a made-up catalog, so there is nothing to import into. Leave it first.' };

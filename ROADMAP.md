@@ -28,7 +28,7 @@ losing anything, and pass its automated tests on Windows, Mac and Linux.
 | [Step zero](#step-zero--settle-the-foundations) | Settle the foundations | Built. The installers for Windows, Mac and Linux are built and checked by CI |
 | [v1.0](#v10--the-catalog) | The catalog | **Released as 1.0.0 on 22 November 2026.** Contributors and credits and the suite's look and feel are built |
 | [v1.1](#v11--the-money) | The money | **Part released as 1.1.0 on 22 November 2026.** KDP import and royalties, the calculator with your own rate cards, and one price check. The other stores' readers, two price checks and the test against real reports are still to do |
-| [v1.2](#v12--every-store) | Every store | Planned |
+| [v1.2](#v12--every-store) | Every store | **Part released as 1.2.0 on 22 November 2026.** Match your columns, the notice when a kept layout no longer fits, and Reports due are built. The readers for four more stores each wait for a real report |
 | [v1.3](#v13--accounts-and-the-vault) | Accounts and the vault | Planned |
 | [v1.4](#v14--what-a-book-really-made) | What a book really made | Planned |
 | [v1.5](#v15--launch-a-book) | Launch a book | Planned |
@@ -154,7 +154,7 @@ made true). The open finding about the sample KDP report is in
 Import the same file again and nothing changes. Undo a batch. A price worked out by the calculator matches the store's own
 calculator for a set of real books.
 
-**Still needed from the owner to finish it:** a real report from each of Barnes & Noble Press, ACX, Google Play Books and IngramSpark, a recent
+**Still needed from the owner to finish it:** a real report from each of Barnes & Noble Press and ACX, a Google Play Books report that has dates, IngramSpark's report of sales (the invoices report is not it), a recent
 KDP report with pages read, what "the rate you want" means for the ebook price check, and what is locked (and until when) for the locked-period check.
 Four of the eight shipped rate cards (B&N ebook and print, KDP ebook before 7 July 2026, ACX's old rates) were not read on the store's own page, and the
 Calculator says so for each.
@@ -163,12 +163,14 @@ Calculator says so for each.
 
 🙋 Sales from everywhere you sell, and no store left typed in by hand.
 
+**Where it stands (22 November 2026).** Match your columns is built: for a store with no reader, choose its report (a CSV or an Excel file), say which store it is from and which column is which, and see every row accounted for before anything is saved. The columns can be kept by their headings, so the next report from that store is recognized, and when a store renames a column the app says which one has gone and never reads past it by guessing. It is for stores with no reader yet; a reader built from a real report is better when there is one. Reports due on the Desk is built too. The four readers are still to do, and each waits for a real report. Two samples have come in: Google Play Books' Sales Summary report (tab-separated, UTF-16, with no date and no currency in it) is recognized by its headings and asks for the month and currency; IngramSpark's report turned out to be a list of invoices, which are bills and not sales, so the report of sales is still needed.
+
 | Feature | Size | Details |
 |---|:-:|---|
 | 🙋 More readers | L | Draft2Digital, Kobo, Apple Books and Lulu. Each needs a real report to build from. |
-| 🙋 Match your columns | M | For any other store: show the app which column is the date, the title and the money, and it remembers that store's layout. |
-| Layout changed | S | When a store changes its report, the app says what's different instead of guessing, and offers Match your columns. |
-| Reports due | S | Each store's last report and when the next is due, shown on the Desk. |
+| 🙋 Match your columns | M | Built. For any other store: show the app which column is the date, the title and the money, and it remembers that store's layout. CSV and Excel; a day or a month for the date, either number style, a fixed currency for a file with none; a line with no title (a total or a note) is set aside and named, and a cell it cannot read stops the import and names the row. |
+| Layout changed | S | Built for layouts you have kept. When a store changes its report, the app says which column has gone and which is new instead of guessing, and offers Match your columns again. (KDP's own reader already refuses a changed layout in words.) |
+| Reports due | S | Built. The Desk lists each store whose next report is ready to download (a month's report is there once the month is over), with how long it has been ready and a link to import it, and notes when the others come. A store with nothing imported for over a year is taken to be one you have left. |
 
 **Test:** import a real report from each store. Rename a column in a test file: the app refuses it and says which column,
 and nothing is half imported.

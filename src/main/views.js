@@ -158,6 +158,23 @@ function lastMonth(library, today, locale) {
   return earned && { period: before, earned, estimate: true };
 }
 
+// Each store you have imported sales reports from, and whether its next report can be downloaded yet. A report covers a month and is there once
+// that month is over, so after the last month you have, the next report is due from the first day of the month after it. A store whose last report ended more
+// than a year ago is taken to be one you have stopped selling on, and is left alone.
+const STOPPED_AFTER_DAYS = 400;
+function reportSchedule(library, today) {
+  const stores = new Map(library.list('stores').map((s) => [s.id, s.name]));
+  const last = new Map();
+  for (const row of library.db.prepare("SELECT store_id, period_end, file_name FROM report_files WHERE status = 'accepted' AND period_end IS NOT NULL AND kind != 'kdp-payments' ORDER BY period_end, rowid").all()) last.set(row.store_id, row);
+  const after = (month, by) => { const [y, m] = month.split('-').map(Number); const at = y * 12 + (m - 1) + by; return `${Math.floor(at / 12)}-${String((at % 12) + 1).padStart(2, '0')}`; };
+  return [...last.entries()].map(([storeId, row]) => {
+    const lastMonth = row.period_end.slice(0, 7);
+    const nextMonth = after(lastMonth, 1);
+    const dueFrom = `${after(lastMonth, 2)}-01`;
+    return { store_id: storeId, store: stores.get(storeId) ?? storeId, lastEnd: row.period_end, lastFile: row.file_name, nextMonth, dueFrom, due: today >= dueFrom, daysLate: daysBetween(dueFrom, today) };
+  }).filter((r) => daysBetween(r.lastEnd, today) <= STOPPED_AFTER_DAYS).sort((a, b) => b.daysLate - a.daysLate || a.store.localeCompare(b.store));
+}
+
 // The home screen: what needs you today. Not totals. It answers "what's next, and what's in its way?"
 function desk(library, { today, locale }) {
   const clashes = findClashes(library, { today });
@@ -174,10 +191,11 @@ function desk(library, { today, locale }) {
     comingSoon: releases.filter((r) => r.days_away <= SOON_DAYS).slice(0, 8),
     problems: clashes.filter((c) => c.severity === 'problem'),
     toCheck: clashes.filter((c) => c.severity === 'check'),
-    // Reports due arrive with the stores' report schedules (v1.1). Last month's earnings are the sales reports' estimates.
-    reportsDue: [],
+    // Reports to download: the stores whose next report is ready. Last month's earnings are the sales reports' estimates.
+    reportsDue: reportSchedule(library, today).filter((r) => r.due),
+    reportsComing: reportSchedule(library, today).filter((r) => !r.due),
     lastMonth: lastMonth(library, today, locale),
   };
 }
 
-module.exports = { audiobookTracker, desk, releaseCalendar, storeGrid };
+module.exports = { audiobookTracker, desk, releaseCalendar, reportSchedule, storeGrid };
