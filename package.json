@@ -17,8 +17,8 @@
     "fflate": "^0.8.3"
   },
   "devDependencies": {
-    "electron": "^45.2.2",
-    "electron-builder": "^26.18.0"
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.1"
   },
   "scripts": {
     "start": "electron .",
