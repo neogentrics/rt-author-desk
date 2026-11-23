@@ -23,7 +23,7 @@ test('the window of the built app opens and draws, with nothing wrong in the con
       icon: Boolean(document.querySelector('.tb-btn svg')),
       font: getComputedStyle(document.body).fontFamily,
     })`);
-    assert.equal(drawn.screens, 10, 'every screen is in the sidebar');
+    assert.equal(drawn.screens, await app.run('window.ADScreens.SCREENS.length'), 'every screen is in the sidebar');
     assert.equal(drawn.tools, 6, 'every button is on the toolbar');
     assert.ok(drawn.heading.length > 0, 'the first screen has its heading');
     assert.equal(drawn.icon, true, 'the toolbar draws its icons');

@@ -3,7 +3,7 @@
 // block, **bold** is bold, [words](help:guide-name) opens another guide, and [words](go:books) opens a screen of the app.
 // Written for someone who has never used the app and doesn't care how it works inside.
 
-const SCREENS = ['desk', 'books', 'audiobooks', 'calendar', 'clashes', 'isbns', 'names'];
+const SCREENS = ['desk', 'books', 'audiobooks', 'calendar', 'clashes', 'isbns', 'names', 'calculator'];
 
 const GUIDES = [
   {
@@ -166,6 +166,27 @@ const GUIDES = [
     ],
   },
   {
+    slug: 'calculator',
+    title: 'The calculator',
+    summary: 'What a price earns on a copy at each store, and what to charge to earn what you want.',
+    keywords: 'calculator royalty price earn rate card kdp amazon barnes noble acx printing cost delivery paperback ebook audiobook estimate charge',
+    blocks: [
+      { type: 'p', text: 'The [Calculator](go:calculator) shows what a list price earns you on each copy at every store that has a **rate card**, side by side, and works backwards to the price that earns what you want. It is an **estimate for planning**: the store\'s own report is what counts.' },
+      { type: 'h', text: 'What a price earns' },
+      { type: 'ol', items: [
+        'Choose the **format**, and the date if you want the rates as they were or will be.',
+        'For a printed book, enter the **printing cost** of one copy. The store\'s own printing cost calculator gives it for your page count and ink. For an ebook, enter the file size in MB.',
+        'Enter the list price and choose **Work it out**. Each store shows every rate it offers, what comes off, and what you earn on a copy. The best is marked.',
+      ] },
+      { type: 'p', text: 'A price just under a line, such as KDP\'s $9.99 for paperbacks, says what stepping over it would earn.' },
+      { type: 'h', text: 'What to charge' },
+      { type: 'p', text: 'Enter what you want to earn on each copy and choose **Find the price**. Each price is rounded up to the next cent, so a copy never earns a cent less than you asked.' },
+      { type: 'h', text: 'Where the rates come from' },
+      { type: 'p', text: 'Rates are never written into the app\'s code. Each is a dated card that says where it came from, and whether it was read on the store\'s own page. A card marked as not confirmed has not been, so check it before you rely on it.' },
+      { type: 'note', text: 'The Calculator is marked early in the menu. It is part of the next release, the money, and has not yet been checked against the stores\' own calculators for a set of real books.' },
+    ],
+  },
+  {
     slug: 'trash-and-backups',
     title: 'The Trash, backups and export',
     summary: 'Getting back what you removed, keeping a copy, and taking everything out.',
@@ -223,7 +244,7 @@ const GUIDES = [
     blocks: [
       { type: 'p', text: 'The first versions of the app were **test builds**, numbered like 1.0.0-alpha.1. Version 1.0.0 is the first full release, and a test build updates to it by itself. After that, each release updates to the next.' },
       { type: 'ul', items: [
-        'Choose **Help, then Check for Updates…** at any time. The app also checks by itself a few seconds after it opens, and every few hours.',
+        'Choose **Help, then Check for Updates…** at any time. The app also checks by itself a few seconds after it opens, and every few hours. To stop that, turn off **Look for new versions by itself** under **Updates** in Preferences: the app then contacts no one until you choose Check for Updates.',
         'On **Windows** and the Linux **AppImage**, an update downloads in the background and you are asked to restart when it is ready.',
         'On a **Mac**, and with the Linux **.deb**, the app tells you a newer version exists and takes you to the download page.',
         'Your library is not touched by an update. Before any change to how it is stored, the app makes a backup copy first.',

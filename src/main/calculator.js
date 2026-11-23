@@ -222,7 +222,8 @@ class Calculator {
     if (!matches.length) {
       throw new CalculatorError(`There's no rate card for ${store.name} ${kind} in ${currency} on ${date}. The app ships a few, and you can add your own.`);
     }
-    if (channel) {
+    // A channel that is given, even an empty one, has to match exactly. Only one that is left out means "whichever there is".
+    if (channel !== undefined && channel !== null) {
       const card = matches.find((c) => c.channel === channel);
       if (!card) throw new CalculatorError(`${store.name} ${kind} has no "${channel}" card on ${date}. The choices are ${matches.map((c) => `"${c.channel}"`).join(', ')}.`);
       return card;

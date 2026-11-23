@@ -7,11 +7,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ## [Unreleased]
 
 ### Added
-- **The royalty and pricing calculator's engine** (early, part of 1.1; its screen is next). From dated rate cards it works out what a price earns per copy
+- **The royalty and pricing calculator** (early, part of 1.1), with its own screen in the menu. From dated rate cards it works out what a price earns per copy
   (KDP paperback at 60% or 50% less the printing cost, KDP ebook at 70% less the delivery cost or 35%, Barnes & Noble Press, ACX), the price that earns what you
   want (rounded up so it never falls a cent short), and where a rate changes, so a price a cent under a line says what stepping over it would earn.
   Each card says where it came from and whether it was read on the store's own page. Your own cards live in your library and win over the shipped ones, an
   update never touches them, and they are in the export. Everything is exact whole-cent maths, rounded once at the end. The database goes to step 9 for them.
+  The screen shows every store that has a card side by side for the format you choose, marks the best, says when a copy would lose money, points out a
+  price just under a line, works backwards from what you want to earn, and shows the rates behind the numbers with where each came from. A rate that was
+  not read on the store's own page says so, in full. It is marked early, and has not yet been checked against the stores' own calculators for real books.
 
 ### Changed
 - **The app no longer carries the project's own docs, tests and scripts.** Version 1.0.0 shipped the whole project folder inside the app (its

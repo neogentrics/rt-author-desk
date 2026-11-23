@@ -8,7 +8,7 @@ const { GUIDES, SCREENS, searchGuides, textOf } = require('../src/shared/help');
 const renderer = path.join(__dirname, '..', 'src', 'renderer');
 
 // The routes the window really has, read from the screens themselves.
-const routes = new Set([...['app.js', 'screens-desk.js', 'screens-books.js', 'screens-lists.js', 'screens-audio.js']
+const routes = new Set([...['app.js', 'screens-desk.js', 'screens-books.js', 'screens-lists.js', 'screens-audio.js', 'screens-calc.js']
   .map((f) => fs.readFileSync(path.join(renderer, f), 'utf8')).join('\n').matchAll(/AD\.routes\.(\w+)\s*=/g)].map((m) => m[1]));
 
 test('every guide has what it needs, and no two share a name', () => {

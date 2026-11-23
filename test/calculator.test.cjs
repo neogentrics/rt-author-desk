@@ -183,6 +183,18 @@ test('a card of your own that makes no sense is refused in words', () => {
   library.close();
 });
 
+test('a card with no channel is found by its empty channel, and does not get mixed up with the cards that have one', () => {
+  const { library, calc } = start();
+  const plain = { name: 'Plain', store_id: 'store-kobo', format: 'ebook', currency: 'USD', options: [{ name: '70%', rate: '0.7' }] };
+  calc.saveOwnCard({ ...plain, channel: '' });
+  calc.saveOwnCard({ ...plain, name: 'Promo', channel: 'Promo' });
+  const empty = calc.earn({ storeId: 'store-kobo', format: 'ebook', channel: '', currency: 'USD', price: '10.00' });
+  assert.equal(empty.card.name, 'Plain');
+  assert.equal(calc.earn({ storeId: 'store-kobo', format: 'ebook', channel: 'Promo', currency: 'USD', price: '10.00' }).card.name, 'Promo');
+  refused(() => calc.earn({ storeId: 'store-kobo', format: 'ebook', currency: 'USD', price: '10.00' }), /more than one card/);
+  library.close();
+});
+
 test('what is asked for has to make sense, and the answers say what to fix', () => {
   const { library, calc } = start();
   refused(() => calc.earn({ ...KDP, format: 'paperback', price: '12.99' }), /Enter the printing cost/);
