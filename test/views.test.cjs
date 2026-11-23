@@ -195,3 +195,40 @@ test('a clash on a recording shows on the square where it is listed', () => {
   assert.equal(row.cells['store-google-play-books'][0].clashes.length, 1);
   library.close();
 });
+
+// ---- Reports due ----------------------------------------------------------------------------------------------------------
+
+function importedThrough(library, storeId, end, { kind = 'mapped', status = 'accepted', name = `${storeId}-${end}.csv` } = {}) {
+  return library.put('report_files', {
+    store_id: storeId, kind, file_name: name, fingerprint: `${storeId}:${end}:${kind}:${status}`, period_start: `${end.slice(0, 7)}-01`, period_end: end, status, rows_in_file: 1, original: null,
+  });
+}
+
+test('a store whose next report can be downloaded is listed on the Desk, with the month and how long it has been ready', () => {
+  const library = new Library(temp()).open();
+  assert.deepEqual(desk(library, { today: '2026-11-22' }).reportsDue, [], 'no reports imported, so none are due');
+  importedThrough(library, 'store-kobo', '2026-09-30');
+  importedThrough(library, 'store-kdp', '2026-10-31');
+  const home = desk(library, { today: '2026-11-22', locale: 'en-US' });
+  // Kobo's October report has been ready since 1 November; KDP's November report is not ready until 1 December
+  assert.deepEqual(home.reportsDue.map((r) => [r.store, r.nextMonth, r.dueFrom, r.daysLate, r.lastEnd]), [['Kobo', '2026-10', '2026-11-01', 21, '2026-09-30']]);
+  assert.deepEqual(home.reportsComing.map((r) => [r.store, r.nextMonth, r.dueFrom]), [['Amazon KDP', '2026-11', '2026-12-01']]);
+  const later = desk(library, { today: '2026-12-01' });
+  assert.deepEqual(later.reportsDue.map((r) => [r.store, r.daysLate]), [['Kobo', 30], ['Amazon KDP', 0]], 'the one that has waited longest comes first');
+  library.close();
+});
+
+test('only the latest sales report counts, an undone one or a payments report does not, a year end is rolled over, and a store left long ago is not nagged about', () => {
+  const library = new Library(temp()).open();
+  importedThrough(library, 'store-kobo', '2026-08-31');
+  importedThrough(library, 'store-kobo', '2026-10-31', { name: 'later.csv' });
+  importedThrough(library, 'store-kobo', '2026-11-30', { status: 'undone', name: 'undone.csv' });
+  importedThrough(library, 'store-kdp', '2026-11-30', { kind: 'kdp-payments' });
+  assert.deepEqual(desk(library, { today: '2026-12-05' }).reportsDue.map((r) => [r.store, r.nextMonth, r.lastFile]), [['Kobo', '2026-11', 'later.csv']]);
+  importedThrough(library, 'store-lulu', '2026-12-31');
+  const january = desk(library, { today: '2027-01-02' });
+  assert.ok(january.reportsComing.some((r) => r.store === 'Lulu' && r.nextMonth === '2027-01' && r.dueFrom === '2027-02-01'), 'December is followed by January of the next year');
+  importedThrough(library, 'store-apple-books', '2025-03-31');
+  assert.ok(![...january.reportsDue, ...january.reportsComing].some((r) => r.store === 'Apple Books'), 'a store with nothing for over a year is taken to be one you have left');
+  library.close();
+});

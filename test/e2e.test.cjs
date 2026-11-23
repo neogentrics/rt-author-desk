@@ -439,6 +439,25 @@ e2e('Match your columns: choose the store and the columns, see every row account
   assert.match(await app.run("document.querySelector('dialog [role=status]').textContent"), /doesn't fit this file any more: no column called "Royalty" \(new: "Net Royalty"\)/);
 }, { env: { RTAD_TEST_FILES: JSON.stringify({ columns: matchFile }) } });
 
+// Reports due: a store whose last imported report ended in September has its October report ready, and the Desk says so.
+e2e('the Desk lists a store whose next report is ready to download, and links to where it is imported', async (app) => {
+  await app.goTo('#/');
+  await app.until("document.querySelector('section[aria-labelledby=due]')", 'Reports due');
+  const text = await app.run("document.querySelector('section[aria-labelledby=due]').textContent");
+  assert.match(text, /Reports due/);
+  assert.match(text, /Kobo: the report for .* is ready to download, since .*The last one you imported ends September 30, 2026/);
+  assert.equal(await app.run("document.querySelector('section[aria-labelledby=due] a').getAttribute('href')"), '#/money');
+  assert.deepEqual(await audit(app), [], 'the Desk with a report due passes the accessibility checks');
+}, {
+  seed: async (userData) => {
+    const { Library } = require('../src/main/storage/library');
+    const library = new Library(path.join(userData, 'library')).open();
+    new (require('../src/main/catalog').Catalog)(library).saveBook({ title: 'Tidewater' }); // a library with a book, so the Desk is not the empty welcome
+    library.put('report_files', { store_id: 'store-kobo', kind: 'mapped', file_name: 'kobo-september.csv', fingerprint: 'seeded', period_start: '2026-09-01', period_end: '2026-09-30', status: 'accepted', rows_in_file: 1, original: null });
+    library.close();
+  },
+});
+
 // A backup made elsewhere, to restore. The test stops at the question: the restart that follows can't be watched from the page.
 const backupToRestore = (() => {
   const { Library } = require('../src/main/storage/library');

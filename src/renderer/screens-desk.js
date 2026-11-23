@@ -138,6 +138,14 @@
         h('ul', { class: 'list' }, later.map((r) => h('li', null,
           h('a', { href: `#/book/${encodeURIComponent(r.book_id)}` }, r.title), ` · ${r.format}${r.store ? ` on ${r.store}` : ''} · ${AD.longDate(r.date)} (${AD.days(r.days_away)})`)))));
     }
+    const monthName = (period) => new Date(`${period}-15T12:00:00`).toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
+    if (home.reportsDue.length || home.reportsComing.length) {
+      out.push(h('section', { class: `card${home.reportsDue.length ? ' check' : ''}`, 'aria-labelledby': 'due' }, h('h2', { id: 'due' }, 'Reports due'),
+        home.reportsDue.length ? h('ul', { class: 'list' }, home.reportsDue.map((r) => h('li', null,
+          h('strong', null, r.store), `: the report for ${monthName(r.nextMonth)} is ready to download${r.daysLate > 0 ? `, since ${AD.longDate(r.dueFrom)}` : ''}. The last one you imported ends ${AD.longDate(r.lastEnd)}. `,
+          h('a', { href: '#/money' }, 'Import it')))) : h('p', null, 'Nothing is waiting to be downloaded.'),
+        home.reportsComing.length ? h('p', { class: 'note' }, 'Next: ', home.reportsComing.map((r, i) => [i ? '; ' : '', `${r.store}, from ${AD.longDate(r.dueFrom)}`]), '.') : null));
+    }
     if (home.lastMonth) {
       const month = new Date(`${home.lastMonth.period}-15T12:00:00`).toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
       out.push(h('section', { class: 'card', 'aria-labelledby': 'last' }, h('h2', { id: 'last' }, `Last month: ${month}`),

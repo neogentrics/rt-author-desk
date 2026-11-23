@@ -82,7 +82,7 @@ anyway*), and macOS will ask you to open the app from *System Settings → Priva
 | **People and credits** | Editors, cover artists, narrators and others, credited on each edition. Write down which credits each store shows, and a store that leaves someone off is pointed out |
 | **Clash checks** | Eleven kinds of real problem, such as an ebook in an exclusive program that is also on sale elsewhere, a free store ISBN used at another store, or an editor credited on one store and left off another. Each can be dismissed with a reason |
 | **The release calendar** | Every dated release, soonest first |
-| **The Desk** | The home screen: the next release and what is in its way, and everything that needs you |
+| **The Desk** | The home screen: the next release and what is in its way, everything that needs you, and which store's next report is ready to download |
 | **Sales reports** (early, part of 1.1) | Choose an Amazon KDP orders or payments report and see what it holds before accepting it. Every row is accounted for, rows you already have are skipped, rows that match no book are asked about once, and a whole import can be undone. The original file is kept inside your library |
 | **Earned and paid** (early, part of 1.1) | What the reports say you earned, beside what the payment reports say you were paid, by currency and month. A report whose own total doesn't match its rows is flagged and never hidden |
 | **Royalties** (early, part of 1.1) | Added up by month, book, edition, store and marketplace, in any mix, always by currency. Estimates from the sales reports are kept apart from what the payment reports say was paid, and last month's earnings show on the Desk |
