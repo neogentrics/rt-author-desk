@@ -159,7 +159,7 @@ const GUIDES = [
       { type: 'p', text: '[Clashes](go:clashes) looks across your whole catalog for problems that are easy to miss one book at a time. Each one says what\'s wrong and what to do.' },
       { type: 'ul', items: [
         '**Fix** is a real problem, such as an ebook in an exclusive program that is also on sale elsewhere, or a free store ISBN used at another store.',
-        '**Check** is worth a look but may be fine, such as a publisher name that differs between stores, or an editor credited on one store and left off another.',
+        '**Check** is worth a look but may be fine, such as a publisher name that differs between stores, an editor credited on one store and left off another, or a price just under the line where a store\'s rate goes up.',
         'You can **dismiss** one with a reason. It stays dismissed until the records it names change, and you can bring it back.',
       ] },
       { type: 'note', text: 'The number beside Clashes in the menu is the count of problems that need fixing.' },

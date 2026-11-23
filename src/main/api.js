@@ -42,7 +42,7 @@ function createApi(library, { now = () => new Date(), locale } = {}) {
     desk: () => desk(library, options()),
     calendar: ({ includePast = false } = {}) => releaseCalendar(library, { today: today(), includePast }),
     audiobooks: () => audiobookTracker(library, { today: today() }),
-    clashes: ({ includeDismissed = false } = {}) => findClashes(library, { today: today(), includeDismissed }),
+    clashes: ({ includeDismissed = false } = {}) => findClashes(library, { today: today(), includeDismissed, locale }),
     dismissClash: ({ key, reason }) => (dismissClash(library, key, reason), true),
     restoreClash: ({ key }) => restoreClash(library, key),
 

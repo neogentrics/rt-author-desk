@@ -145,7 +145,7 @@ no screen yet. The price checks, the other stores' cards and readers, and the te
 | 🙋 Royalties | L | Built. By month, book, edition, store, marketplace and currency. Estimates are kept apart from what was actually paid. |
 | Currencies | M | Amounts stay in the currency they were earned in. Paid amounts use the rate on the store's payment report. |
 | 🙋 Royalty and pricing calculator | L | Built and tested, with its screen; a screen for your own cards, the chart and the promotion test are still to do. What a price earns per copy at each store, side by side, and what to charge to earn a given amount. Rates are dated cards that show where they came from and when they were checked, and you can change them. [How it works](docs/design/royalties-and-prices.md). |
-| Price checks | S | The three clash checks that read the rate cards: a print price just under a royalty line, an ebook price outside the band for the rate you want, and a price that changes inside a deal's locked period. |
+| Price checks | S | The three clash checks that read the rate cards. Built: a price just under a royalty line, such as a paperback at $9.98 where KDP's rate goes from 50% to 60% at $9.99, which says what stepping over earns. Still to do, and each needs to be told more than the catalog holds: an ebook price outside the band for the rate you want (it needs to know the rate you want), and a price that changes inside a deal's locked period (it needs to know what is locked, and until when). |
 | Reports in the export | S | Each original report as you imported it, along with everything else. |
 
 **Test:** import two years of real KDP reports: every row is accounted for, and each month's total matches the report to the cent.

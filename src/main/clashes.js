@@ -3,19 +3,61 @@
 // `computeClashes` is a pure function of the catalog's rows, so every rule is tested on made-up data. A clash can be
 // dismissed with a reason, and it stays dismissed until its facts change (its key names the records it's about).
 //
-// Not here yet, because the data they need isn't built: price lines and bands (rate cards come with the calculator), a price
-// change in a locked period, a pre-order deadline, and release spacing.
+// Not here yet, because the data they need isn't built: an ebook price outside the band for the rate you want and a price change
+// in a locked period (both need to be told more than the catalog holds), a pre-order deadline, and release spacing.
 // "An ISBN is on two editions" can't happen: the register holds each number once, and says where it is when you try.
 const { daysBetween } = require('../shared/dates');
 const { parseIsbn } = require('../shared/isbn');
 const { roleLabel } = require('../shared/credits');
+const { Calculator } = require('./calculator');
+const { exponentOf, format, money, parseDecimal, roundTo } = require('../shared/money');
 
 const norm = (text) => String(text ?? '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 const activeOn = (from, until, today) => (!from || from <= today) && (!until || until >= today);
 const onSale = (listing) => listing.status === 'live' || listing.status === 'pre-order';
 const SYNTHETIC_WORDS = /\b(auto[- ]?narrat\w*|synthes\w*|artificial|a\.?i\.?|text[- ]to[- ]speech|tts|virtual voice|digital voice|generated|computer[- ]voice)\b/i;
 
-function computeClashes(data, today) {
+// ---- Price lines: where a store's rate goes up with the price ------------------------------------------------------------
+
+const lift = (a, scale) => a.digits * 10n ** BigInt(scale - a.scale);
+const greater = (a, b) => { const s = Math.max(a.scale, b.scale); return lift(a, s) > lift(b, s); };
+const minus = (a, b) => { const s = Math.max(a.scale, b.scale); return { digits: lift(a, s) - lift(b, s), scale: s }; };
+const percentOf = (rate) => `${(Number(rate) * 100).toFixed(2).replace(/\.?0+$/, '')}%`;
+// A rate in words: its name when that already says the percentage ("50% (list price $9.98 or less)"), otherwise the percentage and the name.
+const rateWords = (option) => (option.name.includes(percentOf(option.rate)) ? option.name : `${percentOf(option.rate)} (${option.name})`);
+
+// The rate card that applies to a price: the one for its marketplace, or the only one the store has for that format and currency.
+function cardFor(cards, storeId, kind, price) {
+  const same = cards.filter((c) => c.store_id === storeId && c.format === kind && c.currency === price.currency);
+  return same.find((c) => c.channel === price.marketplace) ?? (same.length === 1 ? same[0] : null);
+}
+
+// When a price is under the line where the store's rate goes up, by no more than a whole unit of the currency, and stepping over it would
+// earn more on each copy: { here, up, at, gain }, the rate now, the rate above, the price it starts at, and what stepping up earns more
+// (in the smallest unit). Only rates that take off the same things are compared (a printed book's printing cost comes off either way), so
+// no cost is needed: it cancels out. A rate that depends on the file's size is left alone, since the size isn't known here.
+function lineAbove(card, minor, currency) {
+  const places = exponentOf(currency);
+  const unit = 10n ** BigInt(places);
+  const limit = (text) => roundTo(parseDecimal(text), places);
+  const sized = (o) => Boolean(o.price_min_by_file_mb);
+  const fits = (o) => !sized(o) && (o.price_min == null || minor >= limit(o.price_min)) && (o.price_max == null || minor <= limit(o.price_max));
+  const gross = (o, amount) => { const rate = parseDecimal(o.rate); return { digits: rate.digits * amount, scale: rate.scale }; };
+  const takesOff = (o) => [...(o.deduct ?? [])].sort().join(',');
+  let best = null;
+  for (const here of card.options.filter(fits)) {
+    for (const up of card.options) {
+      if (up === here || sized(up) || up.price_min == null || takesOff(up) !== takesOff(here)) continue;
+      const at = limit(up.price_min);
+      if (at <= minor || at - minor > unit || (up.price_max != null && at > limit(up.price_max))) continue;
+      const gain = minus(gross(up, at), gross(here, minor));
+      if (gain.digits > 0n && (!best || greater(gain, best.gain))) best = { here, up, at, gain };
+    }
+  }
+  return best && { here: best.here, up: best.up, at: best.at, gain: roundTo(best.gain, 0) };
+}
+
+function computeClashes(data, today, { locale } = {}) {
   const by = (rows) => new Map(rows.map((row) => [row.id, row]));
   const books = by(data.books);
   const editions = by(data.editions);
@@ -249,6 +291,28 @@ function computeClashes(data, today) {
     });
   }
 
+  // A price a little under the line where the store's rate goes up, such as a paperback at $9.98 where KDP's rate goes from 50% to 60% at $9.99.
+  const shown = (minor, currency) => format(money(minor, currency), locale);
+  for (const listing of data.listings) {
+    const edition = editions.get(listing.edition_id);
+    if (!edition || listing.status === 'pulled') continue;
+    for (const price of (data.current_prices ?? []).filter((p) => p.listing_id === listing.id)) {
+      const card = cardFor(data.rate_cards ?? [], listing.store_id, edition.format, price);
+      const step = card && lineAbove(card, price.minor, price.currency);
+      if (!step) continue;
+      add({
+        kind: 'price-under-line',
+        severity: 'check',
+        key: ['price-under-line', listing.id, price.marketplace, price.currency, String(price.minor), step.up.name].join(':'),
+        title: `${editionName(edition.id)} is priced just under a royalty line on ${price.marketplace}`,
+        detail: `At ${shown(price.minor, price.currency)}, ${storeName(listing.store_id)} pays ${rateWords(step.here)}. From ${shown(step.at, price.currency)} it pays ${rateWords(step.up)}, which earns about ${shown(step.gain, price.currency)} more on each copy, because what comes off each copy is the same either way.`,
+        action: `If ${shown(price.minor, price.currency)} is not a price you chose on purpose, raise it to ${shown(step.at, price.currency)}.`,
+        subjects: [['listings', listing.id]],
+        edition_id: edition.id,
+      });
+    }
+  }
+
   for (const clash of found) {
     clash.subjects = clash.subjects.map(([table, id]) => ({ table, id }));
     clash.book_id = clash.edition_id ? editions.get(clash.edition_id)?.book_id ?? null : null;
@@ -261,10 +325,20 @@ const TABLES = ['books', 'editions', 'stores', 'isbns', 'listings', 'recordings'
 
 // Reads the catalog and returns the clashes, each marked with its dismissal if it has one. Dismissed ones are left out
 // unless asked for.
-function findClashes(library, { today, includeDismissed = false }) {
+function findClashes(library, { today, includeDismissed = false, locale } = {}) {
   const data = Object.fromEntries(TABLES.map((table) => [table, library.list(table)]));
+  // What the price checks read: the price in force today for each listing and marketplace, and the rate cards in force today.
+  const seen = new Set();
+  data.current_prices = [];
+  for (const row of library.db.prepare('SELECT * FROM prices WHERE from_date <= ? ORDER BY listing_id, marketplace, from_date DESC, id').all(today)) {
+    const key = `${row.listing_id}\0${row.marketplace}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    data.current_prices.push({ listing_id: row.listing_id, marketplace: row.marketplace, currency: row.currency, minor: BigInt(row.amount) });
+  }
+  data.rate_cards = new Calculator(library, { locale, now: () => new Date(`${today}T12:00:00`) }).cards({ date: today });
   const dismissed = new Map(library.list('dismissed_clashes').map((row) => [row.clash_key, row]));
-  const all = computeClashes(data, today).map((clash) => {
+  const all = computeClashes(data, today, { locale }).map((clash) => {
     const row = dismissed.get(clash.key);
     return { ...clash, dismissed: row ? { id: row.id, reason: row.reason, at: row.created_at } : null };
   });

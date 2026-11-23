@@ -258,3 +258,86 @@ test('a clash can be dismissed with a reason, brought back, and stays dismissed 
   assert.deepEqual(findClashes(library, { today: TODAY }).map((c) => c.subjects[0].id), [second.id]);
   library.close();
 });
+
+// ---- A price a little under a royalty line --------------------------------------------------------------------------------
+
+const lineClashes = (library) => findClashes(library, { today: TODAY, locale: 'en-US' }).filter((c) => c.kind === 'price-under-line');
+
+test('a paperback priced a cent under the line where KDP\'s rate goes from 50% to 60% is pointed out, with what stepping over earns', () => {
+  const { library, catalog, edition } = shelf();
+  const paperback = edition('paperback');
+  const kdp = catalog.saveListing({ edition_id: paperback.id, store_id: 'store-kdp', status: 'live' });
+  catalog.setPrice({ listingId: kdp.id, marketplace: 'Amazon.com', currency: 'USD', amount: '9.98', fromDate: '2027-01-01' });
+  const [clash] = lineClashes(library);
+  assert.equal(lineClashes(library).length, 1);
+  assert.equal(clash.severity, 'check', 'worth a look, not a fault: the price may be on purpose');
+  assert.equal(clash.title, 'Book One: paperback is priced just under a royalty line on Amazon.com');
+  // 0.60 x 9.99 = 5.994 and 0.50 x 9.98 = 4.99: stepping over the line earns 1.004 more on each copy, which is about $1.00
+  assert.match(clash.detail, /At \$9\.98, Amazon KDP pays 50% \(list price \$9\.98 or less\)\. From \$9\.99 it pays 60% \(list price \$9\.99 or more\), which earns about \$1\.00 more on each copy/);
+  assert.match(clash.action, /raise it to \$9\.99/);
+  assert.deepEqual(clash.subjects, [{ table: 'listings', id: kdp.id }]);
+  assert.equal(clash.book_id, paperback.book_id, 'it shows on the book it is about');
+  library.close();
+});
+
+test('a price on the right side of the line, or well under it, or for something with no rate card, says nothing', () => {
+  const { library, catalog, edition } = shelf();
+  const paperback = edition('paperback');
+  const kdp = catalog.saveListing({ edition_id: paperback.id, store_id: 'store-kdp', status: 'live' });
+  const price = (amount, marketplace = 'Amazon.com', currency = 'USD', fromDate = '2027-01-01') => catalog.setPrice({ listingId: kdp.id, marketplace, currency, amount, fromDate });
+  price('9.99');
+  assert.equal(lineClashes(library).length, 0, 'at the line is on the line');
+  price('14.99', 'Amazon.com', 'USD', '2027-01-05');
+  assert.equal(lineClashes(library).length, 0);
+  price('8.98', 'Amazon.com', 'USD', '2027-01-06');
+  assert.equal(lineClashes(library).length, 0, 'more than a dollar under the line is not "just under"');
+  price('8.99', 'Amazon.com', 'USD', '2027-01-07');
+  assert.equal(lineClashes(library).length, 1, 'a dollar under is');
+  price('9.98', 'Amazon.co.uk', 'GBP', '2027-01-08');
+  assert.equal(lineClashes(library).length, 1, 'a price in a currency the store has no card for says nothing');
+  // a price that starts in the future is not the price today
+  price('9.98', 'Amazon.com', 'USD', '2027-03-01');
+  assert.equal(lineClashes(library).length, 1);
+  library.close();
+});
+
+test('a pulled listing is left alone, an ebook\'s rates that depend on the file are not guessed, and a price that changes makes a new clash', () => {
+  const { library, catalog, edition } = shelf();
+  const paperback = edition('paperback');
+  const kdp = catalog.saveListing({ edition_id: paperback.id, store_id: 'store-kdp', status: 'planned' });
+  catalog.setPrice({ listingId: kdp.id, marketplace: 'Amazon.com', currency: 'USD', amount: '9.98', fromDate: '2027-01-01' });
+  const before = lineClashes(library);
+  assert.equal(before.length, 1, 'a planned listing is worth fixing before it goes live');
+  catalog.setPrice({ listingId: kdp.id, marketplace: 'Amazon.com', currency: 'USD', amount: '9.50', fromDate: '2027-01-05' });
+  const after = lineClashes(library);
+  assert.equal(after.length, 1);
+  assert.notEqual(after[0].key, before[0].key, 'the new price is a new question, so an old dismissal does not hide it');
+  dismissClash(library, after[0].key, 'On purpose: the book is a promotion.');
+  assert.equal(lineClashes(library).length, 0, 'and it can be dismissed with a reason, like the others');
+
+  catalog.saveListing({ id: kdp.id, status: 'pulled' });
+  catalog.setPrice({ listingId: kdp.id, marketplace: 'Amazon.com', currency: 'USD', amount: '9.40', fromDate: '2027-01-06' });
+  restoreClash(library, after[0].key);
+  assert.equal(lineClashes(library).length, 0, 'a pulled listing has no price to fix');
+
+  const ebook = edition('ebook');
+  const listing = catalog.saveListing({ edition_id: ebook.id, store_id: 'store-kdp', status: 'live' });
+  catalog.setPrice({ listingId: listing.id, marketplace: 'Amazon.com', currency: 'USD', amount: '2.89', fromDate: '2027-01-01' });
+  assert.equal(lineClashes(library).length, 0, 'the 70% and 35% options take off different things, and the 35% one depends on the file size');
+  library.close();
+});
+
+test('a card of your own that has a line is used, so a contract rate is checked too', () => {
+  const { library, catalog, edition } = shelf();
+  const { Calculator } = require('../src/main/calculator');
+  new Calculator(library, { now: () => new Date(`${TODAY}T12:00:00`) }).saveOwnCard({
+    name: 'My print deal', store_id: 'store-kdp', format: 'paperback', channel: 'Amazon.com', currency: 'USD',
+    options: [{ name: '55% under $15', rate: '0.55', price_min: '0.01', price_max: '14.99', deduct: ['printing'] }, { name: '65% from $15', rate: '0.65', price_min: '15.00', deduct: ['printing'] }],
+  });
+  const paperback = edition('paperback');
+  const kdp = catalog.saveListing({ edition_id: paperback.id, store_id: 'store-kdp', status: 'live' });
+  catalog.setPrice({ listingId: kdp.id, marketplace: 'Amazon.com', currency: 'USD', amount: '14.99', fromDate: '2027-01-01' });
+  const [clash] = lineClashes(library);
+  assert.match(clash.detail, /From \$15\.00 it pays 65% from \$15/);
+  library.close();
+});

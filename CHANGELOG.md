@@ -15,6 +15,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
   The screen shows every store that has a card side by side for the format you choose, marks the best, says when a copy would lose money, points out a
   price just under a line, works backwards from what you want to earn, and shows the rates behind the numbers with where each came from. A rate that was
   not read on the store's own page says so, in full. It is marked early, and has not yet been checked against the stores' own calculators for real books.
+- **A price check in Clashes: a price just under a royalty line.** A paperback at $9.98 on Amazon.com, where KDP's rate goes from 50% to 60% at $9.99, is
+  pointed out with what stepping over the line earns on each copy (about $1.00 there). It reads the rate cards, including cards of your own, looks at the price in
+  force today, and compares only rates that take off the same things, so it needs no printing cost. It is a check, not a fault, and can be dismissed with a reason.
 
 ### Changed
 - **The app no longer carries the project's own docs, tests and scripts.** Version 1.0.0 shipped the whole project folder inside the app (its
