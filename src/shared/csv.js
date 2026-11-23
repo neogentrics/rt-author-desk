@@ -36,7 +36,7 @@ class CsvError extends Error {
 }
 
 // Rows of cells. A row that is nothing but empty cells is dropped. A quote that never closes is an error, not a guess.
-function parseCsv(text, { delimiter = detectDelimiter(text), maxRows = 100_000, maxCell = 32_767 } = {}) {
+function parseCsv(text, { delimiter = detectDelimiter(text), maxRows = 100_000, maxCell = 32_767, keepEmpty = false } = {}) {
   const rows = [];
   let row = [];
   let cell = '';
@@ -50,7 +50,7 @@ function parseCsv(text, { delimiter = detectDelimiter(text), maxRows = 100_000, 
   };
   const endRow = () => {
     endCell();
-    if (row.some((c) => c.trim() !== '')) {
+    if (keepEmpty || row.some((c) => c.trim() !== '')) { // a report keeps its empty lines, so its row numbers are the ones a spreadsheet shows
       rows.push(row);
       if (rows.length > maxRows) throw new CsvError(`This file has more than ${maxRows} rows, which is too many to bring in at once.`);
     }
