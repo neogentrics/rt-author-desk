@@ -6,6 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Security
+- **Electron 45.4.1 and electron-builder 26.18.1**, the newest patch of each. `npm audit` finds nothing in what ships in the app. It still lists 6 moderate
+  problems in the build tools (a slow-pattern problem in `minimatch`, which only matters if someone hands the build a hostile pattern); the fix `npm audit fix --force`
+  offers is to go back to electron-builder 25, which has 16 problems including a critical one, so it is not used. They go when electron-builder updates `minimatch`.
+
 ## [1.1.0] - 2026-11-22
 
 The first money release. It brings the calculator and a round of security work. The money screens are still marked early: the sales-report

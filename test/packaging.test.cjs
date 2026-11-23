@@ -56,3 +56,9 @@ test('installing the project runs no program of its own, and every dependency is
     for (const [name, range] of Object.entries(pkg[group] ?? {})) assert.match(range, /^[\^~]?\d+\.\d+\.\d+$/, `${name} is a plain version, not an address, a branch or a tag`);
   }
 });
+
+test('the lock file names the same version as the package, so npm sees no mismatch', () => {
+  const lock = require('../package-lock.json');
+  assert.equal(lock.version, require('../package.json').version);
+  assert.equal(lock.packages[''].version, require('../package.json').version);
+});
