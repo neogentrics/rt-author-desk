@@ -6,6 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-11-27
+
+Readers for two more stores' sales reports: Barnes & Noble Press and Lulu. **Neither has been checked on a real file yet.** Each was built from the store's own description of its report
+and tested on made-up files, so compare the totals with the store's own. The money screens are still marked early.
+
 ### Added
 - **Barnes & Noble Press's sales report** (early). Choose the Excel file with Import a report. It was **built from the columns B&N Press's help page lists and tested on made-up files, so it is still to be confirmed on a
   real one**. Columns are found by their headings, and a needed one that is missing stops the import and names it.

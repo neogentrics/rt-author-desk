@@ -4,7 +4,7 @@
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-1.0-f0a52b?style=for-the-badge&labelColor=0a1a33)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.2.1-f0a52b?style=for-the-badge&labelColor=0a1a33)](CHANGELOG.md)
 [![Tests](https://img.shields.io/github/actions/workflow/status/neogentrics/rt-author-desk/ci.yml?style=for-the-badge&label=tests&labelColor=0a1a33)](https://github.com/neogentrics/rt-author-desk/actions/workflows/ci.yml)
 [![Platforms](https://img.shields.io/badge/windows%20%7C%20macOS%20%7C%20linux-2a4a80?style=for-the-badge&labelColor=0a1a33)](#download)
 [![Offline](https://img.shields.io/badge/works-offline-2e8fe0?style=for-the-badge&labelColor=0a1a33)](#how-your-library-is-kept)
@@ -22,10 +22,11 @@ nothing else to install.
 RT Author Desk is part of the **Recon Towers** suite, built by its Dev Department. It was inspired by the owner writing his
 own books.
 
-> **Version 1.2 is out.** The catalog (1.0): books, editions, ISBNs, store listings, audiobooks and clashes, with backups, a Trash, and a way to get everything
+> **Version 1.2.1 is out.** The catalog (1.0): books, editions, ISBNs, store listings, audiobooks and clashes, with backups, a Trash, and a way to get everything
 > out. And the first of the money: KDP sales reports, royalties, and a calculator with rate cards of your own, marked "early" in the menu until they have been
 > checked against real reports from every store. Version 1.2 adds Match your columns, for reading a report from a store the app has no reader for yet, and
-> the Desk now says which store's next report is ready to download.
+> the Desk now says which store's next report is ready to download. Version 1.2.1 adds readers for the sales reports from Barnes & Noble Press and Lulu, each
+> built from the store's own description and still to be confirmed on a real file.
 
 <table>
 <tr>
@@ -62,7 +63,7 @@ own books.
 |---|---|---|
 | `.exe` installer, or a portable `.exe` | `.dmg` for Apple silicon or Intel | `AppImage` or `.deb` |
 
-Version 1.2.0 is on the [Releases](https://github.com/neogentrics/rt-author-desk/releases/latest) page. Every change is built and
+Version 1.2.1 is on the [Releases](https://github.com/neogentrics/rt-author-desk/releases/latest) page. Every change is built and
 checked on all three systems by [CI](https://github.com/neogentrics/rt-author-desk/actions/workflows/ci.yml), which also installs
 each build and runs a self-test.
 
@@ -87,8 +88,8 @@ anyway*), and macOS will ask you to open the app from *System Settings → Priva
 | **Sales reports** (early, part of 1.1) | Choose an Amazon KDP orders or payments report and see what it holds before accepting it. Every row is accounted for, rows you already have are skipped, rows that match no book are asked about once, and a whole import can be undone. The original file is kept inside your library |
 | **Earned and paid** (early, part of 1.1) | What the reports say you earned, beside what the payment reports say you were paid, by currency and month. A report whose own total doesn't match its rows is flagged and never hidden |
 | **Royalties** (early, part of 1.1) | Added up by month, book, edition, store and marketplace, in any mix, always by currency. Estimates from the sales reports are kept apart from what the payment reports say was paid, and last month's earnings show on the Desk |
-| **Barnes & Noble Press's sales report** (early, built after 1.2.0 and not yet in a release) | Built from the columns its help page lists, and **still to be confirmed on a real file**. The royalty is counted in the currency you are paid in, each list price stays in the currency it was sold in, every row's own sum is checked, and a newer download updates rows with more copies without counting any twice |
-| **Lulu's sales report** (early, built after 1.2.0 and not yet in a release) | Built from Lulu's own description of the report, and **still to be confirmed on a real file**. Only your own payee's lines are saved, a newer download updates sales that have been paid without counting any twice, and paid money is kept apart from Lulu's estimates |
+| **Barnes & Noble Press's sales report** (early, new in 1.2.1) | Built from the columns its help page lists, and **still to be confirmed on a real file**. The royalty is counted in the currency you are paid in, each list price stays in the currency it was sold in, every row's own sum is checked, and a newer download updates rows with more copies without counting any twice |
+| **Lulu's sales report** (early, new in 1.2.1) | Built from Lulu's own description of the report, and **still to be confirmed on a real file**. Only your own payee's lines are saved, a newer download updates sales that have been paid without counting any twice, and paid money is kept apart from Lulu's estimates |
 | **Match your columns** (early, part of 1.2) | For a store the app has no reader for: choose its report (CSV or Excel), say which column is the date (or which month the whole report covers), the title, the copies and what you earned, and see every row accounted for before anything is saved. Files saved as UTF-16 or with tabs are read, and Google Play Books' Sales Summary report is recognized by its headings. The columns are kept, so next month's report is read the same way, and a store that renames a column is told apart from one that did not, with the column named |
 | **Calculator** (early, part of 1.1) | What a price earns on each copy at every store that has a rate card, side by side, and the price that earns what you want. A price just under a line says what stepping over it would earn. Every rate says where it came from and whether it was read on the store's own page, and it is an estimate for planning: the store's own report is what counts |
 | **Backups, Trash and export** | Backups to a folder you choose, each one file holding the library and its key, so keep it where only you can reach. Anything you remove waits 30 days in the Trash and comes back exactly. Everything can be exported as JSON and CSV, with your original reports |
