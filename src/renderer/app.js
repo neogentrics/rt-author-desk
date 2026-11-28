@@ -25,7 +25,7 @@
         text, key === 'clashes' && problems ? h('span', { class: 'count', 'aria-label': `${problems} to fix` }, problems) : null,
         key === 'trash' && binned ? h('span', { class: 'tally', 'aria-label': `${binned} in the Trash` }, binned) : null,
         // Money is the next release's work, started early. It is real and tested, and it says so.
-        EARLY.has(key) ? h('span', { class: 'tally', title: 'Early: part of the next release, the money' }, 'early') : null))));
+        EARLY.has(key) ? h('span', { class: 'tally', title: 'Early: not yet checked against real reports from every store' }, 'early') : null))));
   }
 
   AD.refresh = async function refresh() {

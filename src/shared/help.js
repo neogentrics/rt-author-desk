@@ -185,7 +185,7 @@ const GUIDES = [
       { type: 'p', text: 'Rates are never written into the app\'s code. Each is a dated card that says where it came from, and whether it was read on the store\'s own page. A card marked as not confirmed has not been, so check it before you rely on it.' },
       { type: 'h', text: 'Your own rates' },
       { type: 'p', text: 'A contract can pay differently from the published rate. Under **The rates behind these numbers**, choose **Add a rate card of my own**, start from one the app ships if you like, and change what is different. Your card is used in place of the app\'s for the same store, format, where and currency, and an update never touches it. You can change or remove it later, and it is in your export.' },
-      { type: 'note', text: 'The Calculator is marked early in the menu. It is part of the next release, the money, and has not yet been checked against the stores\' own calculators for a set of real books.' },
+      { type: 'note', text: 'The Calculator is marked early in the menu, because it has not yet been checked against the stores\' own calculators for a set of real books.' },
     ],
   },
   {
@@ -212,7 +212,7 @@ const GUIDES = [
     summary: 'Importing it, its two currencies, and the sum the app checks on every row.',
     keywords: 'barnes noble press nook bn sales report excel xlsx royalty currency print cost returns import bn id',
     blocks: [
-      { type: 'note', text: 'This reader was **built from the list of columns on Barnes & Noble Press\'s help page, and is still to be confirmed on a real file**. Compare the total it shows with B&N\'s own figure. If it says a column is missing, nothing is imported, and [Match your columns](help:match-columns) can read the file in the meantime.' },
+      { type: 'note', text: 'New in 1.2.1. This reader was **built from the list of columns on Barnes & Noble Press\'s help page, and is still to be confirmed on a real file**. Compare the total it shows with B&N\'s own figure. If it says a column is missing, nothing is imported, and [Match your columns](help:match-columns) can read the file in the meantime.' },
       { type: 'h', text: 'Getting the file' },
       { type: 'p', text: 'In B&N Press, open **Sales**, pick any date range, and choose **Export Excel Sheet**. A range you choose yourself can cover at most 6 months. Then choose **Import a report** on the Money screen. A printed book\'s sale appears when it ships, and an ebook\'s when it is downloaded.' },
       { type: 'h', text: 'Two currencies' },
@@ -235,7 +235,7 @@ const GUIDES = [
     summary: 'Importing it, which payee is you, and what is paid against what is only estimated.',
     keywords: 'lulu sales report csv payee paid converted revenue refund self purchase royalty import product id',
     blocks: [
-      { type: 'note', text: 'This reader was **built from Lulu\'s own description of its report, and is still to be confirmed on a real file**. Compare the total it shows with Lulu\'s own figure. If it says a column is missing, nothing is imported, and [Match your columns](help:match-columns) can read the file in the meantime.' },
+      { type: 'note', text: 'New in 1.2.1. This reader was **built from Lulu\'s own description of its report, and is still to be confirmed on a real file**. Compare the total it shows with Lulu\'s own figure. If it says a column is missing, nothing is imported, and [Match your columns](help:match-columns) can read the file in the meantime.' },
       { type: 'h', text: 'Getting the file' },
       { type: 'p', text: 'On Lulu, open **My Projects**, then **Sales & Payments**, pick the payee, and choose **Generate and Download CSV of this list**. Then choose **Import a report** on the Money screen.' },
       { type: 'h', text: 'Two questions it may ask' },
@@ -369,7 +369,7 @@ const GUIDES = [
     keywords: 'question faq answer why how can',
     blocks: [
       { type: 'h', text: 'Does it sign in to Amazon or any other store?' },
-      { type: 'p', text: 'No, never. Sales will come in as report files you download yourself, so the app needs no store account and keeps working when a store changes its website.' },
+      { type: 'p', text: 'No, never. Sales come in as report files you download yourself, so the app needs no store account and keeps working when a store changes its website.' },
       { type: 'h', text: 'Is anything sent to the internet?' },
       { type: 'p', text: 'No. The only time the app goes online is to look for a newer version of itself.' },
       { type: 'h', text: 'Do I have to fill in everything?' },
