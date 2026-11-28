@@ -86,6 +86,31 @@ The owner asked for the app to cover more than his own stores. Worth adding as r
 - **Direct sales** (Payhip, Gumroad, Shopify, a signing table) are in the Direct sales feature in v1.4, not in a store reader.
 - **Match your columns** already covers any store that exports a table, with no new code.
 
+## Where an author signs up
+
+For the app's "Where to sell" page (see the v1.2 roadmap row). Each link goes to the store's own site and opens in the person's browser. The app signs in to nothing. Links were opened on 27 November 2026; Barnes & Noble Press and Kobo refuse scripts, so they were not checked that way.
+
+| Store | Sells | Link |
+|---|---|---|
+| Amazon KDP | Ebooks and print on Amazon only (print can go wider through Expanded Distribution). Kindle Select asks for ebook exclusivity | https://kdp.amazon.com |
+| Barnes & Noble Press | Ebooks and print on barnesandnoble.com; audiobooks through Findaway Voices | https://press.barnesandnoble.com |
+| Lulu | Print and ebooks, on its own store and through retail distribution | https://www.lulu.com |
+| IngramSpark | Print and ebooks to bookstores, libraries and online shops worldwide | https://www.ingramspark.com |
+| Google Play Books | Ebooks and audiobooks | https://play.google.com/books/publish |
+| Draft2Digital | One upload sent to Apple Books, Kobo, Barnes & Noble and others. Smashwords is part of it now | https://draft2digital.com |
+| Kobo Writing Life | Ebooks and audiobooks on Kobo | https://www.kobo.com/writinglife |
+| Apple Books for Authors | Ebooks and audiobooks on Apple Books | https://authors.apple.com |
+| ACX | Audiobooks on Audible, Amazon and Apple | https://www.acx.com |
+| Spotify for Authors | Audiobooks on Spotify. Findaway Voices, the audiobook distributor Spotify bought, is part of it | https://authors.spotify.com |
+| PublishDrive | One upload to many stores, with its own sales reports | https://publishdrive.com |
+| StreetLib | One upload to many stores, strong outside the US | https://www.streetlib.com |
+
+Two things the owner asked about, as far as the research shows:
+- **KDP does not send ebooks to Apple Books or Kobo.** A book is on Apple Books through Apple's own portal or through an aggregator such as Draft2Digital or PublishDrive. If sales appear there, they came by one of those routes, and the report is that route's report.
+- **A link between Kobo and Barnes & Noble Press could not be confirmed.** B&N Press's own page mentions Findaway Voices for audio, and nothing about Kobo.
+
+The owner has sold on KDP and a few others only, so real reports for the rest do not exist yet. Readers for those are built from the store's description and say so; the first person to import a real file confirms or corrects them.
+
 ## What the research changes in the plan
 
 1. Lulu and B&N Press readers can be built now from documented headers, then confirmed against a real file.
