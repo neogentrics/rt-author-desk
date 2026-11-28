@@ -192,9 +192,9 @@ const GUIDES = [
     slug: 'match-columns',
     title: 'A report from any store',
     summary: 'Match your columns: read a report from a store the app has no reader for.',
-    keywords: 'match columns report csv excel xlsx store import sales royalties kobo draft2digital apple lulu layout remember map',
+    keywords: 'match columns report csv excel xlsx store import sales royalties kobo draft2digital apple layout remember map',
     blocks: [
-      { type: 'p', text: 'The app reads Amazon KDP\'s reports by itself. For any other store, choose **Match your columns…** on the Money screen, pick the report (a CSV or an Excel file), and show the app which column is which.' },
+      { type: 'p', text: 'The app reads Amazon KDP\'s reports and [Lulu\'s sales report](help:lulu-report) by itself. For any other store, choose **Match your columns…** on the Money screen, pick the report (a CSV or an Excel file), and show the app which column is which.' },
       { type: 'ol', items: [
         'Say which **store** the report is from, and which sheet if the file has several. If the headings are not on the first line, say which row they are on.',
         'The app guesses the columns. Check each one: the **date**, the **title** or ISBN, the **country**, the **copies sold**, **what you earned** and the **currency**. If the file has no currency column, say which currency the whole file is in.',
@@ -204,6 +204,34 @@ const GUIDES = [
       ] },
       { type: 'p', text: 'If a store renames a column, the app says which one has gone and asks you to match again. It never reads past a change by guessing.' },
       { type: 'note', text: 'A report read this way has no total of its own to check against, so compare the total shown with the store\'s own figure. The money is an estimate until a payment report says otherwise. A reader built from a real report is better when there is one.' },
+    ],
+  },
+  {
+    slug: 'lulu-report',
+    title: 'Lulu\'s sales report',
+    summary: 'Importing it, which payee is you, and what is paid against what is only estimated.',
+    keywords: 'lulu sales report csv payee paid converted revenue refund self purchase royalty import product id',
+    blocks: [
+      { type: 'note', text: 'This reader was **built from Lulu\'s own description of its report, and is still to be confirmed on a real file**. Compare the total it shows with Lulu\'s own figure. If it says a column is missing, nothing is imported, and [Match your columns](help:match-columns) can read the file in the meantime.' },
+      { type: 'h', text: 'Getting the file' },
+      { type: 'p', text: 'On Lulu, open **My Projects**, then **Sales & Payments**, pick the payee, and choose **Generate and Download CSV of this list**. Then choose **Import a report** on the Money screen.' },
+      { type: 'h', text: 'Two questions it may ask' },
+      { type: 'ul', items: [
+        '**Which payee is you?** A sale with more than one payee is in the report once for each, so adding every line would count it more than once. Only your lines are saved, and the others are named as left out. Once your lines are in, the same name is chosen next time.',
+        '**Month first or day first?** This is only asked when no date in the file settles it.',
+      ] },
+      { type: 'h', text: 'Earned, paid and estimated' },
+      { type: 'ul', items: [
+        '**Earned** is Lulu\'s Payee Revenue: your share of the whole line, in the currency of the sale.',
+        'A line Lulu marks as **paid** counts as paid on the Money screen.',
+        'Lulu also converts each line into the currency it pays you in. For a paid line that is what it says it paid. Until then it is **an estimate** that moves with exchange rates, and the two are never added together.',
+        'A **refund** is taken off. Your **own purchases** are kept and marked, and counted with the rest. A line Lulu calls other revenue rather than a royalty is marked so. Both marks are in your export.',
+      ] },
+      { type: 'h', text: 'Importing a newer download' },
+      { type: 'p', text: 'A later download holds the same sales again. Nothing is counted twice. A sale that has since been paid is **updated**, and a paid one is never made unpaid by an older file. If a sale is here with a different amount and the file does not newly mark it paid, it is set aside and both figures are shown. To undo an import whose sales a later one updated, undo the later one first.' },
+      { type: 'h', text: 'Matching your books' },
+      { type: 'p', text: 'Lulu\'s sales report has no ISBN, only its own **Product ID**. The app asks once which edition each one is. Or put the Product ID on the book\'s Lulu [listing](help:listings-and-prices) as the store\'s ID.' },
+      { type: 'note', text: 'If you already read some months of Lulu with Match your columns, the app will not take the same months again, because it could count them twice. Undo that import first. A book you also publish straight to a shop that Lulu sells through can appear in both reports, so check that a sale is not counted from each.' },
     ],
   },
   {

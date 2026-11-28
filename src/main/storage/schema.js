@@ -28,10 +28,10 @@ const TABLES = {
   prices: ['listing_id', 'marketplace', 'currency', 'amount', 'from_date', 'notes'],
   dismissed_clashes: ['clash_key', 'reason'],
   report_files: ['store_id', 'kind', 'file_name', 'fingerprint', 'period_start', 'period_end', 'status', 'rows_in_file', 'counts',
-    'accounting', 'problems', 'mismatch_accepted', 'original'],
+    'accounting', 'problems', 'mismatch_accepted', 'original', 'replaced'],
   sale_lines: ['report_id', 'fingerprint', 'store_id', 'store_item', 'title', 'author', 'marketplace', 'period', 'royalty_date',
     'royalty_type', 'transaction_type', 'units_sold', 'units_refunded', 'net_units', 'currency', 'list_price', 'offer_price',
-    'delivery_cost', 'royalty', 'estimate', 'edition_id', 'listing_id'],
+    'delivery_cost', 'royalty', 'estimate', 'edition_id', 'listing_id', 'payee', 'paid', 'self_purchase', 'converted', 'converted_currency'],
   pages_read: ['report_id', 'fingerprint', 'store_id', 'store_item', 'title', 'marketplace', 'read_date', 'period', 'pages', 'edition_id'],
   order_counts: ['report_id', 'fingerprint', 'store_id', 'store_item', 'title', 'marketplace', 'kind', 'order_date', 'period',
     'paid_units', 'free_units', 'edition_id'],
@@ -376,6 +376,23 @@ const STEPS = [
           created_at TEXT NOT NULL, updated_at TEXT NOT NULL, device_id TEXT NOT NULL
         );
         CREATE INDEX report_layouts_by_store ON report_layouts (store_id);
+      `);
+    },
+  },
+  {
+    version: 11,
+    up(db) {
+      // For a report that repeats a sale for each payee, and that says line by line what has been paid (Lulu's). Whether a figure is an
+      // estimate or settled is already `estimate`. `paid` is only set when the sales report itself says the line was paid. `converted` is what
+      // the store turns the line into in the currency it pays in: its estimate until the line is paid. A batch keeps what the rows it
+      // updated said before, so it can be undone.
+      db.exec(`
+        ALTER TABLE sale_lines ADD COLUMN payee TEXT NOT NULL DEFAULT '';
+        ALTER TABLE sale_lines ADD COLUMN paid INTEGER NOT NULL DEFAULT 0 CHECK (paid IN (0, 1));
+        ALTER TABLE sale_lines ADD COLUMN self_purchase INTEGER NOT NULL DEFAULT 0 CHECK (self_purchase IN (0, 1));
+        ALTER TABLE sale_lines ADD COLUMN converted TEXT CHECK (converted IS NULL OR (length(converted) > 0 AND converted NOT GLOB '*[^0-9-]*' AND converted NOT GLOB '*?-*'));
+        ALTER TABLE sale_lines ADD COLUMN converted_currency TEXT CHECK (converted_currency IS NULL OR converted_currency GLOB '[A-Z][A-Z][A-Z]');
+        ALTER TABLE report_files ADD COLUMN replaced TEXT NOT NULL DEFAULT '[]';
       `);
     },
   },

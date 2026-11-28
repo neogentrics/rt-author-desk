@@ -46,7 +46,8 @@ count once. **Any import can be undone** as a batch.
 | ACX | A monthly earnings statement as a multi-sheet Excel file, and a CSV from Sales Overview (its help pages). Not seen yet. Final figures arrive at the end of the following month | 1.1 |
 | Google Play Books | Not seen yet. It's a report from Partner Center, including audiobooks | 1.1 |
 | IngramSpark | Not seen yet | 1.1 |
-| Draft2Digital, Kobo, Apple Books, Lulu | Not seen yet | 1.2 |
+| Lulu | Not seen yet. A reader is built from its help page's list of 30 columns, to be confirmed on a real file: see below | 1.2 |
+| Draft2Digital, Kobo, Apple Books | Not seen yet | 1.2 |
 
 ### What a KDP report holds
 
@@ -71,6 +72,15 @@ royalty, tax withholding, adjustments, net earnings, exchange rate and payout am
 and it's the source of exchange rates. Its header has `Currency` twice, so columns are read by position there, and a test
 guards it.
 
+### Lulu's sales report
+
+Built from Lulu's description, not from a file. [What each store says its report holds](store-report-layouts.md) lists the columns.
+
+- **One row for each payee.** Only the owner's lines are saved. The others are set aside with the payee named. The app asks when it can't tell, and remembers from the lines already saved.
+- **Money.** Earned is Payee Revenue, which Lulu says is in the sale's currency, after its share and any tax withheld. Converted Revenue is that in the payment currency: an estimate until Paid is `y`.
+- **The same sale again.** A row's fingerprint is made from what the sale is (its reference, product, version, type, day, payee, channel, region, currency, quantity and prices), not from what has been paid. A later copy that is newly paid updates the row, which is the **Replaced** outcome. Pressing Import is the agreement, and the batch keeps the old figures so Undo can put them back. A copy that is not newly paid and disagrees about the amount is set aside and shown.
+- **Not said by Lulu.** How a refund is signed (so a refund is taken off either way) and how the sale date is written (so an unclear order is asked for).
+
 ## Estimates and payments
 
 Stores report a sale first and pay for it later, sometimes months later and in another currency. The app shows both:
@@ -78,6 +88,8 @@ Stores report a sale first and pay for it later, sometimes months later and in a
 - **Earned:** what the reports say, by the month of the sale.
 - **Paid:** what reached you, by the date it was paid.
 - **Owed:** earned but not yet paid.
+
+Lulu has no separate payment file here: its sales report says line by line what has been paid, and those lines count as paid.
 
 When a payment arrives, the app matches it to its sales period and shows any difference.
 

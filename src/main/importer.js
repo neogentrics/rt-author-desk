@@ -7,7 +7,7 @@ const crypto = require('node:crypto');
 const { LayoutError } = require('./reports/kdp');
 const { readReport, readerStatus } = require('./reports/index');
 const { readWorkbook, WorkbookError } = require('./reports/xlsx');
-const { FIELDS, MappingError, compareLayout, guessMapping, headingsOf, knownFor, layoutOf, readMapped, readTable } = require('./reports/mapped');
+const { FIELDS, MappingError, compareLayout, guessMapping, headingsOf, isWorkbook, knownFor, layoutOf, readMapped, readTable } = require('./reports/mapped');
 const { parseIsbn } = require('../shared/isbn');
 const { add, format, money, toDecimalString, zero } = require('../shared/money');
 
@@ -24,8 +24,14 @@ const KIND_LABELS = {
   'kdp-orders': 'Orders report (estimated royalties)',
   'kdp-payments': 'Payments report (what was paid)',
   mapped: 'Report read with the columns you matched',
+  'lulu-sales': 'Sales report',
 };
 const SALE_TABLES = ['sale_lines', 'pages_read', 'order_counts'];
+const TOTAL_NOTES = {
+  'lulu-sales': 'This is your share of every sale in the file, in the currency of each sale. Lines already in your library are included in it.',
+};
+// What a later copy of the same sale can change. These are kept as they were, so the later import can be undone.
+const REVISABLE = ['royalty', 'royalty_type', 'estimate', 'paid', 'converted', 'converted_currency'];
 
 // An ASIN is compared as typed, in capitals. An ISBN is compared as its 13 digits, so a 10-digit ISBN finds the same book.
 function itemKey(text) {
@@ -67,22 +73,47 @@ class Importer {
 
   // ---- Reading a file, and showing what it holds ----------------------------------------------------------------------
 
-  // Reads the file and says what accepting it would do. Nothing is saved.
-  preview(buffer, fileName = '') {
+  // Reads the file and says what accepting it would do. Nothing is saved. `choices` answer a reader's questions, such as which payee is you.
+  preview(buffer, fileName = '', choices = {}) {
     if (!Buffer.isBuffer(buffer)) throw new ImportError("That isn't a file the app can read.");
     if (buffer.length > MAX_FILE) throw new ImportError('That file is too big to be a sales report.');
     let report;
     try {
-      report = readReport(readWorkbook(buffer));
+      const format = isWorkbook(buffer) ? 'xlsx' : 'csv';
+      let workbook;
+      if (format === 'xlsx') workbook = readWorkbook(buffer);
+      else {
+        const { sheets } = readTable(buffer, fileName);
+        workbook = { sheets, sheet: (name) => sheets.find((s) => s.name === name) ?? null };
+      }
+      report = readReport(workbook, { format, choices, knownPayees: this.#knownPayees() });
     } catch (error) {
-      if (error instanceof LayoutError || error instanceof WorkbookError) throw new ImportError(`${error.message} Nothing was imported.`);
+      if (error instanceof LayoutError || error instanceof WorkbookError || error instanceof MappingError) throw new ImportError(`${error.message} Nothing was imported.`);
       throw error;
     }
     if (!report) {
       const waiting = readerStatus().filter((r) => !r.ready).map((r) => r.name);
-      throw new ImportError(`This isn't a report the app can read yet. It reads Amazon KDP's orders and payments reports. ${waiting.join(', ')} are waiting for a real report to build from. For any of them, Match your columns reads its report in the meantime.`);
+      throw new ImportError(`This isn't a report the app can read yet. It reads Amazon KDP's orders and payments reports and Lulu's sales report. ${waiting.join(', ')} are waiting for a real report to build from. For any of them, Match your columns reads its report in the meantime. Nothing was imported.`);
     }
     return this.#show(report, buffer, fileName);
+  }
+
+  // The same file read again with the person's answers. The file is the one already held here, so the window never has it.
+  review({ previewId, payees, dateOrder } = {}) {
+    const pending = this.waiting.get(previewId);
+    if (!pending?.report.ask) throw new ImportError('That file is no longer open here. Choose it again.');
+    const choices = {
+      ...(Array.isArray(payees) ? { payees: payees.filter((name) => typeof name === 'string') } : {}),
+      ...(dateOrder === 'month-first' || dateOrder === 'day-first' ? { dateOrder } : {}),
+    };
+    const shown = this.preview(pending.buffer, pending.fileName, choices); // if this can't be read, the first one stays open
+    this.waiting.delete(previewId);
+    return shown;
+  }
+
+  // The payees whose Lulu sales are in the library: they are the person's own, so the question is only asked once.
+  #knownPayees() {
+    return this.library.db.prepare("SELECT DISTINCT payee FROM sale_lines WHERE store_id = 'store-lulu' AND payee != ''").all().map((row) => row.payee);
   }
 
   // ---- Match your columns: a report from a store with no reader, read with the columns the person points out ----------------
@@ -189,10 +220,11 @@ class Importer {
 
   // Shows what accepting a read report would do, and keeps it until it is accepted.
   #show(report, buffer, fileName, layout = null) {
-    if (!report.complete) throw new ImportError("The rows in this file didn't add up, so nothing was imported.");
+    if (!report.needs && !report.complete) throw new ImportError("The rows in this file didn't add up, so nothing was imported.");
 
     const fingerprint = crypto.createHash('sha256').update(buffer).digest('hex');
-    const plan = this.#plan(report);
+    // A reader with a question still unanswered has read no sales, so there is nothing to plan yet.
+    const plan = report.needs ? { period: null, counts: {}, newRows: 0, updates: [], unmatched: [], notes: [] } : this.#plan(report);
     const earlier = this.#liveFile(fingerprint);
     const id = crypto.randomUUID();
     this.waiting.set(id, { buffer, fileName: String(fileName).slice(0, 200), fingerprint, report, layout });
@@ -209,9 +241,13 @@ class Importer {
       rowsInFile: report.rowsInFile,
       counts: plan.counts,
       newRows: plan.newRows,
+      updatedRows: plan.updates.length,
+      ask: report.ask ?? null,
+      needs: report.needs ?? null,
       totals: this.#shown([...report.totals?.values?.() ?? []]),
-      problems: report.problems,
-      notes: report.notes ?? [],
+      totalsNote: TOTAL_NOTES[report.kind] ?? null,
+      problems: report.problems ?? [],
+      notes: [...plan.notes, ...report.notes ?? []],
       layoutKept: Boolean(layout),
       needsMatching: plan.unmatched,
     };
@@ -225,6 +261,7 @@ class Importer {
     const pending = this.waiting.get(previewId);
     if (!pending) throw new ImportError('That file is no longer open here. Choose it again.');
     const { report, buffer, fileName, fingerprint, layout } = pending;
+    if (report.needs) throw new ImportError(`Answer the question about the ${report.needs.join(' and the ')} first. Nothing was imported.`);
     const earlier = this.#liveFile(fingerprint);
     if (earlier) throw new ImportError(`You already imported this exact file on ${earlier.created_at.slice(0, 10)}. Nothing was changed.`);
     if (report.problems.length && !knowingMismatch) {
@@ -251,7 +288,14 @@ class Importer {
           units_refunded: sale.unitsRefunded, net_units: sale.netUnits, currency: sale.royalty.currency,
           list_price: minor(sale.listPrice), offer_price: minor(sale.offerPrice), delivery_cost: minor(sale.cost),
           royalty: minor(sale.royalty), estimate: sale.estimate ? 1 : 0, edition_id: found.edition_id, listing_id: found.listing_id,
+          payee: sale.payee ?? '', paid: sale.paid ? 1 : 0, self_purchase: sale.selfPurchase ? 1 : 0,
+          converted: minor(sale.converted), converted_currency: sale.converted?.currency ?? null,
         });
+      }
+      // Sales already here that this later report marks as paid. What each one said before is kept with this batch.
+      if (plan.updates.length) {
+        for (const { id, after } of plan.updates) this.library.put('sale_lines', { id, ...after });
+        this.library.put('report_files', { id: file.id, replaced: JSON.stringify(plan.updates.map(({ id, before }) => ({ id, before }))) });
       }
       for (const row of plan.pages) {
         this.library.put('pages_read', {
@@ -284,7 +328,7 @@ class Importer {
           headers: JSON.stringify(layout.headers), columns: JSON.stringify(layout.columns), options: JSON.stringify(layout.options),
         });
       }
-      return { reportId: file.id, counts: plan.counts, newRows: plan.newRows, needsMatching: plan.unmatched, layoutKept: Boolean(layout) };
+      return { reportId: file.id, counts: plan.counts, newRows: plan.newRows, updatedRows: plan.updates.length, needsMatching: plan.unmatched, layoutKept: Boolean(layout) };
     })();
     this.waiting.delete(previewId);
     return result;
@@ -296,7 +340,16 @@ class Importer {
     const file = this.library.get('report_files', id);
     if (!file) throw new ImportError("That import isn't in your library.");
     if (file.status === 'undone') throw new ImportError('That import was already undone.');
+    const replaced = JSON.parse(file.replaced);
+    const later = this.#laterChangeTo(id, replaced);
+    if (later) throw new ImportError(`A later import ("${later}") updated rows from this one. Undo that one first.`);
     return this.library.db.transaction(() => {
+      let restored = 0;
+      for (const { id: rowId, before } of replaced) {
+        if (!this.library.get('sale_lines', rowId)) continue;
+        this.library.put('sale_lines', { id: rowId, ...before });
+        restored += 1;
+      }
       let removed = 0;
       for (const table of [...SALE_TABLES, 'payments']) {
         for (const { id: rowId } of this.library.db.prepare(`SELECT id FROM ${table} WHERE report_id = ?`).all(id)) {
@@ -304,9 +357,17 @@ class Importer {
           removed += 1;
         }
       }
-      this.library.put('report_files', { id, status: 'undone', original: null });
-      return { removed };
+      this.library.put('report_files', { id, status: 'undone', original: null, replaced: '[]' });
+      return restored ? { removed, restored } : { removed };
     })();
+  }
+
+  // A later import that changed a row this one saved or changed, by its file name, or null. Undoing out of order would put back the wrong
+  // figures, so the later one is undone first.
+  #laterChangeTo(id, replaced) {
+    const mine = new Set([...this.library.db.prepare('SELECT id FROM sale_lines WHERE report_id = ?').all(id).map((r) => r.id), ...replaced.map((r) => r.id)]);
+    const after = this.library.db.prepare("SELECT file_name, replaced FROM report_files WHERE status = 'accepted' AND rowid > (SELECT rowid FROM report_files WHERE id = ?) ORDER BY rowid DESC").all(id);
+    return after.find((file) => JSON.parse(file.replaced).some((row) => mine.has(row.id)))?.file_name ?? null;
   }
 
   // The person's one answer for an item: this ASIN or ISBN is that edition. It's remembered, and every row already saved
@@ -399,13 +460,27 @@ class Importer {
     const slot = (currency, period) => {
       const cur = byCurrency.get(currency) ?? new Map();
       byCurrency.set(currency, cur);
-      const row = cur.get(period) ?? { earned: zero(currency), accrued: zero(currency), paid: zero(currency), waiting: zero(currency), statuses: new Set(), payments: 0 };
+      const row = cur.get(period) ?? { earned: zero(currency), accrued: zero(currency), paid: zero(currency), waiting: zero(currency), statuses: new Set(), payments: 0, saidPaid: 0, saidNot: 0 };
       cur.set(period, row);
       return row;
     };
-    for (const { currency, period, royalty } of db.prepare('SELECT currency, period, royalty FROM sale_lines').all()) {
-      const row = slot(currency, period);
-      row.earned = add(row.earned, money(BigInt(royalty), currency));
+    // What a store turns a line into in the currency it pays in, with what it says it paid kept apart from what it still only estimates.
+    const turned = new Map();
+    for (const line of db.prepare('SELECT currency, period, royalty, paid, payee, converted, converted_currency FROM sale_lines').all()) {
+      const row = slot(line.currency, line.period);
+      const royalty = money(BigInt(line.royalty), line.currency);
+      row.earned = add(row.earned, royalty);
+      // A sales report that says line by line what has been paid (Lulu's) counts as the payment report for those lines.
+      if (line.paid) {
+        row.paid = add(row.paid, royalty);
+        row.payments += 1;
+        row.saidPaid += 1;
+      } else if (line.payee) row.saidNot += 1; // a line with a payee comes from a report that says which are paid
+      if (line.converted == null) continue;
+      const sums = turned.get(line.converted_currency) ?? { paid: zero(line.converted_currency), estimate: zero(line.converted_currency) };
+      turned.set(line.converted_currency, sums);
+      const key = line.paid ? 'paid' : 'estimate';
+      sums[key] = add(sums[key], money(BigInt(line.converted), line.converted_currency));
     }
     for (const p of db.prepare('SELECT earned_currency, period_start, accrued, net, status FROM payments WHERE earned_currency IS NOT NULL AND period_start IS NOT NULL').all()) {
       const row = slot(p.earned_currency, p.period_start.slice(0, 7));
@@ -427,7 +502,7 @@ class Importer {
         waiting: this.#one(r.waiting),
         owed: this.#one(money(r.earned.minor - r.paid.minor, currency)),
         paymentSeen: r.payments > 0,
-        statuses: [...r.statuses],
+        statuses: [...r.statuses, ...(r.saidPaid ? [`${r.saidNot ? 'Part paid' : 'Paid'}, says the sales report`] : [])],
       }));
       const sum = (key) => rows.reduce((acc, r) => acc + BigInt(r[key].minor), 0n);
       return {
@@ -439,7 +514,9 @@ class Importer {
     // A batch the person chose to keep although its own total disagreed stays flagged, for as long as it's in the library.
     const warnings = this.reports().filter((r) => r.status === 'accepted' && r.problems.length)
       .map((r) => ({ reportId: r.id, fileName: r.fileName, problems: r.problems }));
-    return { currencies, warnings };
+    const converted = [...turned.entries()].sort(([a], [b]) => a.localeCompare(b))
+      .map(([currency, sums]) => ({ currency, paid: this.#one(sums.paid), estimate: this.#one(sums.estimate) }));
+    return { currencies, converted, warnings };
   }
 
   readers() {
@@ -485,6 +562,19 @@ class Importer {
     };
   }
 
+  // A store's report read by the app's own reader and the same report read with Match your columns don't know each other's rows, so the same
+  // months from both would count the same sales twice. The second one is refused.
+  #refuseTwice(report, sales) {
+    if (!sales.length) return;
+    const months = new Set(sales.map((s) => monthOf(s.royaltyDate, `row ${s.row} of ${s.sheet}`)));
+    const mapped = report.kind === 'mapped';
+    const other = this.library.db.prepare(`SELECT s.period, f.file_name FROM sale_lines s JOIN report_files f ON f.id = s.report_id
+      WHERE s.store_id = ? AND (f.kind = 'mapped') = ? ORDER BY s.period`).all(report.reader.storeId, mapped ? 0 : 1).filter((row) => months.has(row.period));
+    if (!other.length) return;
+    const shared = [...new Set(other.map((row) => row.period))];
+    throw new ImportError(`Your library already has ${report.reader.name} sales for ${shared.slice(0, 6).join(', ')}${shared.length > 6 ? ' and more' : ''} from "${other[0].file_name}", ${mapped ? 'read by the app\'s own reader' : 'read with Match your columns'}. Importing this too could count those sales twice, so nothing was imported. To use this file instead, undo that import on the Money screen first.`);
+  }
+
   // What accepting this report would do right now, row by row. A row already in the library, from this or another file,
   // is a duplicate. The outcomes must add up to the rows in the file, or nothing is saved.
   #plan(report) {
@@ -496,13 +586,54 @@ class Importer {
       duplicated.add(`${row.sheet}:${row.row}`);
       return false;
     });
-    const sales = fresh('sale_lines', report.sales ?? []);
+    // A sale that can change (Lulu's, which arrives again once it is paid) updates the copy here when it has become paid. It never goes back
+    // from paid, and a copy that disagrees about what was earned is set aside and named, not counted again.
+    const updates = [];
+    const updatedSales = [];
+    const differing = [];
+    const kept = new Map(); // row of the file: why it was set aside
+    const revised = new Set();
+    const stored = db.prepare(`SELECT id, currency, ${REVISABLE.join(', ')} FROM sale_lines WHERE fingerprint = ?`);
+    const amountText = (value, currency) => format(money(BigInt(value), currency), this.locale);
+    const sales = (report.sales ?? []).filter((sale) => {
+      if (!sale.revisable) return fresh('sale_lines', [sale]).length;
+      const here = stored.get(sale.fingerprint);
+      if (!here) return true;
+      const where = `${sale.sheet}:${sale.row}`;
+      if (sale.paid && !here.paid) {
+        updates.push({
+          id: here.id,
+          before: Object.fromEntries(REVISABLE.map((name) => [name, here[name]])),
+          after: { royalty: minor(sale.royalty), royalty_type: sale.royaltyType, estimate: 0, paid: 1, converted: minor(sale.converted), converted_currency: sale.converted?.currency ?? null },
+          was: here.royalty === minor(sale.royalty) ? null : `row ${sale.row}: ${amountText(here.royalty, here.currency)} is now ${amountText(sale.royalty.minor, here.currency)}`,
+        });
+        revised.add(where);
+        updatedSales.push(sale);
+      } else if (here.royalty !== minor(sale.royalty)) {
+        const why = `row ${sale.row}: the file says ${amountText(sale.royalty.minor, here.currency)} and your library has ${amountText(here.royalty, here.currency)}`;
+        differing.push(why);
+        kept.set(where, 'already here with a different amount');
+      } else duplicated.add(where);
+      return false;
+    });
+    this.#refuseTwice(report, sales);
+    const notes = [];
+    if (updates.length) notes.push(`${updates.length === 1 ? 'One sale already here is' : `${updates.length} sales already here are`} now marked paid, and will be updated, not added again.`);
+    const changed = updates.map((u) => u.was).filter(Boolean);
+    if (changed.length) notes.push(`What you earned changed on ${changed.length === 1 ? 'one of them' : `${changed.length} of them`}: ${changed.slice(0, 5).join('; ')}${changed.length > 5 ? ' and more' : ''}.`);
+    if (differing.length) notes.push(`Set aside, because the same sale is here with another amount, and the one in your library is kept: ${differing.slice(0, 5).join('; ')}${differing.length > 5 ? ' and more' : ''}. If the file is the right one, undo the import that brought the sale in, then import this file again.`);
+
     const orders = fresh('order_counts', report.orders ?? []);
     const pages = fresh('pages_read', report.pagesRead ?? []);
     const payments = fresh('payments', report.payments ?? []);
 
-    const accounting = report.accounting.map((item) => (duplicated.has(`${item.sheet}:${item.row}`)
-      ? { sheet: item.sheet, row: item.row, outcome: 'duplicate', reason: 'already imported' } : item));
+    const accounting = report.accounting.map((item) => {
+      const where = `${item.sheet}:${item.row}`;
+      if (duplicated.has(where)) return { sheet: item.sheet, row: item.row, outcome: 'duplicate', reason: 'already imported' };
+      if (revised.has(where)) return { sheet: item.sheet, row: item.row, outcome: 'replaced', reason: 'already here, now paid' };
+      if (kept.has(where)) return { sheet: item.sheet, row: item.row, outcome: 'set aside', reason: kept.get(where) };
+      return item;
+    });
     const counts = {};
     for (const item of accounting) counts[item.outcome] = (counts[item.outcome] ?? 0) + 1;
     if (accounting.length !== report.rowsInFile || Object.values(counts).reduce((a, b) => a + b, 0) !== report.rowsInFile) {
@@ -519,7 +650,7 @@ class Importer {
       unmatched.set(key, item);
     }
 
-    const months = [...sales.map((s) => monthOf(s.royaltyDate, `row ${s.row} of ${s.sheet}`)), ...orders.map((r) => monthOf(r.date, `row ${r.row} of ${r.sheet}`)),
+    const months = [...[...sales, ...updatedSales].map((s) => monthOf(s.royaltyDate, `row ${s.row} of ${s.sheet}`)), ...orders.map((r) => monthOf(r.date, `row ${r.row} of ${r.sheet}`)),
       ...pages.map((r) => monthOf(r.date, `row ${r.row} of ${r.sheet}`))].sort();
     const starts = payments.map((p) => dayOf(p.periodStart, `row ${p.row} of Payments`)).filter(Boolean).sort();
     const ends = payments.map((p) => dayOf(p.periodEnd, `row ${p.row} of Payments`)).filter(Boolean).sort();
@@ -528,7 +659,7 @@ class Importer {
     else if (starts.length) period = { start: starts[0], end: (ends.length ? ends.at(-1) : starts.at(-1)) };
 
     return {
-      sales, orders, pages, payments, accounting, counts, period,
+      sales, orders, pages, payments, accounting, counts, period, updates, notes,
       newRows: sales.length + orders.length + pages.length + payments.length,
       unmatched: [...unmatched.values()],
     };

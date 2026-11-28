@@ -68,7 +68,7 @@ function runChecks(dir, version) {
     check('credits are kept, and a store that leaves one off is found',
       made('book', { id: selfBook.id }).editions[0].credits[0].id === credit.id && made('clashes').some((item) => item.kind === 'credits-differ'));
     check('the nine built-in stores are there', made('names').stores.length === 9);
-    check('the money screens have their data', made('earnings').currencies.length === 0 && made('readers').filter((r) => r.ready).length === 1 && made('imports').length === 0);
+    check('the money screens have their data', made('earnings').currencies.length === 0 && made('readers').filter((r) => r.ready).map((r) => r.id).join() === 'kdp,lulu' && made('imports').length === 0);
     // The spreadsheet reader's two libraries are in the build: a file that isn't a workbook is refused in words, not by a crash.
     let reader = 'loaded';
     try {

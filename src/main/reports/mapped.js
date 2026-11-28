@@ -284,4 +284,4 @@ function compareLayout(saved, names) {
   };
 }
 
-module.exports = { FIELDS, KNOWN, MappingError, knownFor, columnName, compareLayout, guessMapping, headingsOf, layoutOf, readDate, readMapped, readNumber, readTable };
+module.exports = { FIELDS, KNOWN, MappingError, knownFor, columnName, compareLayout, guessMapping, headingsOf, isWorkbook, layoutOf, readDate, readMapped, readNumber, readTable };

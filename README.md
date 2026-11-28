@@ -87,6 +87,7 @@ anyway*), and macOS will ask you to open the app from *System Settings → Priva
 | **Sales reports** (early, part of 1.1) | Choose an Amazon KDP orders or payments report and see what it holds before accepting it. Every row is accounted for, rows you already have are skipped, rows that match no book are asked about once, and a whole import can be undone. The original file is kept inside your library |
 | **Earned and paid** (early, part of 1.1) | What the reports say you earned, beside what the payment reports say you were paid, by currency and month. A report whose own total doesn't match its rows is flagged and never hidden |
 | **Royalties** (early, part of 1.1) | Added up by month, book, edition, store and marketplace, in any mix, always by currency. Estimates from the sales reports are kept apart from what the payment reports say was paid, and last month's earnings show on the Desk |
+| **Lulu's sales report** (early, built after 1.2.0 and not yet in a release) | Built from Lulu's own description of the report, and **still to be confirmed on a real file**. Only your own payee's lines are saved, a newer download updates sales that have been paid without counting any twice, and paid money is kept apart from Lulu's estimates |
 | **Match your columns** (early, part of 1.2) | For a store the app has no reader for: choose its report (CSV or Excel), say which column is the date (or which month the whole report covers), the title, the copies and what you earned, and see every row accounted for before anything is saved. Files saved as UTF-16 or with tabs are read, and Google Play Books' Sales Summary report is recognized by its headings. The columns are kept, so next month's report is read the same way, and a store that renames a column is told apart from one that did not, with the column named |
 | **Calculator** (early, part of 1.1) | What a price earns on each copy at every store that has a rate card, side by side, and the price that earns what you want. A price just under a line says what stepping over it would earn. Every rate says where it came from and whether it was read on the store's own page, and it is an estimate for planning: the store's own report is what counts |
 | **Backups, Trash and export** | Backups to a folder you choose, each one file holding the library and its key, so keep it where only you can reach. Anything you remove waits 30 days in the Trash and comes back exactly. Everything can be exported as JSON and CSV, with your original reports |
@@ -99,9 +100,9 @@ anyway*), and macOS will ask you to open the app from *System Settings → Priva
 | **Private by default** | Your library is an encrypted database on your own computer. Until a password is set it keeps out a casual look, not someone who can use your account |
 | **Works offline** | No account, no server, and nothing you enter is ever sent anywhere. The one thing the app contacts is GitHub, to look for a newer version, and you can turn that off |
 
-Coming next: the rest of the money: readers for Barnes & Noble Press, ACX, Google Play
-Books and IngramSpark, and for Draft2Digital, Kobo, Apple Books and Lulu, which are waiting for a real report to build from, two more price checks,
-and a check of the calculator against real reports. Until a store has a reader, Match your columns reads its report. After that: the other stores, costs and profit per book,
+Coming next: the rest of the money: readers for Barnes & Noble Press, Google Play Books, Draft2Digital and IngramSpark, built from each store's own
+description, and for ACX, Kobo and Apple Books, which are waiting for a real report to build from, two more price checks,
+and a check of the readers and the calculator against real reports. Until a store has a reader, Match your columns reads its report. After that: the other stores, costs and profit per book,
 launches, accounts and a locked vault for logins, links to the other Recon Towers apps, and moving off Notion. See the
 [roadmap](ROADMAP.md).
 

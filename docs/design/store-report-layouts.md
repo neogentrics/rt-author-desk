@@ -28,6 +28,12 @@ Things the reader must get right:
 - Retailer sales (Amazon, B&N, Apple through Lulu's distribution) arrive here a month at a time, 6 to 8 weeks late. The same sale will also be in that retailer's own report if the owner publishes there directly; matching by ISBN is how to avoid counting it twice.
 - Lulu-owned ISBN earnings are royalties, other earnings are "Other Revenue" (the Royalties column). The Year-end summary needs the difference.
 
+**Reader built on 27 November 2026, to be confirmed on a real file.** Lulu's page was read again while building it:
+- **Payee Revenue is in the sale's currency** ("The amount to be paid to the Payee in the sale currency"), and Converted Revenue is that amount in the payment currency.
+- "(y/n)" is written as part of four headings. "month/year" and "Sale or Refund" are in the descriptions only. The reader takes a heading with or without them.
+- The 30 columns hold **no ISBN**, so matching by ISBN is not possible from this report. A book is matched by its Product ID, and the app only warns that a shop's own report may hold the same sale.
+- The page does not say whether a refund's figures carry a minus, how Sale Date is written, or how Payee Percent is written (the reader does not use it).
+
 ## Barnes & Noble Press (the sales report, 17 columns)
 
 Sale Date, Title, Format (eBook, Print Hardcover, Print Paperback), BN ID / ISBN, eBook ISBN, Author, Publisher, Selling Currency, List Price, Payment Currency, Unit Royalty, Units Sold, Units Returned, Net Units Sold, Print Cost, Total Royalty, Royalty %.
