@@ -9,7 +9,7 @@ tags: [roadmap, planning]
 # Roadmap
 
 RT Author Desk is the business side of being an author. This page lists the releases, each one something that can be tested
-on its own. **The catalog (1.0.0) and the first of the money (1.1.0) are released, and building goes on.** The reasons behind it are in the
+on its own. **1.0.0, 1.1.0 and 1.2.0 are released. The next release is 1.2.1**, the store readers built since 1.2.0 (Lulu's so far, with the checks against counting a month twice). Nothing else is being built for a release, and 1.3 comes after it. The reasons behind it are in the
 [product plan](docs/product-plan.md), and the choices are in [decisions](docs/decisions.md).
 
 > [!TIP]
