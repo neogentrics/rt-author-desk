@@ -48,7 +48,7 @@
 
     const { rows, totals } = data.estimated;
     out.push(h('section', { class: 'card', 'aria-labelledby': 'est' }, h('h2', { id: 'est' }, 'Earned, as the sales reports say'),
-      h('p', { class: 'note' }, 'These are estimates until a payment report covers them. Copies are copies sold: free copies are counted on their own, and a refund takes one off.'),
+      h('p', { class: 'note' }, 'These are estimates until a payment report covers them, or, for Lulu, until the line is marked paid. Copies are copies sold: free copies are counted on their own, and a refund takes one off.'),
       rows.length
         ? h('div', { class: 'tablewrap' }, h('table', null,
           h('thead', null, h('tr', null, data.by.map((d) => h('th', { scope: 'col' }, CHOICES.find(([k]) => k === d)[1])),
@@ -68,7 +68,7 @@
             h('tbody', null, data.paid.map((p) => h('tr', null, h('td', null, monthName(p.month)), h('td', null, p.marketplace), h('td', null, p.currency),
               h('td', { class: 'num mono' }, p.accrued.shown), h('td', { class: 'num mono' }, p.paid.shown), h('td', { class: 'num mono' }, p.waiting.shown),
               h('td', null, p.statuses.join(', '))))))) ]
-        : h('p', { class: 'note' }, 'No payment reports imported for this range yet.')));
+        : h('p', { class: 'note' }, 'No payment reports imported for this range yet. Lulu has no separate one here: what its sales report marks as paid is on the Money screen.')));
     return out;
   };
 })();

@@ -225,15 +225,15 @@ test('a file the app cannot read says so, and names the stores still waiting for
   const { library, importer } = start();
   refused(() => importer.preview(Buffer.from('not a spreadsheet'), 'x.xlsx'), /Nothing was imported/);
   const other = makeXlsx([{ name: 'Sheet1', rows: [['Date', 'Title', 'Units'], ['2026-09-01', 'A Book', 3]] }]);
-  refused(() => importer.preview(other, 'sales.xlsx'), /Barnes & Noble Press, ACX, Google Play Books, IngramSpark, Draft2Digital, Kobo, Apple Books, Lulu are waiting for a real report.*Match your columns/);
+  refused(() => importer.preview(other, 'sales.xlsx'), /Barnes & Noble Press, ACX, Google Play Books, IngramSpark, Draft2Digital, Kobo, Apple Books are waiting for a real report.*Match your columns/);
   library.close();
 });
 
 test('the other stores are empty slots that say they are waiting, and read nothing', () => {
   const { library, importer } = start();
   const slots = importer.readers();
-  assert.deepEqual(slots.filter((r) => r.ready).map((r) => r.name), ['Amazon KDP']);
-  assert.deepEqual(slots.filter((r) => !r.ready).map((r) => r.name), ['Barnes & Noble Press', 'ACX', 'Google Play Books', 'IngramSpark', 'Draft2Digital', 'Kobo', 'Apple Books', 'Lulu']);
+  assert.deepEqual(slots.filter((r) => r.ready).map((r) => r.name), ['Amazon KDP', 'Lulu']);
+  assert.deepEqual(slots.filter((r) => !r.ready).map((r) => r.name), ['Barnes & Noble Press', 'ACX', 'Google Play Books', 'IngramSpark', 'Draft2Digital', 'Kobo', 'Apple Books']);
   assert.ok(slots.filter((r) => !r.ready).every((r) => /[Ww]aiting for/.test(r.waiting)));
   library.close();
 });

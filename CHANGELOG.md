@@ -6,6 +6,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+- **Lulu's sales report** (early). Choose the CSV with Import a report. It was **built from Lulu's own description of the report and tested on made-up files, so it is still to be confirmed on a
+  real one**. Columns are found by their headings, and a needed one that is missing stops the import and names it.
+  - A sale with more than one payee is in the report once for each. Only your lines are saved, and the app asks which payee is you when it can't tell. The date order is asked for only when no date in the file settles it.
+  - A newer download holds the same sales again. A sale that has since been paid is updated, nothing is counted twice, an older file never makes a paid sale unpaid, and a different amount that the file does not newly mark as paid is set aside and shown. Undo puts the earlier figures back.
+  - What Lulu marks as paid counts as paid. Its converted amounts show in the currency you are paid in, with what it says it paid kept apart from its estimate.
+  - Refunds are taken off, your own purchases and Lulu's "other revenue" are marked, and each line keeps its payee (database step 11; all of it is in the export).
+  - Lulu's report has no ISBN, so a book is matched by Lulu's Product ID.
+
+### Changed
+- **The same months are not taken twice.** Sales read with Match your columns and sales read by the app's own reader don't know each other's rows, so importing the same store's months both ways is now refused, with the earlier file named.
+
 ## [1.2.0] - 2026-11-22
 
 The first "every store" release. A store the app has no reader for can now be read by matching its columns, and the Desk says which store's next report is

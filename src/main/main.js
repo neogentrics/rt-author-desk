@@ -190,7 +190,7 @@ if (selfTestArg) {
       const choice = await chooseFile('report', {
         title: 'Choose a sales report',
         properties: ['openFile'],
-        filters: [{ name: 'Sales reports (.xlsx)', extensions: ['xlsx'] }],
+        filters: [{ name: 'Sales reports (.xlsx, .csv)', extensions: ['xlsx', 'csv'] }],
       });
       if (choice.canceled || !choice.filePaths[0]) return { ok: true, value: null };
       try {

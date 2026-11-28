@@ -440,6 +440,49 @@ e2e('Match your columns: choose the store and the columns, see every row account
   assert.match(await app.run("document.querySelector('dialog [role=status]').textContent"), /doesn't fit this file any more: no column called "Royalty" \(new: "Net Royalty"\)/);
 }, { env: { RTAD_TEST_FILES: JSON.stringify({ columns: matchFile }) } });
 
+// Lulu's sales report, made up from the columns Lulu describes. It has two payees and a date that could be read two ways, so both are asked.
+const luluFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-lulu-')), 'lulu.csv');
+e2e('a Lulu report asks which payee is you and how its dates are written, then imports only your lines and shows what is paid', async (app) => {
+  const { THEM, ME, line, makeLulu } = require('./helpers/make-lulu.cjs');
+  fs.writeFileSync(luluFile, makeLulu([
+    line({ 'Sale Date': '03/09/2026', 'Paid (y/n)': 'y', 'Payee Revenue': '4.50', 'Converted Revenue': '4.40' }),
+    line({ 'Sale Date': '03/09/2026', Payee: THEM, 'Payee Revenue': '1.50' }),
+    line({ 'Sale Date': '04/09/2026', 'Reference Number': 'R-2', 'Payee Revenue': '3.00', 'Converted Revenue': '3.10' }),
+  ]));
+  await app.goTo('#/money');
+  await app.until("document.querySelector('#match-columns')", 'the Money screen');
+  await app.clickText('Import a report', 'main');
+  await app.until("document.querySelector('dialog #report-answer')", 'the questions');
+  assert.equal(await app.run("document.querySelector('#report-import').disabled"), true, 'nothing can be imported before they are answered');
+  assert.deepEqual(await app.run("[...document.querySelectorAll('dialog fieldset label')].map((l) => l.textContent)"), [`${ME} (2 lines)`, `${THEM} (1 line)`]);
+  assert.deepEqual(await audit(app), [], 'the questions pass the accessibility checks');
+
+  await app.click('#report-answer');
+  await app.until("document.querySelector('dialog [role=alert]:not([hidden])')", 'the payee to be asked for');
+  assert.match(await app.run("document.querySelector('dialog [role=alert]:not([hidden])').textContent"), /Tick the payee that is you/);
+  await app.click('#payee-0');
+  await app.fill('#report-date-order', 'day-first');
+  await app.click('#report-answer');
+  await app.until("document.querySelector('#report-import') && !document.querySelector('#report-import').disabled", 'the summary');
+  const summary = await app.run("document.querySelector('dialog').textContent");
+  assert.match(summary, /Lulu · Sales report/);
+  assert.match(summary, /The sales add up to \$7\.50\. This is your share of every sale in the file/);
+  assert.match(summary, /1 set aside/);
+  assert.match(summary, /Left out as another payee's share: Made-up Illustrator \(1 line\)/);
+  assert.match(summary, /marks as paid come to 4\.40 USD/);
+  assert.match(summary, /not yet been checked on a real file/);
+  assert.deepEqual(await audit(app), [], 'the summary passes the accessibility checks');
+
+  await app.click('#report-import');
+  await app.until("!document.querySelector('dialog') && document.querySelector('main section[aria-labelledby=converted]')", 'the import and what Lulu pays');
+  const page = await app.run("document.querySelector('main').textContent");
+  assert.match(page, /Part paid, says the sales report|Paid, says the sales report/);
+  assert.match(await app.run("document.querySelector('main section[aria-labelledby=converted]').textContent"), /USD\$4\.40\$3\.10/);
+  const earnings = await app.call('earnings');
+  assert.deepEqual(earnings.currencies.map((c) => [c.currency, c.totals.earned.amount, c.totals.paid.amount]), [['USD', '7.50', '4.50']]);
+  assert.deepEqual(await audit(app), [], 'the Money screen passes the accessibility checks');
+}, { env: { RTAD_TEST_FILES: JSON.stringify({ report: luluFile }) } });
+
 // Reports due: a store whose last imported report ended in September has its October report ready, and the Desk says so.
 e2e('the Desk lists a store whose next report is ready to download, and links to where it is imported', async (app) => {
   await app.goTo('#/');

@@ -6,8 +6,9 @@ const crypto = require('node:crypto');
 const { parseDecimal, parseMoney, toDecimalString, totals } = require('../../shared/money');
 
 class LayoutError extends Error {
-  constructor(sheet, missing) {
-    super(`KDP's "${sheet}" sheet has changed: no column called ${missing.map((name) => `"${name}"`).join(', ')}.`);
+  // Another store's reader passes its own message; without one it is KDP's.
+  constructor(sheet, missing, message = `KDP's "${sheet}" sheet has changed: no column called ${missing.map((name) => `"${name}"`).join(', ')}.`) {
+    super(message);
     this.name = 'LayoutError';
     this.sheet = sheet;
     this.missing = missing;
@@ -269,4 +270,4 @@ function readKdp(workbook) {
   return null;
 }
 
-module.exports = { LayoutError, detect, readKdp, readOrders, readPayments };
+module.exports = { LayoutError, detect, fingerprinter, readKdp, readOrders, readPayments };
