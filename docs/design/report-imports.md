@@ -42,7 +42,7 @@ count once. **Any import can be undone** as a batch.
 | Store | What's known | In |
 |---|---|---|
 | KDP | Real files read: see below | 1.1 |
-| Barnes & Noble Press | Sales reports export to a spreadsheet, with sale date, title, format and BN ID or ISBN (its help center). Not seen yet | 1.1 |
+| Barnes & Noble Press | Not seen yet. A reader is built from its help page's list of 17 columns, to be confirmed on a real file: see below | 1.1 |
 | ACX | A monthly earnings statement as a multi-sheet Excel file, and a CSV from Sales Overview (its help pages). Not seen yet. Final figures arrive at the end of the following month | 1.1 |
 | Google Play Books | Not seen yet. It's a report from Partner Center, including audiobooks | 1.1 |
 | IngramSpark | Not seen yet | 1.1 |
@@ -71,6 +71,15 @@ sales, free promotions and countdown deals, so a free copy doesn't count as a sa
 royalty, tax withholding, adjustments, net earnings, exchange rate and payout amount. This is the final word on what was paid,
 and it's the source of exchange rates. Its header has `Currency` twice, so columns are read by position there, and a test
 guards it.
+
+### Barnes & Noble Press's sales report
+
+Built from the column list in [what each store says its report holds](store-report-layouts.md), not from a file.
+
+- **Two currencies.** A row's money is Total Royalty, in the Payment Currency. List Price is taken to be in the Selling Currency and is kept with that currency. The report does not say which currency Print Cost is in, so it is only kept when the two are the same.
+- **Its own sum.** Net Units Sold times Unit Royalty, rounded once to the payment currency, must equal Total Royalty. A row that does not is a problem on the report, handled like a total that disagrees.
+- **The same row again.** A row's fingerprint is its day, book, format, list price and two currencies, never its counts. A later copy with at least as many copies sold and returned, and more of one, updates it (**Replaced**). Any other difference is set aside and shown.
+- **Not confirmed.** The exact headings, whether anything sits above them, how a return is written, and that there really is only one row for a book, day and price in each pair of currencies.
 
 ### Lulu's sales report
 

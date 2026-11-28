@@ -194,7 +194,7 @@ const GUIDES = [
     summary: 'Match your columns: read a report from a store the app has no reader for.',
     keywords: 'match columns report csv excel xlsx store import sales royalties kobo draft2digital apple layout remember map',
     blocks: [
-      { type: 'p', text: 'The app reads Amazon KDP\'s reports and [Lulu\'s sales report](help:lulu-report) by itself. For any other store, choose **Match your columns…** on the Money screen, pick the report (a CSV or an Excel file), and show the app which column is which.' },
+      { type: 'p', text: 'The app reads Amazon KDP\'s reports, and the sales reports from [Barnes & Noble Press](help:bn-press-report) and [Lulu](help:lulu-report), by itself. For any other store, choose **Match your columns…** on the Money screen, pick the report (a CSV or an Excel file), and show the app which column is which.' },
       { type: 'ol', items: [
         'Say which **store** the report is from, and which sheet if the file has several. If the headings are not on the first line, say which row they are on.',
         'The app guesses the columns. Check each one: the **date**, the **title** or ISBN, the **country**, the **copies sold**, **what you earned** and the **currency**. If the file has no currency column, say which currency the whole file is in.',
@@ -204,6 +204,29 @@ const GUIDES = [
       ] },
       { type: 'p', text: 'If a store renames a column, the app says which one has gone and asks you to match again. It never reads past a change by guessing.' },
       { type: 'note', text: 'A report read this way has no total of its own to check against, so compare the total shown with the store\'s own figure. The money is an estimate until a payment report says otherwise. A reader built from a real report is better when there is one.' },
+    ],
+  },
+  {
+    slug: 'bn-press-report',
+    title: 'Barnes & Noble Press\'s sales report',
+    summary: 'Importing it, its two currencies, and the sum the app checks on every row.',
+    keywords: 'barnes noble press nook bn sales report excel xlsx royalty currency print cost returns import bn id',
+    blocks: [
+      { type: 'note', text: 'This reader was **built from the list of columns on Barnes & Noble Press\'s help page, and is still to be confirmed on a real file**. Compare the total it shows with B&N\'s own figure. If it says a column is missing, nothing is imported, and [Match your columns](help:match-columns) can read the file in the meantime.' },
+      { type: 'h', text: 'Getting the file' },
+      { type: 'p', text: 'In B&N Press, open **Sales**, pick any date range, and choose **Export Excel Sheet**. A range you choose yourself can cover at most 6 months. Then choose **Import a report** on the Money screen. A printed book\'s sale appears when it ships, and an ebook\'s when it is downloaded.' },
+      { type: 'h', text: 'Two currencies' },
+      { type: 'ul', items: [
+        'A copy can be sold in one currency while you are paid in another. **Your royalty is counted in the currency B&N pays you in.** The list price is kept in the currency the copy was sold in, which is what the app takes the List Price column to be.',
+        'The report doesn\'t say which currency the **print cost** is in, so it is only kept when both currencies are the same. It is always in the original file.',
+      ] },
+      { type: 'h', text: 'The sum it checks' },
+      { type: 'p', text: 'On every row, **Net Units Sold** times **Unit Royalty** should be **Total Royalty**. A row that disagrees is named with both figures. Nothing is changed to make it agree. You can only import such a report by ticking that you know, and the import stays flagged.' },
+      { type: 'h', text: 'Downloading the same days again' },
+      { type: 'p', text: 'There is one row for each book, day and list price. If a later download shows **more copies** sold or returned on a row, the one you have is **updated**, not added again. If a file shows other figures that are not more copies, such as an older download, your row is kept and both figures are shown. To undo an import whose rows a later one updated, undo the later one first.' },
+      { type: 'h', text: 'Earned, not paid' },
+      { type: 'p', text: 'This report says what you earned, not what has been paid. B&N\'s payments report is not read yet, so on the Money screen these earnings show as **not paid yet** even after B&N has paid you. The pre-order report is not read either.' },
+      { type: 'p', text: 'A book is matched by its **BN ID or ISBN**, and an ebook also by its **eBook ISBN**. The app asks once about any it doesn\'t know. Months you already read with Match your columns are not taken again, because they could count twice. Undo that import first.' },
     ],
   },
   {

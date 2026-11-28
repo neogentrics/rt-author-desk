@@ -69,7 +69,7 @@ function readableColumns(library) {
     recordings: (r) => ({ edition: edition(r.edition_id), exclusive_store_name: store(r.exclusive_store_id) }),
     listings: (r) => ({ edition: edition(r.edition_id), store_name: store(r.store_id), via_store_name: store(r.via_store_id) }),
     prices: (r) => ({ edition: edition(listings.get(r.listing_id)?.edition_id), store_name: store(listings.get(r.listing_id)?.store_id), ...money3(r, ['amount'], () => r.currency) }),
-    sale_lines: (r) => ({ edition: edition(r.edition_id), store_name: store(r.store_id), ...money3(r, ['list_price', 'offer_price', 'delivery_cost', 'royalty'], () => r.currency), ...money3(r, ['converted'], () => r.converted_currency) }),
+    sale_lines: (r) => ({ edition: edition(r.edition_id), store_name: store(r.store_id), ...money3(r, ['list_price', 'offer_price', 'delivery_cost', 'royalty'], (f) => (f.endsWith('_price') ? r.price_currency || r.currency : r.currency)), ...money3(r, ['converted'], () => r.converted_currency) }),
     pages_read: (r) => ({ edition: edition(r.edition_id), store_name: store(r.store_id) }),
     order_counts: (r) => ({ edition: edition(r.edition_id), store_name: store(r.store_id) }),
     payments: (r) => ({ store_name: store(r.store_id), ...money3(r, ['accrued', 'tax_withheld', 'adjustments', 'net'], () => r.earned_currency), ...money3(r, ['payout'], () => r.payout_currency) }),

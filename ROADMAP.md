@@ -28,7 +28,7 @@ losing anything, and pass its automated tests on Windows, Mac and Linux.
 | [Step zero](#step-zero--settle-the-foundations) | Settle the foundations | Built. The installers for Windows, Mac and Linux are built and checked by CI |
 | [v1.0](#v10--the-catalog) | The catalog | **Released as 1.0.0 on 22 November 2026.** Contributors and credits and the suite's look and feel are built |
 | [v1.1](#v11--the-money) | The money | **Part released as 1.1.0 on 22 November 2026.** KDP import and royalties, the calculator with your own rate cards, and one price check. The other stores' readers, two price checks and the test against real reports are still to do |
-| [v1.2](#v12--every-store) | Every store | **Part released as 1.2.0 on 22 November 2026.** Match your columns, the notice when a kept layout no longer fits, and Reports due are built. Since then, not yet released: a Lulu reader built from Lulu's description, to be confirmed on a real file. The other readers are still to do |
+| [v1.2](#v12--every-store) | Every store | **Part released as 1.2.0 on 22 November 2026.** Match your columns, the notice when a kept layout no longer fits, and Reports due are built. Since then, not yet released: readers for Lulu and Barnes & Noble Press, built from each store's description, to be confirmed on real files. The other readers are still to do |
 | [v1.3](#v13--accounts-and-the-vault) | Accounts and the vault | Planned |
 | [v1.4](#v14--what-a-book-really-made) | What a book really made | Planned |
 | [v1.5](#v15--launch-a-book) | Launch a book | Planned |
@@ -141,7 +141,7 @@ made true). The open finding about the sample KDP report is in
 
 | Feature | Size | Details |
 |---|:-:|---|
-| 🙋 Read sales reports | L | KDP (built, on made-up files), and empty slots for Barnes & Noble Press, ACX, Google Play Books and IngramSpark that wait for a real report. Choose a file, see what it holds, and accept it. [How it works](docs/design/report-imports.md). |
+| 🙋 Read sales reports | L | KDP (built, on made-up files). Barnes & Noble Press, built from its help page's columns, **to be confirmed on a real file**. ACX waits for a real report, and Google Play Books and IngramSpark are still to be built. Choose a file, see what it holds, and accept it. [How it works](docs/design/report-imports.md). |
 | 🙋 Every row accounted for | M | Built for KDP. Each row is imported, a duplicate, or set aside with a reason. Totals are checked against the report's own. Importing twice does no harm, and any import can be undone. |
 | Matching | M | Built for KDP. Report rows are matched to editions by ISBN or store ID. What it can't match, it asks about once and remembers. |
 | 🙋 Royalties | L | Built. By month, book, edition, store, marketplace and currency. Estimates are kept apart from what was actually paid. |
@@ -154,7 +154,9 @@ made true). The open finding about the sample KDP report is in
 Import the same file again and nothing changes. Undo a batch. A price worked out by the calculator matches the store's own
 calculator for a set of real books.
 
-**Still needed from the owner to finish it:** a real report from each of Barnes & Noble Press and ACX, a Google Play Books report that has dates, IngramSpark's report of sales (the invoices report is not it), a recent
+**Since 1.1.0 (27 November 2026):** a **Barnes & Noble Press** reader for its sales report. It was built from the 17 columns its help page lists and tested on made-up files, so it is **still to be confirmed on a real file**. The royalty is counted in the payment currency and the list price is kept in the selling currency. Net Units Sold times Unit Royalty is checked against Total Royalty on every row, and a later download with more copies on a row updates it instead of counting twice. B&N's payments and pre-order reports are not read.
+
+**Still needed from the owner to finish it:** a real Barnes & Noble Press sales report, to confirm its reader, a real report from ACX, a Google Play Books report that has dates, IngramSpark's report of sales (the invoices report is not it), a recent
 KDP report with pages read, what "the rate you want" means for the ebook price check, and what is locked (and until when) for the locked-period check.
 Four of the eight shipped rate cards (B&N ebook and print, KDP ebook before 7 July 2026, ACX's old rates) were not read on the store's own page, and the
 Calculator says so for each.

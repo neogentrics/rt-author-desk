@@ -483,6 +483,35 @@ e2e('a Lulu report asks which payee is you and how its dates are written, then i
   assert.deepEqual(await audit(app), [], 'the Money screen passes the accessibility checks');
 }, { env: { RTAD_TEST_FILES: JSON.stringify({ report: luluFile }) } });
 
+// A Barnes & Noble Press report, made up from the columns its help page lists: two currencies, and one row whose own arithmetic is a cent out.
+const bnFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'rt-author-desk-bn-')), 'bn.xlsx');
+e2e('a B&N Press report in two currencies with a row that does not add up says which, and is imported only by someone who says they know', async (app) => {
+  const { makeBn, row } = require('./helpers/make-bn.cjs');
+  fs.writeFileSync(bnFile, makeBn([
+    row({ 'Sale Date': 46279 }),
+    row({ 'Sale Date': 46280, 'Selling Currency': 'GBP', 'List Price': 3.99, 'Unit Royalty': 3.1, 'Units Sold': 2, 'Net Units Sold': 2, 'Total Royalty': 6.21 }),
+  ]));
+  await app.goTo('#/money');
+  await app.until("document.querySelector('#match-columns')", 'the Money screen');
+  await app.clickText('Import a report', 'main');
+  await app.until("document.querySelector('dialog #report-import')", 'the summary');
+  const summary = await app.run("document.querySelector('dialog').textContent");
+  assert.match(summary, /Barnes & Noble Press · Sales report/);
+  assert.match(summary, /The sales add up to \$15\.96\. This is the Total Royalty of every row/);
+  assert.match(summary, /does not say what has been paid/);
+  assert.match(summary, /another currency \(GBP\)/);
+  assert.match(summary, /row 3: 2 net units times the Unit Royalty comes to 6\.20 USD, but Total Royalty says 6\.21/);
+  assert.equal(await app.run("document.querySelector('#report-import').disabled"), true);
+  assert.deepEqual(await audit(app), [], 'the summary passes the accessibility checks');
+  await app.click('dialog #know');
+  assert.equal(await app.run("document.querySelector('#report-import').disabled"), false);
+  await app.click('#report-import');
+  await app.until("!document.querySelector('dialog') && document.querySelector('main .card.problem')", 'the import, still flagged');
+  assert.match(await app.run("document.querySelector('main .card.problem').textContent"), /6\.21/);
+  const earnings = await app.call('earnings');
+  assert.deepEqual(earnings.currencies.map((c) => [c.currency, c.totals.earned.amount, c.totals.paid.amount]), [['USD', '15.96', '0.00']]);
+}, { env: { RTAD_TEST_FILES: JSON.stringify({ report: bnFile }) } });
+
 // Reports due: a store whose last imported report ended in September has its October report ready, and the Desk says so.
 e2e('the Desk lists a store whose next report is ready to download, and links to where it is imported', async (app) => {
   await app.goTo('#/');

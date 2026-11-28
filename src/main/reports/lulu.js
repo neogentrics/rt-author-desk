@@ -14,8 +14,8 @@
 // Lulu's page doesn't say how a refund's figures are signed or how the sale date is written, so a refund is taken off however it is signed, and
 // a date order the file does not settle is asked for.
 const { LayoutError, fingerprinter } = require('./kdp');
-const { readDate, readNumber } = require('./mapped');
-const { exponentOf, money, parseDecimal, parseMoney, toDecimalString, totals } = require('../../shared/money');
+const { amountOf, blank, cleaned, dateOrderOf, dayKey, findColumns, finerThan, quoted, readDate } = require('./common');
+const { exponentOf, money, roundTo, toDecimalString, totals } = require('../../shared/money');
 
 class LuluError extends LayoutError {
   constructor(sheet, message, missing = []) {
@@ -38,8 +38,6 @@ const TELLTALE = ['Payee Revenue', 'Payee Revenue Currency', 'Converted Revenue'
 // A heading as it is compared: capitals and extra spaces don't matter, and neither does the "(y/n)" Lulu writes after the yes-or-no ones.
 const headingKey = (text) => String(text ?? '').trim().replace(/\s+/g, ' ').replace(/\s*\((?:y\/n|month\/year|sale or refund)\)$/i, '').toLowerCase();
 
-const blank = (cells) => cells.every((cell) => String(cell ?? '').trim() === '');
-
 // The sheet that is Lulu's report, with the row its headings are on, or null.
 function find(workbook) {
   for (const sheet of workbook.sheets) {
@@ -52,50 +50,11 @@ function find(workbook) {
 }
 
 function columnsIn(sheet, header) {
-  const keys = header.map(headingKey);
-  const at = {};
-  const missing = [];
-  const twice = [];
-  for (const [field, name] of Object.entries(COLUMNS)) {
-    const key = headingKey(name);
-    const first = keys.indexOf(key);
-    if (first < 0) missing.push(name);
-    else if (keys.indexOf(key, first + 1) >= 0) twice.push(name);
-    at[field] = first;
-  }
-  const list = (names) => names.map((name) => `"${name}"`).join(', ');
-  if (missing.length) throw new LuluError(sheet, `Lulu's sales report has no column called ${list(missing)}. Lulu may have changed the report. Until the app catches up, Match your columns can read it.`, missing);
-  if (twice.length) throw new LuluError(sheet, `Lulu's sales report has two columns called ${list(twice)}, so the app can't tell which to read.`);
+  const { at, missing, twice } = findColumns(header, COLUMNS, headingKey);
+  if (missing.length) throw new LuluError(sheet, `Lulu's sales report has no column called ${quoted(missing)}. Lulu may have changed the report. Until the app catches up, Match your columns can read it.`, missing);
+  if (twice.length) throw new LuluError(sheet, `Lulu's sales report has two columns called ${quoted(twice)}, so the app can't tell which to read.`);
   return at;
 }
-
-// Which comes first in a date such as 03/04/2026. The file settles it when any date in it can only be read one way.
-function dateOrderOf(sheet, texts, asked) {
-  let monthFirst = false;
-  let dayFirst = false;
-  let unsure = null;
-  for (const text of texts) {
-    const m = /^(\d{1,2})[/.-](\d{1,2})[/.-]\d{4}/.exec(text);
-    if (!m) continue;
-    const [a, b] = [Number(m[1]), Number(m[2])];
-    if (a > 12) dayFirst = true;
-    else if (b > 12) monthFirst = true;
-    else if (a !== b) unsure ??= text;
-  }
-  if (monthFirst && dayFirst) throw new LuluError(sheet, 'Lulu\'s sales report writes some sale dates with the month first and some with the day first, so the app can\'t read them.');
-  if (monthFirst) return { order: 'month-first' };
-  if (dayFirst) return { order: 'day-first' };
-  if (!unsure) return { order: 'month-first' }; // every date reads the same either way, or is written year first or in words
-  if (asked === 'month-first' || asked === 'day-first') return { order: asked, ask: { example: unsure, chosen: asked } };
-  return { order: null, ask: { example: unsure, chosen: null } };
-}
-
-// The same day written another way, or read with the month and day the other way round, gives the same key, so choosing a date order
-// differently one time can't make a sale count twice.
-const dayKey = (iso) => {
-  const [year, ...rest] = iso.split('-');
-  return [year, ...rest.sort()].join('-');
-};
 
 // Which payees are the person's own. `known` are the payees whose sales are already in the library. A file with one payee is theirs unless
 // the library says they are someone else; a file with several is asked about unless it holds a payee already known to be theirs.
@@ -109,15 +68,6 @@ function payeesOf(rows, known, asked) {
   // Asked about whenever there is something to choose: several payees, or none that can be taken to be the person's.
   const ask = names.length > 1 || !chosen.length || asked ? names.map((name) => ({ name, rows: rows.get(name), chosen: chosen.includes(name) })) : null;
   return { chosen, ask };
-}
-
-// Money as Lulu writes it, with a point for the cents. A comma is only taken between thousands, so a number written with a comma for the
-// point is refused rather than read a hundred times too big.
-function amountOf(text) {
-  const read = readNumber(text, '.');
-  if (read.empty) return { empty: true };
-  if (read.problem || (text.includes(',') && !/^\D*\d{1,3}(?:,\d{3})+(?:\.\d+)?\D*$/.test(text))) return { problem: true };
-  return read;
 }
 
 const yesNo = (text) => (/^(y|yes)$/i.test(text) ? true : /^(n|no)$/i.test(text) ? false : null);
@@ -148,7 +98,7 @@ function readLulu(workbook, { choices = {}, knownPayees = [] } = {}) {
   }
   const asked = Array.isArray(choices.payees) ? choices.payees.filter((name) => typeof name === 'string') : null;
   const payees = payeesOf(payeeRows, knownPayees, asked);
-  const dates = dateOrderOf(sheet.name, data.map((row) => cell(row.cells, 'saleDate')), choices.dateOrder);
+  const dates = dateOrderOf(data.map((row) => cell(row.cells, 'saleDate')), choices.dateOrder, { report: "Lulu's sales report", refuse: (message) => new LuluError(sheet.name, message) });
   const ask = payees.ask || dates.ask ? { payees: payees.ask, dateOrder: dates.ask ?? null } : null;
   const rowsInFile = workbook.sheets.reduce((sum, s) => sum + s.rows.length, 0);
   const needs = [...(payees.chosen.length ? [] : ['payee']), ...(dates.order ? [] : ['date order'])];
@@ -198,10 +148,10 @@ function readLulu(workbook, { choices = {}, knownPayees = [] } = {}) {
       if (read.empty && !needed) return null;
       if (read.empty) throw new Error(`"${COLUMNS[field]}" is empty`);
       if (read.problem) throw new Error(`"${COLUMNS[field]}" isn't an amount the app can read: "${cell(row.cells, field)}"`);
-      const exact = parseDecimal(read.text);
       const places = exponentOf(currency);
-      if (exact.scale > places && exact.digits % 10n ** BigInt(exact.scale - places) !== 0n) rounded = true;
-      return parseMoney(read.text, currency);
+      const exact = cleaned(read.text, places);
+      if (finerThan(exact, places)) rounded = true;
+      return money(roundTo(exact, places), currency);
     };
     const currencyIn = (field) => {
       const code = cell(row.cells, field).toUpperCase();
@@ -222,12 +172,11 @@ function readLulu(workbook, { choices = {}, knownPayees = [] } = {}) {
     const refund = type === 'Refund';
     const units = Math.abs(qty);
     const net = refund ? -units : qty;
-    sales.push({
+    const sale = {
       sheet: sheet.name, row: row.number,
       // What the sale is. Whether it has been paid, and every amount that can still change, is left out.
       fingerprint: print([cell(row.cells, 'reference'), cell(row.cells, 'productId'), cell(row.cells, 'version'), type, dayKey(date.date), payee,
         cell(row.cells, 'channel'), cell(row.cells, 'region'), currency, String(units), String(listPrice?.minor ?? ''), String(offerPrice?.minor ?? '')]),
-      revisable: true,
       royaltyDate: date.date, title: cell(row.cells, 'title') || cell(row.cells, 'productId'), author: cell(row.cells, 'author'), storeId: cell(row.cells, 'productId'),
       marketplace: cell(row.cells, 'region'), royaltyType: flags.royalties ? 'Royalty' : 'Other revenue', transactionType: type,
       unitsSold: Math.max(net, 0), unitsRefunded: Math.max(-net, 0), netUnits: net,
@@ -235,7 +184,19 @@ function readLulu(workbook, { choices = {}, knownPayees = [] } = {}) {
       royalty: refund ? takenOff(revenue) : revenue,
       converted: refund ? takenOff(converted) : converted,
       payee, paid: flags.paid, estimate: !flags.paid, selfPurchase: flags.selfPurchase,
-    });
+    };
+    // A later copy updates the one here when the sale has become paid. It never goes back from paid, and a copy that disagrees about what
+    // was earned without being newly paid can't be placed, so the one here is kept.
+    sale.revise = (here) => {
+      if (sale.paid && !here.paid) {
+        return {
+          verdict: 'update',
+          after: { royalty: sale.royalty.minor.toString(), royalty_type: sale.royaltyType, estimate: 0, paid: 1, converted: sale.converted ? sale.converted.minor.toString() : null, converted_currency: sale.converted?.currency ?? null },
+        };
+      }
+      return { verdict: here.royalty === sale.royalty.minor.toString() ? 'same' : 'differs' };
+    };
+    sales.push(sale);
     account(sheet.name, row.number, 'imported');
     return undefined;
   });

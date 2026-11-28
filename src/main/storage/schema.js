@@ -31,7 +31,7 @@ const TABLES = {
     'accounting', 'problems', 'mismatch_accepted', 'original', 'replaced'],
   sale_lines: ['report_id', 'fingerprint', 'store_id', 'store_item', 'title', 'author', 'marketplace', 'period', 'royalty_date',
     'royalty_type', 'transaction_type', 'units_sold', 'units_refunded', 'net_units', 'currency', 'list_price', 'offer_price',
-    'delivery_cost', 'royalty', 'estimate', 'edition_id', 'listing_id', 'payee', 'paid', 'self_purchase', 'converted', 'converted_currency'],
+    'delivery_cost', 'royalty', 'estimate', 'edition_id', 'listing_id', 'payee', 'paid', 'self_purchase', 'converted', 'converted_currency', 'price_currency'],
   pages_read: ['report_id', 'fingerprint', 'store_id', 'store_item', 'title', 'marketplace', 'read_date', 'period', 'pages', 'edition_id'],
   order_counts: ['report_id', 'fingerprint', 'store_id', 'store_item', 'title', 'marketplace', 'kind', 'order_date', 'period',
     'paid_units', 'free_units', 'edition_id'],
@@ -394,6 +394,14 @@ const STEPS = [
         ALTER TABLE sale_lines ADD COLUMN converted_currency TEXT CHECK (converted_currency IS NULL OR converted_currency GLOB '[A-Z][A-Z][A-Z]');
         ALTER TABLE report_files ADD COLUMN replaced TEXT NOT NULL DEFAULT '[]';
       `);
+    },
+  },
+  {
+    version: 12,
+    up(db) {
+      // A report with two currencies (B&N Press's) gives the list price in the one a copy was sold in and the royalty in the one you are paid
+      // in. `currency` stays the royalty's. This is the list and offer prices' own, and is empty when it is the same.
+      db.exec("ALTER TABLE sale_lines ADD COLUMN price_currency TEXT CHECK (price_currency IS NULL OR price_currency GLOB '[A-Z][A-Z][A-Z]');");
     },
   },
 ];

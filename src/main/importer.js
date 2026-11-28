@@ -25,13 +25,32 @@ const KIND_LABELS = {
   'kdp-payments': 'Payments report (what was paid)',
   mapped: 'Report read with the columns you matched',
   'lulu-sales': 'Sales report',
+  'bn-press-sales': 'Sales report',
 };
 const SALE_TABLES = ['sale_lines', 'pages_read', 'order_counts'];
 const TOTAL_NOTES = {
   'lulu-sales': 'This is your share of every sale in the file, in the currency of each sale. Lines already in your library are included in it.',
+  'bn-press-sales': 'This is the Total Royalty of every row in the file, in the currency B&N pays you in. Rows already in your library are included in it. This report does not say what has been paid.',
 };
-// What a later copy of the same sale can change. These are kept as they were, so the later import can be undone.
-const REVISABLE = ['royalty', 'royalty_type', 'estimate', 'paid', 'converted', 'converted_currency'];
+// What a later copy of a row can say about it that is new. A reader's `revise` says which of these change.
+const REVISABLE = ['royalty', 'royalty_type', 'estimate', 'paid', 'converted', 'converted_currency', 'units_sold', 'units_refunded', 'net_units', 'delivery_cost'];
+// The words for what happens to such a row, which differ by what the report is.
+const REVISED = {
+  'lulu-sales': {
+    updated: (n) => `${n === 1 ? 'One sale already here is' : `${n} sales already here are`} now marked paid, and will be updated, not added again.`,
+    changed: (n) => `What you earned changed on ${n === 1 ? 'one of them' : `${n} of them`}`,
+    differs: 'Set aside, because the same sale is here with another amount, and the one in your library is kept',
+    reason: 'already here, now paid',
+    kept: 'already here with a different amount',
+  },
+  'bn-press-sales': {
+    updated: (n) => `${n === 1 ? 'One row already here has' : `${n} rows already here have`} more copies in this later file, and will be updated, not added again.`,
+    changed: () => 'What changes',
+    differs: 'Set aside, because your library has other figures for the same book, day and price, and they are kept',
+    reason: 'already here, now with more copies',
+    kept: 'already here with different figures',
+  },
+};
 
 // An ASIN is compared as typed, in capitals. An ISBN is compared as its 13 digits, so a 10-digit ISBN finds the same book.
 function itemKey(text) {
@@ -61,6 +80,12 @@ const lastDay = (month) => {
 };
 
 const minor = (amount) => (amount ? amount.minor.toString() : null);
+
+// The edition a row belongs to: by the number the row is kept under, or by the other one the report gives for the same book.
+const editionFor = (resolve, row) => {
+  const found = resolve(row.storeId);
+  return found.edition_id || !row.otherId ? found : resolve(row.otherId);
+};
 
 class Importer {
   constructor(library, { locale, now = () => new Date() } = {}) {
@@ -93,7 +118,7 @@ class Importer {
     }
     if (!report) {
       const waiting = readerStatus().filter((r) => !r.ready).map((r) => r.name);
-      throw new ImportError(`This isn't a report the app can read yet. It reads Amazon KDP's orders and payments reports and Lulu's sales report. ${waiting.join(', ')} are waiting for a real report to build from. For any of them, Match your columns reads its report in the meantime. Nothing was imported.`);
+      throw new ImportError(`This isn't a report the app can read yet. It reads Amazon KDP's orders and payments reports, and the sales reports from Barnes & Noble Press and Lulu. ${waiting.join(', ')} are waiting for a real report to build from. For any of them, Match your columns reads its report in the meantime. Nothing was imported.`);
     }
     return this.#show(report, buffer, fileName);
   }
@@ -280,7 +305,7 @@ class Importer {
       });
       const base = { report_id: file.id, store_id: report.reader.storeId };
       for (const sale of plan.sales) {
-        const found = resolve(sale.storeId);
+        const found = editionFor(resolve, sale);
         this.library.put('sale_lines', {
           ...base, fingerprint: sale.fingerprint, store_item: sale.storeId, title: sale.title, author: sale.author,
           marketplace: sale.marketplace, period: monthOf(sale.royaltyDate, `row ${sale.row} of ${sale.sheet}`), royalty_date: sale.royaltyDate,
@@ -289,10 +314,10 @@ class Importer {
           list_price: minor(sale.listPrice), offer_price: minor(sale.offerPrice), delivery_cost: minor(sale.cost),
           royalty: minor(sale.royalty), estimate: sale.estimate ? 1 : 0, edition_id: found.edition_id, listing_id: found.listing_id,
           payee: sale.payee ?? '', paid: sale.paid ? 1 : 0, self_purchase: sale.selfPurchase ? 1 : 0,
-          converted: minor(sale.converted), converted_currency: sale.converted?.currency ?? null,
+          converted: minor(sale.converted), converted_currency: sale.converted?.currency ?? null, price_currency: sale.priceCurrency ?? null,
         });
       }
-      // Sales already here that this later report marks as paid. What each one said before is kept with this batch.
+      // Rows already here that this later report says something newer about. What each one said before is kept with this batch.
       if (plan.updates.length) {
         for (const { id, after } of plan.updates) this.library.put('sale_lines', { id, ...after });
         this.library.put('report_files', { id: file.id, replaced: JSON.stringify(plan.updates.map(({ id, before }) => ({ id, before }))) });
@@ -586,42 +611,50 @@ class Importer {
       duplicated.add(`${row.sheet}:${row.row}`);
       return false;
     });
-    // A sale that can change (Lulu's, which arrives again once it is paid) updates the copy here when it has become paid. It never goes back
-    // from paid, and a copy that disagrees about what was earned is set aside and named, not counted again.
+    // A row that can change (one a store sends again with newer figures) updates the copy here when its reader says the new one is newer.
+    // One the reader can't place is set aside and shown beside what is here, never counted a second time.
     const updates = [];
     const updatedSales = [];
     const differing = [];
     const kept = new Map(); // row of the file: why it was set aside
     const revised = new Set();
     const stored = db.prepare(`SELECT id, currency, ${REVISABLE.join(', ')} FROM sale_lines WHERE fingerprint = ?`);
+    const words = REVISED[report.kind];
     const amountText = (value, currency) => format(money(BigInt(value), currency), this.locale);
+    // What a row says, for putting the old beside the new: its money, and its copies when those differ.
+    const figures = (here, sale) => {
+      const copies = here.net_units !== sale.netUnits;
+      const say = (n, value) => `${copies ? `${n} net ${n === 1 ? 'copy' : 'copies'}, ` : ''}${amountText(value, here.currency)}`;
+      return { was: say(here.net_units, here.royalty), now: say(sale.netUnits, sale.royalty.minor) };
+    };
     const sales = (report.sales ?? []).filter((sale) => {
-      if (!sale.revisable) return fresh('sale_lines', [sale]).length;
+      if (!sale.revise) return fresh('sale_lines', [sale]).length;
       const here = stored.get(sale.fingerprint);
       if (!here) return true;
       const where = `${sale.sheet}:${sale.row}`;
-      if (sale.paid && !here.paid) {
+      const { verdict, after } = sale.revise(here);
+      if (verdict === 'update') {
+        const { was, now } = figures(here, sale);
         updates.push({
-          id: here.id,
-          before: Object.fromEntries(REVISABLE.map((name) => [name, here[name]])),
-          after: { royalty: minor(sale.royalty), royalty_type: sale.royaltyType, estimate: 0, paid: 1, converted: minor(sale.converted), converted_currency: sale.converted?.currency ?? null },
-          was: here.royalty === minor(sale.royalty) ? null : `row ${sale.row}: ${amountText(here.royalty, here.currency)} is now ${amountText(sale.royalty.minor, here.currency)}`,
+          id: here.id, after,
+          before: Object.fromEntries(Object.keys(after).map((name) => [name, here[name]])),
+          was: was === now ? null : `row ${sale.row}: ${was} is now ${now}`,
         });
         revised.add(where);
         updatedSales.push(sale);
-      } else if (here.royalty !== minor(sale.royalty)) {
-        const why = `row ${sale.row}: the file says ${amountText(sale.royalty.minor, here.currency)} and your library has ${amountText(here.royalty, here.currency)}`;
-        differing.push(why);
-        kept.set(where, 'already here with a different amount');
+      } else if (verdict === 'differs') {
+        const { was, now } = figures(here, sale);
+        differing.push(`row ${sale.row}: the file says ${now} and your library has ${was}`);
+        kept.set(where, words.kept);
       } else duplicated.add(where);
       return false;
     });
     this.#refuseTwice(report, sales);
     const notes = [];
-    if (updates.length) notes.push(`${updates.length === 1 ? 'One sale already here is' : `${updates.length} sales already here are`} now marked paid, and will be updated, not added again.`);
+    if (updates.length) notes.push(words.updated(updates.length));
     const changed = updates.map((u) => u.was).filter(Boolean);
-    if (changed.length) notes.push(`What you earned changed on ${changed.length === 1 ? 'one of them' : `${changed.length} of them`}: ${changed.slice(0, 5).join('; ')}${changed.length > 5 ? ' and more' : ''}.`);
-    if (differing.length) notes.push(`Set aside, because the same sale is here with another amount, and the one in your library is kept: ${differing.slice(0, 5).join('; ')}${differing.length > 5 ? ' and more' : ''}. If the file is the right one, undo the import that brought the sale in, then import this file again.`);
+    if (changed.length) notes.push(`${words.changed(changed.length)}: ${changed.slice(0, 5).join('; ')}${changed.length > 5 ? ' and more' : ''}.`);
+    if (differing.length) notes.push(`${words.differs}: ${differing.slice(0, 5).join('; ')}${differing.length > 5 ? ' and more' : ''}. If the file is the right one, undo the import that brought those in, then import this file again.`);
 
     const orders = fresh('order_counts', report.orders ?? []);
     const pages = fresh('pages_read', report.pagesRead ?? []);
@@ -630,7 +663,7 @@ class Importer {
     const accounting = report.accounting.map((item) => {
       const where = `${item.sheet}:${item.row}`;
       if (duplicated.has(where)) return { sheet: item.sheet, row: item.row, outcome: 'duplicate', reason: 'already imported' };
-      if (revised.has(where)) return { sheet: item.sheet, row: item.row, outcome: 'replaced', reason: 'already here, now paid' };
+      if (revised.has(where)) return { sheet: item.sheet, row: item.row, outcome: 'replaced', reason: words.reason };
       if (kept.has(where)) return { sheet: item.sheet, row: item.row, outcome: 'set aside', reason: kept.get(where) };
       return item;
     });
@@ -643,7 +676,7 @@ class Importer {
     const resolve = this.#resolver(report.reader.storeId);
     const unmatched = new Map();
     for (const row of [...sales, ...orders, ...pages]) {
-      if (resolve(row.storeId).edition_id) continue;
+      if (editionFor(resolve, row).edition_id) continue;
       const key = itemKey(row.storeId);
       const item = unmatched.get(key) ?? { storeItem: row.storeId, title: row.title, rows: 0 };
       item.rows += 1;
