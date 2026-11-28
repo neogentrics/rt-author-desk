@@ -251,8 +251,9 @@ test('an older download, or other figures for the same row, are set aside and sh
 
 test('the same row in an overlapping download is a repeat, and the same file twice is refused', () => {
   const { library, importer } = start();
-  take(importer, makeBn());
-  refused(() => take(importer, makeBn(), 'copy.xlsx'), /already imported this exact file/);
+  const file = makeBn(); // built once: a workbook holds the time it was made, so one built again is not always the same file
+  take(importer, file);
+  refused(() => take(importer, file, 'copy.xlsx'), /already imported this exact file/);
   const overlap = importer.preview(makeBn([row(), row({ 'Sale Date': '2026-09-20' })]), 'overlap.xlsx');
   assert.deepEqual([overlap.newRows, overlap.counts.duplicate], [1, 1]);
   library.close();
