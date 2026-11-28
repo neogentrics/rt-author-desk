@@ -7,6 +7,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ## [Unreleased]
 
 ### Added
+- **Barnes & Noble Press's sales report** (early). Choose the Excel file with Import a report. It was **built from the columns B&N Press's help page lists and tested on made-up files, so it is still to be confirmed on a
+  real one**. Columns are found by their headings, and a needed one that is missing stops the import and names it.
+  - Two currencies: your royalty is counted in the currency B&N pays you in, and each list price is kept in the currency the copy was sold in (database step 12). The print cost is only kept when the two are the same, because the report does not say which it is in.
+  - Net Units Sold times Unit Royalty is checked against Total Royalty on every row. A row that disagrees is named, imported only by someone who says they know, and stays flagged. Nothing is changed to make it agree.
+  - There is one row for each book, day and list price. A later download with more copies on a row updates it instead of counting it twice, and Undo puts the earlier figures back. Other figures for the same row are set aside and shown.
+  - The report does not say what has been paid, and B&N's payments report is not read yet, so these earnings show as not paid yet.
 - **Lulu's sales report** (early). Choose the CSV with Import a report. It was **built from Lulu's own description of the report and tested on made-up files, so it is still to be confirmed on a
   real one**. Columns are found by their headings, and a needed one that is missing stops the import and names it.
   - A sale with more than one payee is in the report once for each. Only your lines are saved, and the app asks which payee is you when it can't tell. The date order is asked for only when no date in the file settles it.

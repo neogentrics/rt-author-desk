@@ -43,6 +43,8 @@ Sale Date, Title, Format (eBook, Print Hardcover, Print Paperback), BN ID / ISBN
 - The page also lists a separate **Payments** report and a **Pre-Order** report. Their columns aren't published, so they wait for real files.
 - Custom date reports cover at most 6 months. A print sale appears when it ships; an ebook when it is downloaded.
 
+**Reader built on 27 November 2026, to be confirmed on a real file.** It was built from the list above. B&N's help page refused an automated read that day, so its wording was not checked again. The list does not say which currency List Price and Print Cost are in (List Price is taken to be in the selling currency, and Print Cost is only kept when the two currencies match), how a return is signed, or what sits above or below the rows.
+
 ## Google Play Books
 
 **Sales Summary** (net sales by book and country): Title, Author, Primary ISBN, Country of Sale, Units Purchased, Units Refunded, Net Units Sold, Total Publisher Earnings (in the customer's local currency).

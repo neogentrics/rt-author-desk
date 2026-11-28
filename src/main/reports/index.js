@@ -1,6 +1,7 @@
 'use strict';
 // Which stores' reports the app can read. A store with no real sample file yet is an empty slot: it is listed, says it is
 // waiting, and reads nothing, because a layout guessed from a help page would put wrong money in the library.
+const { readBnPress } = require('./bn-press');
 const { readKdp } = require('./kdp');
 const { readLulu } = require('./lulu');
 
@@ -8,7 +9,7 @@ const WAITING = 'Waiting for a real report from this store to build the reader f
 
 const READERS = [
   { id: 'kdp', storeId: 'store-kdp', name: 'Amazon KDP', ready: true, reads: 'Orders and payments reports (.xlsx)', formats: ['xlsx'], read: readKdp },
-  { id: 'bn-press', storeId: 'store-bn-press', name: 'Barnes & Noble Press', ready: false, waiting: WAITING },
+  { id: 'bn-press', storeId: 'store-bn-press', name: 'Barnes & Noble Press', ready: true, reads: 'Sales report (Excel). Built from the columns its help page lists, and still to be confirmed on a real file', formats: ['xlsx', 'csv'], read: readBnPress },
   { id: 'acx', storeId: 'store-acx', name: 'ACX', ready: false, waiting: WAITING },
   { id: 'google-play-books', storeId: 'store-google-play-books', name: 'Google Play Books', ready: false, waiting: 'Its Sales Summary report is recognized by Match your columns, which asks for the month and the currency, because that report holds neither. Waiting for a report with dates to build a full reader from.' },
   { id: 'ingramspark', storeId: 'store-ingramspark', name: 'IngramSpark', ready: false, waiting: 'Waiting for its report of sales. The invoices report is a list of bills, not sales, and is not read. Until then, Match your columns reads the sales report.' },

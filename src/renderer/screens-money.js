@@ -5,7 +5,7 @@
   const monthName = (period) => new Date(`${period}-15T12:00:00`).toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
   const OUTCOMES = [
     ['imported', 'new rows to save'],
-    ['replaced', 'already here and now paid, to be updated'],
+    ['replaced', 'already here with newer figures, to be updated'],
     ['duplicate', 'already here, or repeated on another sheet'],
     ['set aside', 'set aside'],
     ['not a sale', 'headings, totals and definitions'],
@@ -72,7 +72,7 @@
       try {
         const done = await AD.call('acceptReport', { previewId: preview.previewId, knowingMismatch: know.checked });
         dialog.close();
-        AD.toast(`Imported ${AD.plural(done.newRows, 'row')}${done.updatedRows ? `, and updated ${done.updatedRows} now paid` : ''}.`);
+        AD.toast(`Imported ${AD.plural(done.newRows, 'row')}${done.updatedRows ? `, and updated ${done.updatedRows} already here` : ''}.`);
         AD.refresh();
       } catch (problem) {
         error.textContent = problem.message;
