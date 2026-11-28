@@ -37,6 +37,9 @@ losing anything, and pass its automated tests on Windows, Mac and Linux.
 | [v1.8](#v18--claude-and-ai) | Claude and AI | Planned |
 | [v1.9](#v19--leaving-notion) | Leaving Notion | Planned |
 | [v1.10](#v110--two-computers) | Two computers | Planned |
+| [v1.11](#v111--find-and-arrange) | Find and arrange | Planned |
+| [v1.12](#v112--never-lose-your-place) | Never lose your place | Planned |
+| [v1.13](#v113--your-own-words-and-your-own-language) | Your own words and your own language | Planned |
 | [Later](#later--only-if-needed) | Only if needed | Ideas |
 | [Ongoing](#ongoing--polish--distribution) | Polish & distribution | Ongoing |
 
@@ -314,6 +317,42 @@ It can't reach the vault at any level. Draft a description with a local model an
 | Choose what travels | S | The vault and personal money stay on one computer unless you say otherwise. |
 
 **Test:** change different things on two computers offline, reconnect and check both. Then change the same price on both.
+
+## v1.11 — Find and arrange
+
+Everyday comfort once the catalog is large: find anything, keep the views you use, and arrange the lists your own way. These are in RT Markdown Reader and RT Story Tracker already, and Author Desk follows their wording and behaviour.
+
+| Feature | Size | Details |
+|---|:-:|---|
+| Search across everything | M | One search box for books, editions, ISBNs, stores, accounts and notes, with results grouped by kind. Ctrl+K already goes to a screen or runs a command; this finds the records themselves. |
+| Saved views | M | A filter you use often, saved with a name, such as "ebooks not yet live" or "books with no cover", and a button for each on the Desk. |
+| Lists you can arrange | S | Sort any list by any column, choose which columns show, and drag to reorder them. The choice is remembered for each list. |
+| Right-click menus | S | The common commands for a book, an edition or a row, where you would look for them. Every command is also in a menu, so nothing depends on right-clicking. |
+| Works at any window size | S | Narrow windows, large text and 200% zoom stay usable, with no overlap and nothing cut off. A test checks it. |
+
+**Test:** save a view, close the app and find it again. Search for an ISBN, a store and a pen name and reach each record. Shrink the window and set the text to its largest, and use every screen.
+
+## v1.12 — Never lose your place
+
+Getting back to where you were, and getting back from a mistake.
+
+| Feature | Size | Details |
+|---|:-:|---|
+| Restore last session | S | Reopen on the screen and book you were on, with the same filters. |
+| Version history of a record | M | See every change made to a book, an edition or a listing, who or what made it (you, an import, an AI), and undo one. The change log already records this; this is the screen for it. |
+| Notes on a book | S | Free notes on a book, an edition or a listing, searchable, for things that fit no field. |
+| Where a book was listed | S | A dated history of each listing: put up, price changed, pulled, with the store and the price at each step. |
+
+**Test:** change a price, close the app, reopen it and be back on the same screen. Open a book's history, undo one change and see it return. Add a note and find it from the search.
+
+## v1.13 — Your own words and your own language
+
+| Feature | Size | Details |
+|---|:-:|---|
+| Spell check and your own words | M | Spell check on descriptions, blurbs and notes, with a list of your own words, as in RT Story Tracker. It runs on your computer. It sits beside the writing-patterns check in v1.5 and shares its list of words. |
+| The app in other languages | L | Menus, Help and messages translated, as RT Markdown Reader's are. **Waiting for the owner:** which languages, and who checks each translation. Money amounts and dates already follow the computer's own settings. |
+
+**Test:** misspell a word in a description and have it marked; add it to your words and it stops. Change the language and every screen, menu and error message changes with it.
 
 ## Later — only if needed
 
